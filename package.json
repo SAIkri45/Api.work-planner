@@ -1,0 +1,42 @@
+{
+  "name": "api.task-sheduler.com",
+  "type": "module",
+  "scripts": {
+    "dev": "dotenvx run -- tsx watch src/index.ts",
+    "start": "dotenvx run -- node dist/src/index.js",
+    "build": "npx tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "migrations:gen": "dotenvx run -- tsx node_modules/drizzle-kit/bin.cjs generate",
+    "migrations:apply": "dotenvx run -- drizzle-kit migrate",
+    "db:studio": "tsx node_modules/drizzle-kit/bin.cjs studio",
+    "seed": "dotenvx run -- tsx seeders/seed.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.864.0",
+    "@aws-sdk/s3-request-presigner": "^3.864.0",
+    "@dotenvx/dotenvx": "^1.48.4",
+    "@hono/node-server": "^1.18.2",
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.1",
+    "drizzle-orm": "^0.44.4",
+    "eslint-plugin-format": "^1.0.1",
+    "hono": "^4.9.1",
+    "pg": "^8.16.3",
+    "valibot": "^1.1.0"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^5.2.1",
+    "@eslint/js": "^9.33.0",
+    "@types/node": "^20.19.10",
+    "@types/pg": "^8.15.5",
+    "drizzle-kit": "^0.31.4",
+    "eslint": "^9.33.0",
+    "globals": "^16.3.0",
+    "jiti": "^2.5.1",
+    "prettier": "^3.6.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.1"
+  }
+}
