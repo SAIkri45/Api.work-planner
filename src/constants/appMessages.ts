@@ -155,8 +155,8 @@ export const PHONE_NUMBER_EXISTS = "Phone number already exists.";
 
 // allowed users
 export const allowedUserTypes = [
-  "ADMIN",
-  "USER",
+    "ADMIN",
+    "USER",
 ];
 export const COMPONENT_TYPE_MISSING = "Component type is required.";
 export const COMPONENT_TEXT_MISSING = "Component text is required.";
@@ -228,3 +228,12 @@ export const STATUS_INVALID = "Status is invalid";
 export const STATUS_MISSING = "Status is missing";
 export const FESTIVAL_DELETED = "Festivals deleted successfully";
 export const EVENT_DELETED = "Festivals deleted successfully";
+
+//slackOAauth
+export const MISSING_CODE = "Code is missing";
+export const USER_ACCESS_TOKEN_MISSING = "User access token is missing";
+export const USER_ACCESS_TOKEN_INVALID = "User access token is invalid";
+export const USER_ACCESS_TOKEN_EXPIRED = "User access token is expired";
+export const ACCESS_TOKEN_NOT_FOUND = "User ID not found in token response"
+export const USER_INFO_NOT_FOUND = "User info not found in token response"
+export const USER_PROFILE_INFO_NOT_FOUND = "User profile info not found in token response"

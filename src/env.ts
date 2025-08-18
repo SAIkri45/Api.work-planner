@@ -28,7 +28,10 @@ const VEnvSchema = object({
   AWS_S3_BUCKET: string(),
   AWS_S3_ACCESS_KEY_ID: string(),
   AWS_S3_SECRET_ACCESS_KEY: string(),
-
+  SLACK_CLIENT_ID: string(),
+  SLACK_CLIENT_SECRET: string(),
+  SLACK_REDIRECT_URI: string(),
+  SESSION_SECRET: string(),
 });
 
 export type Env = InferOutput<typeof VEnvSchema>;

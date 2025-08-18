@@ -5,13 +5,21 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 
 import { DEF_ERROR_RESP } from "./constants/appMessages";
+import oAuthRouter from "./routes/slackOAuthRouters";
+import { appConfig } from "./config/appConfig";
+import envData from "./env";
 
-const app = new Hono();
+const apiVer = appConfig.version;
+const app = new Hono().basePath(`/v${apiVer}`);
+const port = envData.PORT || 3000;
+
 app.use("*", cors());
 
 app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
+
+app.route("/", oAuthRouter);
 
 // handling errors globally
 app.onError((err: any, c: Context) => {
