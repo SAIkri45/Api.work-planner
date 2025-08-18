@@ -1,6 +1,6 @@
 
 import { email as emailValidator, InferOutput, minLength, nonEmpty, boolean, number, integer, object, pipe, pipeAsync, rawTransformAsync, regex, string, transform, optional } from "valibot";
-import { allowedUserTypes, DESIGNATION_INVALID, DESIGNATION_MISSING, DESIGNATION_TOO_SHORT, EMAIL_EXISTS, EMAIL_INVALID, EMAIL_MISSING, NAME_INVALID, NAME_MISSING, NAME_TOO_SHORT, PHONE_EXISTS, PHONE_INVALID, PHONE_MISSING, PROFILE_PIC_INVALID, PROFILE_PIC_MISSING, USER_TYPE_INVALID } from "../../constants/appMessages";
+import { allowedUserTypes, DESIGNATION_INVALID, DESIGNATION_MISSING, DESIGNATION_TOO_SHORT, EMAIL_EXISTS, EMAIL_INVALID, EMAIL_MISSING, NAME_INVALID, NAME_MISSING, NAME_TOO_SHORT, PHONE_EXISTS, PHONE_INVALID, PHONE_MISSING, PROFILE_PIC_INVALID, PROFILE_PIC_MISSING, SLACK_ID_INVALID, SLACK_ID_MISSING, USER_TYPE_INVALID } from "../../constants/appMessages";
 import UnprocessableContentException from "../../exceptions/unprocessableContentException";
 import { phoneExist, userEmailExists } from "../customValidations";
 import { prepareValibotIssue } from "../prepareValibotIssue";
@@ -21,8 +21,8 @@ export const VCreateUserSchema = pipeAsync(
             minLength(3, NAME_TOO_SHORT),
         ),
         slack_id: pipe(
-            string("slack_id is invalid"),
-            nonEmpty("slack_id is missing"),
+            string(SLACK_ID_INVALID),
+            nonEmpty(SLACK_ID_MISSING),
             transform(value => value.trim()),
         ),
         display_name: pipe(
