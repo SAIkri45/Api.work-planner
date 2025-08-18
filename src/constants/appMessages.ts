@@ -41,10 +41,13 @@ export const USER_INACTIVE = "Your status is inactive. Please contact manager";
 export const USER_NOT_FOUND = "User not found";
 export const RESET_TOKEN_NOT_FOUND = "Reset token not found";
 export const USER_TYPE_INVALID = "User type is invalid";
-export const FIRST_NAME_INVALID = "First name is invalid";
-export const FIRST_NAME_MISSING = "First name is missing";
-export const FIRST_NAME_TOO_SHORT
-    = "Minimum length of the first name is 3 characters";
+export const NAME_INVALID = "Name is invalid";
+export const NAME_MISSING = "Name is missing";
+export const NAME_TOO_SHORT
+    = "Minimum length of the name is 3 characters";
+export const DESIGNATION_TOO_SHORT = "Minimum length of the name is 3 characters";
+export const DESIGNATION_INVALID = "Designation is invalid";
+export const DESIGNATION_MISSING = "Designation is missing";
 export const LAST_NAME_INVALID = "Last name is invalid";
 export const EMAIL_INVALID = "Email is invalid";
 export const EMAIL_MISSING = "Email is missing";
@@ -63,6 +66,7 @@ export const USER_FETCHED = "User details fetched successfully";
 export const USER_UPDATED = "User updated successfully";
 export const USER_ACTIVE_STATUS_REQUIRED = "Active status is required";
 export const USER_ACTIVE_STATUS_UPDATED = "User status updated successfully";
+
 export const PROFILE_PIC_MISSING = "Profile pic is missing";
 export const PROFILE_PIC_TOO_SHORT
     = "Minimum length of the profile pic is 5 characters";
@@ -156,7 +160,7 @@ export const PHONE_NUMBER_EXISTS = "Phone number already exists.";
 // allowed users
 export const allowedUserTypes = [
     "ADMIN",
-    "USER",
+    "EMPLOYEE",
 ];
 export const COMPONENT_TYPE_MISSING = "Component type is required.";
 export const COMPONENT_TEXT_MISSING = "Component text is required.";
@@ -236,4 +240,8 @@ export const USER_ACCESS_TOKEN_INVALID = "User access token is invalid";
 export const USER_ACCESS_TOKEN_EXPIRED = "User access token is expired";
 export const ACCESS_TOKEN_NOT_FOUND = "User ID not found in token response"
 export const USER_INFO_NOT_FOUND = "User info not found in token response"
-export const USER_PROFILE_INFO_NOT_FOUND = "User profile info not found in token response"
+export const USER_PROFILE_INFO_NOT_FOUND = "User profile info not found in token response";
+export const TOKEN_RESPONSE_NOT_FOUND = "Token response not found in token response";
+
+export const SLACK_ID_INVALID = "slack_id is invalid"
+export const SLACK_ID_MISSING = "slack_id is missing"

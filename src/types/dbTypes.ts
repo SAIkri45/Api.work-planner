@@ -1,10 +1,11 @@
 import type { db } from "../db/configuration.js";
+import { NewUser, User, UsersTable } from "../db/schema/user.js";
 import type { Group, GroupsTable, NewGroup } from "../db/schema/group.js";
 
-export type DBTable = GroupsTable;
-export type DBTableRow = Group;
-export type DBNewRecord = NewGroup;
-export type DBNewRecords = NewGroup[];
+export type DBTable = GroupsTable | UsersTable;
+export type DBTableRow = Group | User;
+export type DBNewRecord = NewGroup | NewUser;
+export type DBNewRecords = NewGroup[] | NewUser[];
 
 export type DBTableColumns<T extends DBTableRow> = keyof T;
 export type SortDirection = "asc" | "desc";

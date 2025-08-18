@@ -1,7 +1,7 @@
 import axios from "axios";
 import { slackConfig } from "../config/slckConfig";
+import { ACCESS_TOKEN_NOT_FOUND, TOKEN_RESPONSE_NOT_FOUND, USER_ACCESS_TOKEN_MISSING, USER_INFO_NOT_FOUND, USER_PROFILE_INFO_NOT_FOUND } from "../constants/appMessages";
 import NotFoundException from "../exceptions/notFoundException";
-import { ACCESS_TOKEN_NOT_FOUND, USER_ACCESS_TOKEN_MISSING, USER_INFO_NOT_FOUND, USER_PROFILE_INFO_NOT_FOUND } from "../constants/appMessages";
 
 
 export async function getOAuthCode(code: string) {
@@ -20,8 +20,10 @@ export async function getOAuthCode(code: string) {
         }
     );
 
-    if (!tokenResponse.data.ok) {
-        throw new Error(`Slack token error: ${tokenResponse.data.error}`);
+    console.log("tokenResponse------>", tokenResponse.data);
+
+    if (!tokenResponse) {
+        throw new NotFoundException(TOKEN_RESPONSE_NOT_FOUND);
     }
 
     // User access token

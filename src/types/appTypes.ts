@@ -1,11 +1,17 @@
+import { User } from "../db/schema/user.js";
 import type { Group } from "../db/schema/group";
 import type { ValidatedCreateGroup } from "../validations/schemas/vGroupSchema";
+import { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
 
-export type ValidatedRequest = ValidatedCreateGroup;
-export type AppActivity = GroupActivity;
+export type ValidatedRequest = ValidatedCreateGroup | ValidatedCreateUserOrAdmin;
+export type AppActivity = GroupActivity | UserActivity;
 export type GroupActivity = "add-group" | "update-group";
+export type UserActivity = "create-user" | "update-user";
 
-export type AppRespData = | Group | Group[];
+export type AppRespData = | Group
+  | Group[]
+  | User
+  | User[];
 
 export interface JWTUserPayload {
   sub: number;

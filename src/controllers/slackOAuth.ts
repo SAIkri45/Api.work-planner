@@ -1,11 +1,15 @@
 import { Context } from "hono";
 import { slackConfig } from "../config/slckConfig";
 import BadRequestException from "../exceptions/badRequestException";
-import { ACCESS_TOKEN_NOT_FOUND, MISSING_CODE, USER_ACCESS_TOKEN_MISSING, USER_INFO_NOT_FOUND, USER_PROFILE_INFO_NOT_FOUND } from "../constants/appMessages";
+import { ACCESS_TOKEN_NOT_FOUND, MISSING_CODE, USER_ACCESS_TOKEN_MISSING, USER_INFO_NOT_FOUND, USER_PROFILE_INFO_NOT_FOUND, USER_VALIDATION_ERROR } from "../constants/appMessages";
 import axios from 'axios'
 import NotFoundException from "../exceptions/notFoundException";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { getOAuthCode } from "../helpers/oAuthHelper";
+import { validateRequest } from "../validations/validateRequest";
+import { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema";
+import { User, users } from "../db/schema/user";
+import { saveSingleRecord } from "../services/db/baseDbService";
 
 class slackOAuthController {
 
@@ -26,7 +30,12 @@ class slackOAuthController {
             throw new BadRequestException(MISSING_CODE);
         }
 
-        const result = await getOAuthCode(code);
+        const userData = await getOAuthCode(code);
+
+        const validatedReq = await validateRequest<ValidatedCreateUserOrAdmin>("create-user", userData, USER_VALIDATION_ERROR)
+
+        //save user to db
+        const result = await saveSingleRecord<User>(users, validatedReq)
 
         return sendSuccessResp(c, 200, 'Authorization successful!', { user: result });
     }
