@@ -1,4 +1,4 @@
-import type { DBTableColumns, DBTableRow, OrderByQueryData, SortDirection } from "../types/dbTypes";
+import type { DBTableColumns, DBTableRow, OrderByQueryData, SortDirection } from "../types/dbTypes.js";
 
 export function parseOrderByQuery<T extends DBTableRow>(
   orderBy: string | undefined,

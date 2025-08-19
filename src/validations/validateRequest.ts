@@ -3,7 +3,6 @@ import { flatten, safeParseAsync } from "valibot";
 import type { AppActivity, ValidatedRequest } from "../types/appTypes.js";
 
 import UnprocessableContentException from "../exceptions/unprocessableContentException.js";
-import { VGroupSchema } from "./schemas/vGroupSchema.js";
 import { VCreateUserSchema } from "./schemas/vUserSchema.js";
 
 export async function validateRequest<R extends ValidatedRequest>(
@@ -14,9 +13,6 @@ export async function validateRequest<R extends ValidatedRequest>(
   let schema;
 
   switch (actionType) {
-    case "add-group":
-      schema = VGroupSchema;
-      break;
     case "create-user":
       schema = VCreateUserSchema;
       break;

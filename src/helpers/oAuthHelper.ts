@@ -1,83 +1,100 @@
 import axios from "axios";
-import { slackConfig } from "../config/slckConfig";
-import { ACCESS_TOKEN_NOT_FOUND, TOKEN_RESPONSE_NOT_FOUND, USER_ACCESS_TOKEN_MISSING, USER_INFO_NOT_FOUND, USER_PROFILE_INFO_NOT_FOUND } from "../constants/appMessages";
-import NotFoundException from "../exceptions/notFoundException";
 
+import { slackConfig } from "../config/slackConfig.js";
+import { TOKEN_RESPONSE_NOT_FOUND, USER_ACCESS_TOKEN_MISSING, USER_INFO_NOT_FOUND, USER_PROFILE_INFO_NOT_FOUND } from "../constants/appMessages.js";
+import NotFoundException from "../exceptions/notFoundException.js";
 
 export async function getOAuthCode(code: string) {
+  const tokenResponse = await axios.post(
+    "https://slack.com/api/oauth.v2.access",
+    null,
+    {
+      params: {
+        code,
+        client_id: slackConfig.clientId,
+        client_secret: slackConfig.clientSecret,
+        redirect_uri: slackConfig.redirectUri,
+      },
+    },
+  );
 
-    // Step 1: Exchange code for tokens
-    const tokenResponse = await axios.post(
-        'https://slack.com/api/oauth.v2.access',
-        null,
-        {
-            params: {
-                code,
-                client_id: slackConfig.clientId,
-                client_secret: slackConfig.clientSecret,
-                redirect_uri: slackConfig.redirectUri,
-            },
-        }
-    );
+  if (!tokenResponse)
+    throw new NotFoundException(TOKEN_RESPONSE_NOT_FOUND);
 
-    console.log("tokenResponse------>", tokenResponse.data);
+  const userId = tokenResponse.data.authed_user?.id;
+  const accessToken = tokenResponse.data.authed_user?.access_token;
+  const refreshToken = tokenResponse.data.authed_user?.refresh_token;
+  const expiresIn = tokenResponse.data.authed_user?.expires_in;
 
-    if (!tokenResponse) {
-        throw new NotFoundException(TOKEN_RESPONSE_NOT_FOUND);
-    }
+  if (!userId || !accessToken)
+    throw new NotFoundException(USER_ACCESS_TOKEN_MISSING);
 
-    // User access token
-    const userAccessToken = tokenResponse.data.authed_user?.access_token;
+  // prepare token data
+  const tokenData = {
+    user_id: userId, // you’ll need to map to your DB user.id
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_at: Math.floor(Date.now() / 1000) + expiresIn,
+  };
 
-    if (!userAccessToken) {
-        throw new NotFoundException(USER_ACCESS_TOKEN_MISSING);
-    }
+  // fetch user info
+  const userInfoResponse = await axios.get("https://slack.com/api/users.info", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    params: { user: userId },
+  });
 
-    const userId = tokenResponse.data.authed_user?.id;
+  if (!userInfoResponse)
+    throw new NotFoundException(USER_INFO_NOT_FOUND);
+  const userInfo = userInfoResponse.data.user;
 
-    if (!userId) {
-        throw new NotFoundException(ACCESS_TOKEN_NOT_FOUND);
-    }
+  const profileResponse = await axios.get(
+    "https://slack.com/api/users.profile.get",
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      params: { user: userId },
+    },
+  );
 
-    const userInfoResponse = await axios.get("https://slack.com/api/users.info", {
-        headers: { Authorization: `Bearer ${userAccessToken}` },
-        params: { user: userId }
-    });
+  if (!profileResponse)
+    throw new NotFoundException(USER_PROFILE_INFO_NOT_FOUND);
 
-    if (!userInfoResponse) {
-        throw new NotFoundException(USER_INFO_NOT_FOUND);
-    }
+  const profile = profileResponse.data.profile;
 
-    const userInfo = userInfoResponse.data.user;
+  const userData = {
+    slack_id: userId.toString(),
+    user_name: profile.real_name, // full name
+    display_name: profile.display_name, // Slack display name
+    email: profile.email,
+    profile_pic: profile.image_192,
+    designation: profile.title, // designation / description
+    statusText: profile.status_text,
+    statusEmoji: profile.status_emoji,
+    phone: profile.phone,
+    // user_type: userInfo,
+    user_type: userInfo.is_admin ? "Admin" : "EMPLOYEE",
+  };
 
-    // Step 2: Fetch full user profile
-    const profileResponse = await axios.get("https://slack.com/api/users.profile.get", {
-        headers: { Authorization: `Bearer ${userAccessToken}` },
-        params: { user: userId }
-    });
+  return { userData, tokenData };
+}
 
-    if (!profileResponse) {
-        throw new NotFoundException(USER_PROFILE_INFO_NOT_FOUND);
-    }
+export async function refreshSlackToken(refreshToken: string) {
+  const response = await axios.post(
+    "https://slack.com/api/oauth.v2.access",
+    null,
+    {
+      params: {
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+        client_id: slackConfig.clientId,
+        client_secret: slackConfig.clientSecret,
+      },
+    },
+  );
 
-
-    const profile = profileResponse.data.profile;
-
-    const userData = {
-        slackId: userId,
-        username: profile.real_name,          // full name
-        displayName: profile.display_name,    // Slack display name
-        email: profile.email,
-        profilePic: profile.image_192,
-        title: profile.title,                 // designation / description
-        statusText: profile.status_text,
-        statusEmoji: profile.status_emoji,
-        phone: profile.phone,
-        usertype: userInfo,
-        userRole: userInfo.is_admin ? "admins" : "Employee",
-        accessToken: userAccessToken,
-    };
-
-    console.log("userData---------->", userData);
-    return userData;
+  const authed = response.data.authed_user;
+  return {
+    access_token: authed.access_token,
+    refresh_token: authed.refresh_token ?? refreshToken,
+    expires_at: Math.floor(Date.now() / 1000) + authed.expires_in,
+  };
 }

@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
-import type { SuccessResp } from "../types/appTypes";
+import type { SuccessResp } from "../types/appTypes.js";
 
 export function sendSuccessResp(c: Context, status: ContentfulStatusCode, message: string, data?: any) {
   const resp: SuccessResp = {

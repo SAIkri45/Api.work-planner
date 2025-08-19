@@ -1,0 +1,31 @@
+import { boolean, email as emailValidator, minLength, nonEmpty, object, optional, pipe, pipeAsync, rawTransformAsync, regex, string, transform } from "valibot";
+import { allowedUserTypes, DESIGNATION_INVALID, DESIGNATION_MISSING, DESIGNATION_TOO_SHORT, EMAIL_EXISTS, EMAIL_INVALID, EMAIL_MISSING, NAME_INVALID, NAME_MISSING, NAME_TOO_SHORT, PHONE_INVALID, PHONE_MISSING, PROFILE_PIC_INVALID, PROFILE_PIC_MISSING, SLACK_ID_INVALID, SLACK_ID_MISSING, USER_TYPE_INVALID } from "../../constants/appMessages.js";
+import UnprocessableContentException from "../../exceptions/unprocessableContentException.js";
+import { userEmailExists } from "../customValidations.js";
+import { prepareValibotIssue } from "../prepareValibotIssue.js";
+// Phone regex
+const phoneRegex = /^(\+91|\+91-|0)?[6-9]\d{9}$/;
+// Create Legal Advisor or Advocate Schema
+export const VCreateUserSchema = pipeAsync(object({
+    user_name: pipe(string(NAME_INVALID), nonEmpty(NAME_MISSING), transform(value => value.trim()), minLength(3, NAME_TOO_SHORT)),
+    slack_id: pipe(string(SLACK_ID_INVALID), nonEmpty(SLACK_ID_MISSING), transform(value => value.trim())),
+    display_name: optional(string(NAME_INVALID)),
+    phone: pipe(string(PHONE_INVALID), nonEmpty(PHONE_MISSING), regex(phoneRegex, PHONE_INVALID)),
+    email: pipe(string(EMAIL_INVALID), nonEmpty(EMAIL_MISSING), emailValidator(EMAIL_INVALID)),
+    profile_pic: pipe(string(PROFILE_PIC_INVALID), nonEmpty(PROFILE_PIC_MISSING)),
+    designation: pipe(string(DESIGNATION_INVALID), nonEmpty(DESIGNATION_MISSING), transform(value => value.trim()), minLength(3, DESIGNATION_TOO_SHORT)),
+    active: optional(boolean()),
+    // User Type
+    user_type: pipe(string(USER_TYPE_INVALID), transform((value) => {
+        if (!allowedUserTypes.includes(value)) {
+            throw new UnprocessableContentException(USER_TYPE_INVALID);
+        }
+        return value;
+    })),
+}), rawTransformAsync(async ({ dataset, addIssue }) => {
+    const { email } = dataset.value;
+    if (email && await userEmailExists(email)) {
+        prepareValibotIssue(dataset, addIssue, "email", email, EMAIL_EXISTS);
+    }
+    return dataset.value;
+}));

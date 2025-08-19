@@ -1,6 +1,6 @@
-import { and, asc, count, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, getTableName, inArray, sql } from "drizzle-orm";
 
-import type { DBNewRecord, DBNewRecords, DBTable, DBTableRow, InQueryData, OrderByQueryData, PaginationInfo, WhereQueryData } from "../../types/dbTypes.js";
+import type { DBNewRecord, DBNewRecords, DBTable, DBTableRow, InQueryData, OrderByQueryData, PaginationInfo, Transaction, UpdateRecordData, WhereQueryData } from "../../types/dbTypes.js";
 
 import { db } from "../../db/configuration.js";
 import { executeQuery, prepareInQueryCondition, prepareOrderByQueryConditions, prepareSelectColumnsForQuery, prepareWhereQueryConditions } from "../../utils/dbUtils.js";
@@ -354,12 +354,104 @@ async function getRecordsCount(table: DBTable, filters?: any) {
   return result[0].total;
 }
 
-export async function deleteAllRecords(table: DBTable) {
-  return await db.delete(table);
+async function updateRecordByColumnValue<R extends DBTableRow>(
+  table: DBTable,
+  column: string,
+  value: string | number,
+  record: UpdateRecordData<R>,
+  id?: number,
+) {
+  const dataWithTimeStamps = { id, ...record, updated_at: new Date() };
+  const columnInfo = sql.raw(`${getTableName(table)}.${column}`);
+  return await db
+    .update(table)
+    .set(dataWithTimeStamps)
+    .where(eq(columnInfo, value));
 }
 
+async function updateRecordById<R extends DBTableRow>(
+  table: DBTable,
+  id: number,
+  record: UpdateRecordData<R>,
+  trx?: Transaction, // ← optional trx
+) {
+  const client = trx ?? db; // ← fallback to db if trx not passed
+
+  const dataWithTimeStamps = {
+    id,
+    ...record,
+    updated_at: new Date(),
+  };
+
+  const recordUpdated = await client
+    .update(table)
+    .set(dataWithTimeStamps)
+    .where(eq(table.id, id))
+    .returning();
+
+  return recordUpdated[0] as R;
+}
+
+async function updateRecordByMultipleColumnValues<
+  R extends DBTableRow,
+  C extends keyof R = keyof R,
+>(
+  table: DBTable,
+  columns: C[],
+  values: any[],
+  record: UpdateRecordData<R>,
+  id?: number,
+  trx?: Transaction,
+) {
+  const client = trx ?? db;
+
+  const whereQueryData: WhereQueryData<R> = {
+    columns,
+    values,
+  };
+
+  const dataWithTimeStamps = { id, ...record, updated_at: new Date() };
+  const whereConditions = whereQueryData.columns.map((column, index) =>
+    eq(
+      sql.raw(`${getTableName(table)}.${String(column)}`),
+      whereQueryData.values[index],
+    ),
+  );
+
+  return await client
+    .update(table)
+    .set(dataWithTimeStamps)
+    .where(and(...whereConditions));
+}
+
+async function updateMultipleRecordsByIds<R extends DBTableRow>(
+  table: DBTable,
+  ids: number[],
+  record: Partial<R>,
+) {
+  const updatedRecords = await db
+    .update(table)
+    .set(record)
+    .where(inArray(table.id, ids))
+    .returning();
+
+  return updatedRecords.length;
+}
+
+async function deleteRecordsByColumn<T>(table: any, column: keyof T, value: any) {
+  return await db.delete(table).where(eq(table[column], value));
+}
+
+async function softDeleteRecordById<R extends DBTableRow>(
+  table: DBTable,
+  id: number,
+  record: UpdateRecordData<R>,
+) {
+  return await db.update(table).set(record).where(eq(table.id, id)).returning();
+}
 export {
   deleteRecordById,
+  deleteRecordsByColumn,
   exportData,
   getMultipleRecordsByAColumnValue,
   getMultipleRecordsByMultipleColumnValues,
@@ -372,4 +464,9 @@ export {
   getSingleRecordByMultipleColumnValues,
   saveRecords,
   saveSingleRecord,
+  softDeleteRecordById,
+  updateMultipleRecordsByIds,
+  updateRecordByColumnValue,
+  updateRecordById,
+  updateRecordByMultipleColumnValues,
 };

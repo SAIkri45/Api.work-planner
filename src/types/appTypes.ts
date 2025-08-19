@@ -1,17 +1,16 @@
-import { User } from "../db/schema/user.js";
-import type { Group } from "../db/schema/group";
-import type { ValidatedCreateGroup } from "../validations/schemas/vGroupSchema";
-import { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
+import type { SlackToken } from "../db/schema/slackTokens.js";
+import type { User } from "../db/schema/user.js";
+import type { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
 
-export type ValidatedRequest = ValidatedCreateGroup | ValidatedCreateUserOrAdmin;
-export type AppActivity = GroupActivity | UserActivity;
-export type GroupActivity = "add-group" | "update-group";
+export type ValidatedRequest = ValidatedCreateUserOrAdmin;
+export type AppActivity = UserActivity;
 export type UserActivity = "create-user" | "update-user";
 
-export type AppRespData = | Group
-  | Group[]
-  | User
-  | User[];
+export type AppRespData
+  = | User
+    | User[]
+    | SlackToken
+    | SlackToken[];
 
 export interface JWTUserPayload {
   sub: number;
@@ -39,4 +38,10 @@ export interface FileData {
 
 export interface DownloadFile {
   download_url: string;
+}
+
+export interface RefreshedTokenData {
+  access_token: string;
+  expires_at: number;
+  refresh_token: string;
 }

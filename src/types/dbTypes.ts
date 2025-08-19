@@ -1,11 +1,11 @@
 import type { db } from "../db/configuration.js";
-import { NewUser, User, UsersTable } from "../db/schema/user.js";
-import type { Group, GroupsTable, NewGroup } from "../db/schema/group.js";
+import type { NewSlackToken, SlackToken, SlackTokensTable } from "../db/schema/slackTokens.js";
+import type { NewUser, User, UsersTable } from "../db/schema/user.js";
 
-export type DBTable = GroupsTable | UsersTable;
-export type DBTableRow = Group | User;
-export type DBNewRecord = NewGroup | NewUser;
-export type DBNewRecords = NewGroup[] | NewUser[];
+export type DBTable = UsersTable | SlackTokensTable;
+export type DBTableRow = User | SlackToken;
+export type DBNewRecord = NewUser | NewSlackToken;
+export type DBNewRecords = NewUser[] | NewSlackToken[];
 
 export type DBTableColumns<T extends DBTableRow> = keyof T;
 export type SortDirection = "asc" | "desc";

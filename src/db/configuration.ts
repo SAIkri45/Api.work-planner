@@ -3,7 +3,7 @@ import fs from "node:fs";
 import pg from "pg";
 
 import { dbConfig } from "../config/dbConfig.js";
-import * as groupsSchema from "./schema/group.js";
+import * as userSchema from "./schema/user.js";
 
 const { Pool } = pg;
 
@@ -23,7 +23,7 @@ export const db = drizzle({
   client: pool,
   schema: {
 
-    ...groupsSchema,
+    ...userSchema,
 
   },
 });
