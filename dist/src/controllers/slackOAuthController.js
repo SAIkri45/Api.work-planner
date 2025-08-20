@@ -15,7 +15,7 @@ class SlackOAuthController {
             + `&redirect_uri=${encodeURIComponent(slackConfig.redirectUri)}`;
         return c.json({
             authUrl: slackAuthUrl,
-            message: "Use this URL to authorize with Slack",
+            message: "Slack OAuth Initiated",
         });
     };
     slackOAuthCallback = async (c) => {
