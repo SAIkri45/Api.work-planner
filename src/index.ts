@@ -17,11 +17,12 @@ app.use(
   "*",
   cors({
     origin: [
-      "http://localhost:3000"
+      "http://localhost:3000",
+      "https://taskscheduler-git-main-rbhavishyas-projects.vercel.app/",
     ],
     credentials: true,
-  })
-)
+  }),
+);
 
 app.get("/", (c) => {
   return c.text("Hello Hono!");
