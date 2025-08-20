@@ -20,7 +20,10 @@ class SlackOAuthController {
     const slackAuthUrl = `https://slack.com/oauth/v2/authorize?client_id=${slackConfig.clientId}`
       + `&user_scope=${encodeURIComponent(slackConfig.userScope)}` // <-- changed here
       + `&redirect_uri=${encodeURIComponent(slackConfig.redirectUri)}`;
-    return c.redirect(slackAuthUrl);
+    return c.json({
+      authUrl: slackAuthUrl,
+      message: "Use this URL to authorize with Slack",
+    });
   };
 
   slackOAuthCallback = async (c: Context) => {
