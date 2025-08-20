@@ -91,10 +91,10 @@ export async function refreshSlackToken(refreshToken: string) {
     },
   );
 
-  const authed = response.data.authed_user;
+  const authed = response.data.authed_user || {};
   return {
-    access_token: authed.access_token,
+    access_token: authed.access_token || response.data.access_token,
     refresh_token: authed.refresh_token ?? refreshToken,
-    expires_at: Math.floor(Date.now() / 1000) + authed.expires_in,
+    expires_at: Math.floor(Date.now() / 1000) + (authed.expires_in || 43200),
   };
 }
