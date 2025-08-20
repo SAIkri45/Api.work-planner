@@ -13,14 +13,9 @@ const apiVer = appConfig.version;
 const app = new Hono().basePath(`/v${apiVer}`);
 const port = envData.PORT || 3000;
 
-app.use(
-  "*",
-  cors({
-    origin: ["http://localhost:3000"],
-    allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  }),
-);
+app.use("*", cors({
+  origin: "http://localhost:3000/",
+}));
 
 app.get("/", (c) => {
   return c.text("Hello Hono!");
