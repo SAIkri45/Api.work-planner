@@ -13,17 +13,7 @@ const apiVer = appConfig.version;
 const app = new Hono().basePath(`/v${apiVer}`);
 const port = envData.PORT || 3000;
 
-app.use(
-  "*",
-  cors({
-    origin: [
-      "https://taskscheduler-irvwojai5-rbhavishyas-projects.vercel.app",
-      // "http://localhost:3000",
-    ],
-    credentials: true,
-
-  }),
-);
+app.use("*", cors());
 
 app.get("/", (c) => {
   return c.text("Hello Hono!");
