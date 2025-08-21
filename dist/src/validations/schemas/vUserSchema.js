@@ -22,12 +22,12 @@ export const VCreateUserSchema = pipeAsync(object({
         }
         return value;
     })),
-    user_status: pipe(string(USER_STATUS_INVALID), transform((value) => {
+    user_status: optional(pipe(string(USER_STATUS_INVALID), transform((value) => {
         if (!allowedUserTypes.includes(value)) {
             throw new UnprocessableContentException(USER_STATUS_INVALID);
         }
         return value;
-    })),
+    }))),
 }), rawTransformAsync(async ({ dataset, addIssue }) => {
     const { email } = dataset.value;
     if (email && await userEmailExists(email)) {
