@@ -32,20 +32,22 @@ class SlackOAuthController {
             result = await saveSingleRecord(users, validatedReq);
             // save slack tokens to db
             await saveSingleRecord(slack_tokens, tokenData);
+            return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
         }
         else {
             const existingToken = await getSlackTokenByUserId(userData.slack_id);
             const now = Math.floor(Date.now() / 1000);
             if (existingToken && existingToken.expires_at > now) {
                 // Token still valid → do nothing
+                return sendSuccessResp(c, 200, "Authorization successful");
             }
             else {
                 // 4. Refresh token
                 const refreshed = await refreshSlackToken(existingToken.refresh_token);
                 await updateSlackToken(existingToken.user_id, refreshed);
+                return sendSuccessResp(c, 200, "Authorization successful", { token: refreshed });
             }
         }
-        return sendSuccessResp(c, 200, "Authorization successful", result || { user: userData, token: tokenData });
     };
 }
 export default SlackOAuthController;
