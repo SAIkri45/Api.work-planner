@@ -1,8 +1,10 @@
 import type { InferOutput } from "valibot";
 
-import { boolean, email as emailValidator, minLength, nonEmpty, object, optional, pipe, pipeAsync, rawTransformAsync, regex, string, transform } from "valibot";
+import { email as emailValidator, minLength, nonEmpty, object, optional, pipe, pipeAsync, rawTransformAsync, regex, string, transform } from "valibot";
 
-import { allowedUserTypes, DESIGNATION_INVALID, DESIGNATION_MISSING, DESIGNATION_TOO_SHORT, EMAIL_EXISTS, EMAIL_INVALID, EMAIL_MISSING, NAME_INVALID, NAME_MISSING, NAME_TOO_SHORT, PHONE_INVALID, PHONE_MISSING, PROFILE_PIC_INVALID, PROFILE_PIC_MISSING, SLACK_ID_INVALID, SLACK_ID_MISSING, USER_TYPE_INVALID } from "../../constants/appMessages.js";
+import type { allowedUserStatuses } from "../../constants/appMessages.js";
+
+import { allowedUserTypes, DESIGNATION_INVALID, DESIGNATION_MISSING, DESIGNATION_TOO_SHORT, EMAIL_EXISTS, EMAIL_INVALID, EMAIL_MISSING, NAME_INVALID, NAME_MISSING, NAME_TOO_SHORT, PHONE_INVALID, PHONE_MISSING, PROFILE_PIC_INVALID, PROFILE_PIC_MISSING, SLACK_ID_INVALID, SLACK_ID_MISSING, USER_STATUS_INVALID, USER_TYPE_INVALID } from "../../constants/appMessages.js";
 import UnprocessableContentException from "../../exceptions/unprocessableContentException.js";
 import { userEmailExists } from "../customValidations.js";
 import { prepareValibotIssue } from "../prepareValibotIssue.js";
@@ -45,13 +47,23 @@ export const VCreateUserSchema = pipeAsync(
       transform(value => value.trim()),
       minLength(3, DESIGNATION_TOO_SHORT),
     ),
-    active: optional(boolean()),
+    // active: optional(boolean()),
     // User Type
     user_type: pipe(
       string(USER_TYPE_INVALID),
       transform((value) => {
         if (!allowedUserTypes.includes(value as typeof allowedUserTypes[number])) {
           throw new UnprocessableContentException(USER_TYPE_INVALID);
+        }
+        return value as typeof allowedUserTypes[number];
+      }),
+    ),
+
+    user_status: pipe(
+      string(USER_STATUS_INVALID),
+      transform((value) => {
+        if (!allowedUserTypes.includes(value as typeof allowedUserStatuses[number])) {
+          throw new UnprocessableContentException(USER_STATUS_INVALID);
         }
         return value as typeof allowedUserTypes[number];
       }),

@@ -1,4 +1,4 @@
-import { boolean, index, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import { index, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 export const users = pgTable("users", {
     id: serial().primaryKey(),
     slack_id: varchar().notNull(),
@@ -9,7 +9,7 @@ export const users = pgTable("users", {
     designation: varchar(),
     phone: varchar(),
     user_type: varchar().default("EMPLOYEE"),
-    active: boolean().default(true),
+    user_status: varchar().default("ACTIVE"),
     created_at: timestamp().defaultNow(),
     updated_at: timestamp(),
     deleted_at: timestamp(),

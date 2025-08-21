@@ -1,13 +1,13 @@
 import type { Context } from "hono";
 
 import type { SlackToken } from "../db/schema/slackTokens.js";
-import type { User } from "../db/schema/user.js";
+import type { User } from "../db/schema/users.js";
 import type { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
 
 import { slackConfig } from "../config/slackConfig.js";
 import { MISSING_CODE, USER_VALIDATION_ERROR } from "../constants/appMessages.js";
 import { slack_tokens } from "../db/schema/slackTokens.js";
-import { users } from "../db/schema/user.js";
+import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import { getOAuthCode, refreshSlackToken } from "../helpers/oAuthHelper.js";
 import { saveSingleRecord } from "../services/db/baseDbService.js";
@@ -20,10 +20,8 @@ class SlackOAuthController {
     const slackAuthUrl = `https://slack.com/oauth/v2/authorize?client_id=${slackConfig.clientId}`
       + `&user_scope=${encodeURIComponent(slackConfig.userScope)}` // <-- changed here
       + `&redirect_uri=${encodeURIComponent(slackConfig.redirectUri)}`;
-    return c.json({
-      authUrl: slackAuthUrl,
-      message: "Slack OAuth Initiated",
-    });
+
+    return sendSuccessResp(c, 200, "Slack OAuth Initiated", { authUrl: slackAuthUrl });
   };
 
   slackOAuthCallback = async (c: Context) => {

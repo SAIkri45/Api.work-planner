@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1755579774441,
-      "tag": "0000_thin_blindfold",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1755588129495,
-      "tag": "0001_closed_tarot",
+      "when": 1755773543235,
+      "tag": "0000_robust_leper_queen",
       "breakpoints": true
     }
   ]

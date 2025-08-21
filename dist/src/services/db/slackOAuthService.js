@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../db/configuration.js";
 import { slack_tokens } from "../../db/schema/slackTokens.js";
-import { users } from "../../db/schema/user.js";
+import { users } from "../../db/schema/users.js";
 export async function checkSlackUserExists(email) {
     const existingUser = await db
         .select()

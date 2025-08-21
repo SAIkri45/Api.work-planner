@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../db/configuration.js";
-import { users } from "../db/schema/user.js";
+import { users } from "../db/schema/users.js";
 import { getSingleRecordByAColumnValue } from "../services/db/baseDbService.js";
 // Check if email exists and return a boolean accordingly
 export async function userEmailExists(email) {
