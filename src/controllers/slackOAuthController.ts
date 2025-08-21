@@ -54,7 +54,7 @@ class SlackOAuthController {
 
       if (existingToken && existingToken.expires_at > now) {
         // Token still valid → do nothing
-        return sendSuccessResp(c, 200, "Authorization successful");
+        return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
       }
       else {
         // 4. Refresh token
@@ -62,7 +62,7 @@ class SlackOAuthController {
 
         await updateSlackToken(existingToken.user_id!, refreshed);
 
-        return sendSuccessResp(c, 200, "Authorization successful", { token: refreshed });
+        return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
       }
     }
   };

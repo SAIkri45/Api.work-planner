@@ -36,13 +36,13 @@ class SlackOAuthController {
             const now = Math.floor(Date.now() / 1000);
             if (existingToken && existingToken.expires_at > now) {
                 // Token still valid → do nothing
-                return sendSuccessResp(c, 200, "Authorization successful");
+                return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
             }
             else {
                 // 4. Refresh token
                 const refreshed = await refreshSlackToken(existingToken.refresh_token);
                 await updateSlackToken(existingToken.user_id, refreshed);
-                return sendSuccessResp(c, 200, "Authorization successful", { token: refreshed });
+                return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
             }
         }
     };
