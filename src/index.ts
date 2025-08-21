@@ -17,8 +17,8 @@ app.use(
   "*",
   cors({
     origin: [
-      // "https://taskscheduler-irvwojai5-rbhavishyas-projects.vercel.app",
-      "http://localhost:3000",
+      "https://taskscheduler-irvwojai5-rbhavishyas-projects.vercel.app",
+      // "http://localhost:3000",
     ],
     credentials: true,
 
