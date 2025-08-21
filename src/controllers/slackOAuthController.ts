@@ -63,7 +63,7 @@ class SlackOAuthController {
       }
     }
 
-    return sendSuccessResp(c, 200, "Authorization successful!", { user: result });
+    return sendSuccessResp(c, 200, "Authorization successful", result || { user: userData, token: tokenData });
   };
 }
 export default SlackOAuthController;
