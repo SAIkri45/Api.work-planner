@@ -25,8 +25,8 @@ export class UsersController {
     };
 
     const whereQueryData: WhereQueryData<User> = {
-      columns: ["user_status"],
-      values: ["ACTIVE"], 
+      columns: ["user_status","user_type"],
+      values: ["ACTIVE","EMPLOYEE"], 
     };
 
     if (orderBy) {

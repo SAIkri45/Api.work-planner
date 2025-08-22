@@ -296,3 +296,16 @@ export const PROJECT_TITLE_INVALID = "Project title is invalid";
 export const PROJECT_TITLE_MISSING = "Project title is missing";
 export const PROJECT_TITLE_TOO_SHORT = "Minimum length of the project title is 3 characters";
 export const PROJECT_DESCRIPTION_INVALID = "Project description is invalid";
+
+
+//Tasks
+export const TASK_TITLE_INVALID = "Task title is invalid";
+export const TASK_TITLE_MISSING = "Task title is missing";
+export const TASK_TITLE_TOO_SHORT = "Minimum length of the task title is 3 characters";
+export const TASK_DESCRIPTION_INVALID = "Task description is invalid";
+export const TASK_PROJECT_ID_INVALID = "Task project ID is invalid";
+export const TASK_PROJECT_ID_MISSING = "Task project ID is missing";
+export const TASK_STATUS_INVALID = "Task status is invalid";
+export const TASK_STATUS_MISSING = "Task status is missing";
+export const TASK_CREATED_BY_MISSING = "Task created by is missing";
+export const TASK_CREATED_BY_INVALID = "Task created by is invalid";
