@@ -144,9 +144,10 @@ export const TEMPLATE_COMPONENTS_MISSING = "Template components are missing";
 export const PHONE_NUMBER_EXISTS = "Phone number already exists.";
 // allowed users
 export const allowedUserTypes = [
-    "ADMIN",
-    "MANAGER",
+    "SUPER_ADMIN",
     "EMPLOYEE",
+    "MANAGER",
+    "ADMIN",
     "TL",
 ];
 export const allowedUserStatuses = [
