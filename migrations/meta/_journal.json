@@ -8,6 +8,13 @@
       "when": 1755773543235,
       "tag": "0000_robust_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1755835217082,
+      "tag": "0001_fearless_logan",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,8 @@
-import { index, integer, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { index, integer, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 import { users } from "./users.js";
 
+export const projectStatuses = pgEnum("project_status", ["NEW", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE", "DONE"]);
 export const projects = pgTable("projects", {
   id: serial().primaryKey(),
   title: varchar().notNull(),
@@ -9,7 +10,8 @@ export const projects = pgTable("projects", {
   logo_url: text(),
   project_links: text(),
   created_by: integer().references(() => users.id),
-  project_status: varchar().default("NEW"),
+  updated_by: integer().references(() => users.id),
+  project_status: projectStatuses("project_status").default("NEW"),
   start_date: timestamp(),
   due_date: timestamp(),
   created_at: timestamp().defaultNow(),

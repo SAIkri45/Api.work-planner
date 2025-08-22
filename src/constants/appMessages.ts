@@ -159,16 +159,17 @@ export const PHONE_NUMBER_EXISTS = "Phone number already exists.";
 
 // allowed users
 export const allowedUserTypes = [
-  "ADMIN",
-  "MANAGER",
+  "SUPER_ADMIN",
   "EMPLOYEE",
+  "MANAGER",
+  "ADMIN",
   "TL",
-];
+] as const;
 
 export const allowedUserStatuses = [
   "ACTIVE",
   "INACTIVE",
-];
+] as const;
 
 export const allowedProjectStatus = [
   "NEW",
@@ -177,7 +178,11 @@ export const allowedProjectStatus = [
   "REVIEW",
   "OVERDUE",
   "DONE",
-];
+] as const;
+// Type exports for use elsewhere if needed
+export type UserType = typeof allowedUserTypes[number];
+export type UserStatus = typeof allowedUserStatuses[number];
+export type ProjectStatus = typeof allowedProjectStatus[number];
 
 export const COMPONENT_TYPE_MISSING = "Component type is required.";
 export const COMPONENT_TEXT_MISSING = "Component text is required.";
