@@ -10,7 +10,7 @@ export const users = pgTable("users", {
   designation: varchar(),
   phone: varchar(),
   user_type: varchar().default("EMPLOYEE"),
-  active: boolean().default(true),
+  user_status: boolean().default(true),
   created_at: timestamp().defaultNow(),
   updated_at: timestamp(),
   deleted_at: timestamp(),
