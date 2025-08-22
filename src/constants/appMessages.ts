@@ -41,6 +41,7 @@ export const USER_INACTIVE = "Your status is inactive. Please contact manager";
 export const USER_NOT_FOUND = "User not found";
 export const RESET_TOKEN_NOT_FOUND = "Reset token not found";
 export const USER_TYPE_INVALID = "User type is invalid";
+
 export const NAME_INVALID = "Name is invalid";
 export const NAME_MISSING = "Name is missing";
 export const NAME_TOO_SHORT
@@ -288,9 +289,10 @@ export const PROJECT_UPDATED = "Project updated successfully";
 export const PROJECT_DELETED = "Project deleted successfully";
 export const PROJECT_NOT_FOUND = "Project not found";
 export const PROJECTS_FETCHED = "Projects fetched successfully";
+export const PROJECTS_FETCHED_SUCCESS = "Project fetched successfully";
 export const PROJECT_NOT_FOUND_ID = "Project not found with id";
 export const PROJECT_VALIDATION_ERROR = "Project details provided do not meet the required validation criteria";
-export const PROJECT_STATUS_INVALID = "Project status is invalid";
+export const PROJECT_STATUS_REQUIRED = "Project status is required";
 export const PROJECT_STATUS_MISSING = "Project status is missing";
 export const PROJECT_CREATED_BY_MISSING = "Project created by is missing";
 export const PROJECT_CREATED_BY_INVALID = "Project created by is invalid";

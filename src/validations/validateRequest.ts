@@ -3,7 +3,7 @@ import { flatten, safeParseAsync } from "valibot";
 import type { AppActivity, ValidatedRequest } from "../types/appTypes.js";
 
 import UnprocessableContentException from "../exceptions/unprocessableContentException.js";
-import { VCreateProjectSchema } from "./schemas/vProjectSchema.js";
+import { VCreateProjectSchema, VUpdateProjectSchema } from "./schemas/vProjectSchema.js";
 import { VCreateUserSchema } from "./schemas/vUserSchema.js";
 
 export async function validateRequest<R extends ValidatedRequest>(
@@ -19,6 +19,9 @@ export async function validateRequest<R extends ValidatedRequest>(
       break;
     case "create-project":
       schema = VCreateProjectSchema;
+      break;
+    case "update-project":
+      schema = VUpdateProjectSchema;
       break;
     default:
       break;

@@ -7,5 +7,8 @@ const projectControllers = new ProjectController();
 
 projectRouter.post("/", projectControllers.createProject);
 projectRouter.get("/", projectControllers.getAllProjectsPaginated);
+projectRouter.patch("/:id", projectControllers.updateProject);
+projectRouter.get("/:id", projectControllers.getProjectById);
+projectRouter.delete("/:id", projectControllers.softDeleteProjectById);
 
 export default projectRouter;
