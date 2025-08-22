@@ -6,7 +6,7 @@ import { users } from "./users.js";
 export const user_projects = pgTable("user_projects", {
   id: serial().primaryKey(),
   project_id: integer().references(() => projects.id),
-  user_id: integer().references(() => users.id),
+  user_id: integer().references(() => users.id), // TODO: Array of user ids
   created_at: timestamp().defaultNow(),
   updated_at: timestamp(),
   deleted_at: timestamp(),

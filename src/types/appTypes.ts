@@ -1,16 +1,20 @@
+import type { Project } from "../db/schema/projects.js";
 import type { SlackToken } from "../db/schema/slackTokens.js";
 import type { User } from "../db/schema/users.js";
+import type { ValidatedCreateProject } from "../validations/schemas/vProjectSchema.js";
 import type { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
 
-export type ValidatedRequest = ValidatedCreateUserOrAdmin;
-export type AppActivity = UserActivity;
+export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject;
+export type AppActivity = UserActivity | CreateProjectActivity;
 export type UserActivity = "create-user" | "update-user";
+export type CreateProjectActivity = "create-project" | "update-project";
 
-export type AppRespData
-  = | User
-    | User[]
-    | SlackToken
-    | SlackToken[];
+export type AppRespData = | User
+  | User[]
+  | SlackToken
+  | SlackToken[]
+  | Project
+  | Project[];
 
 export interface JWTUserPayload {
   sub: number;

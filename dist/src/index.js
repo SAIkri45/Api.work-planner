@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 import { appConfig } from "./config/appConfig.js";
 import { DEF_ERROR_RESP } from "./constants/appMessages.js";
 import envData from "./env.js";
+import projectRouter from "./routes/projectRoutes.js";
 import oAuthRouter from "./routes/slackOAuthRouters.js";
 const apiVer = appConfig.version;
 const app = new Hono().basePath(`/v${apiVer}`);
@@ -13,6 +14,7 @@ app.get("/", (c) => {
     return c.text("Hello Hono!");
 });
 app.route("/", oAuthRouter);
+app.route("/projects", projectRouter);
 // handling errors globally
 app.onError((err, c) => {
     const statusCode = err.status || 555;
