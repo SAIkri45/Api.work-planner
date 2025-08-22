@@ -1,6 +1,6 @@
 import type { db } from "../db/configuration.js";
 import type { NewSlackToken, SlackToken, SlackTokensTable } from "../db/schema/slackTokens.js";
-import type { NewUser, User, UsersTable } from "../db/schema/user.js";
+import type { NewUser, User, UsersTable } from "../db/schema/users.js";
 
 export type DBTable = UsersTable | SlackTokensTable;
 export type DBTableRow = User | SlackToken;

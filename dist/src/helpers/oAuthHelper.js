@@ -52,7 +52,7 @@ export async function getOAuthCode(code) {
         statusEmoji: profile.status_emoji,
         phone: profile.phone,
         // user_type: userInfo,
-        user_type: userInfo.is_admin ? "Admin" : "EMPLOYEE",
+        user_type: userInfo.is_admin ? "ADMIN" : "EMPLOYEE",
     };
     return { userData, tokenData };
 }

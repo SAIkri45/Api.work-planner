@@ -1,5 +1,5 @@
 import type { SlackToken } from "../db/schema/slackTokens.js";
-import type { User } from "../db/schema/user.js";
+import type { User } from "../db/schema/users.js";
 import type { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
 
 export type ValidatedRequest = ValidatedCreateUserOrAdmin;

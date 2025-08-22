@@ -161,9 +161,31 @@ export const PHONE_NUMBER_EXISTS = "Phone number already exists.";
 
 // allowed users
 export const allowedUserTypes = [
-  "ADMIN",
+  "SUPER_ADMIN",
   "EMPLOYEE",
-];
+  "MANAGER",
+  "ADMIN",
+  "TL",
+] as const;
+
+export const allowedUserStatuses = [
+  "ACTIVE",
+  "INACTIVE",
+] as const;
+
+export const allowedProjectStatus = [
+  "NEW",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "REVIEW",
+  "OVERDUE",
+  "DONE",
+] as const;
+// Type exports for use elsewhere if needed
+export type UserType = typeof allowedUserTypes[number];
+export type UserStatus = typeof allowedUserStatuses[number];
+export type ProjectStatus = typeof allowedProjectStatus[number];
+
 export const COMPONENT_TYPE_MISSING = "Component type is required.";
 export const COMPONENT_TEXT_MISSING = "Component text is required.";
 export const COMPONENT_FORMAT_INVALID = "Component format is invalid.";
@@ -247,3 +269,30 @@ export const TOKEN_RESPONSE_NOT_FOUND = "Token response not found in token respo
 
 export const SLACK_ID_INVALID = "slack_id is invalid";
 export const SLACK_ID_MISSING = "slack_id is missing";
+
+export const USER_STATUS_INVALID = "User status is invalid";
+
+// projects
+export const PROJECT_NAME_MISSING = "Project name is missing";
+export const PROJECT_NAME_TOO_SHORT = "Minimum length of the project name is 3 characters";
+export const PROJECT_DESCRIPTION_TOO_SHORT = "Minimum length of the project description is 10 characters";
+export const PROJECT_DESCRIPTION_MISSING = "Project description is missing";
+export const PROJECT_LOGO_URL_INVALID = "Project logo URL is invalid";
+export const PROJECT_LOGO_URL_MISSING = "Project logo URL is missing";
+export const PROJECT_LINKS_INVALID = "Project links are invalid";
+export const PROJECT_LINKS_MISSING = "Project links are missing";
+export const PROJECT_CREATED = "Project created successfully";
+export const PROJECT_UPDATED = "Project updated successfully";
+export const PROJECT_DELETED = "Project deleted successfully";
+export const PROJECT_NOT_FOUND = "Project not found";
+export const PROJECTS_FETCHED = "Projects fetched successfully";
+export const PROJECT_NOT_FOUND_ID = "Project not found with id";
+export const PROJECT_VALIDATION_ERROR = "Project details provided do not meet the required validation criteria";
+export const PROJECT_STATUS_INVALID = "Project status is invalid";
+export const PROJECT_STATUS_MISSING = "Project status is missing";
+export const PROJECT_CREATED_BY_MISSING = "Project created by is missing";
+export const PROJECT_CREATED_BY_INVALID = "Project created by is invalid";
+export const PROJECT_TITLE_INVALID = "Project title is invalid";
+export const PROJECT_TITLE_MISSING = "Project title is missing";
+export const PROJECT_TITLE_TOO_SHORT = "Minimum length of the project title is 3 characters";
+export const PROJECT_DESCRIPTION_INVALID = "Project description is invalid";

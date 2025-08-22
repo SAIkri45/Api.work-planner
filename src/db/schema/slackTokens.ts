@@ -10,7 +10,7 @@ export const slack_tokens = pgTable("slack_tokens", {
   updated_at: timestamp().defaultNow(),
 }, t =>
   [
-    index("slack_okens_user_id_idx").on(t.user_id),
+    index("slack_tokens_user_id_idx").on(t.user_id),
     index("slack_tokens_refresh_token_idx").on(t.refresh_token),
   ]);
 

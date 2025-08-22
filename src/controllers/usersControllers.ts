@@ -2,7 +2,7 @@ import type { Context } from "hono";
 import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes";
 
 import { sendSuccessResp } from "../utils/respUtils";
-import { users } from "../db/schema/user";
+import { users } from "../db/schema/users";
 import { getPaginatedRecordsConditionally } from "../services/db/baseDbService";
 
 import { USERS_FETCHED } from "../constants/appMessages";
