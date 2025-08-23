@@ -5,7 +5,7 @@ import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import { getOAuthCode, refreshSlackToken } from "../helpers/oAuthHelper.js";
 import { saveSingleRecord } from "../services/db/baseDbService.js";
-import { checkSlackUserExists, getSlackTokenByUserId, updateSlackToken } from "../services/db/slackOAuthService.js";
+import { checkSlackUserExists, getByUserId, getSlackTokenByUserId, updateSlackToken } from "../services/db/slackOAuthService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 class SlackOAuthController {
@@ -34,15 +34,17 @@ class SlackOAuthController {
         else {
             const existingToken = await getSlackTokenByUserId(userData.slack_id);
             const now = Math.floor(Date.now() / 1000);
+            let userDetails;
             if (existingToken && existingToken.expires_at > now) {
                 // Token still valid → do nothing
-                return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
+                const userDetails = await getByUserId(userData.slack_id);
+                return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
             }
             else {
                 // 4. Refresh token
                 const refreshed = await refreshSlackToken(existingToken.refresh_token);
                 await updateSlackToken(existingToken.user_id, refreshed);
-                return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
+                return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
             }
         }
     };

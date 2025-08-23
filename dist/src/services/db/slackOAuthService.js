@@ -16,6 +16,13 @@ export async function getSlackTokenByUserId(userId) {
         .where(eq(slack_tokens.user_id, userId));
     return token[0];
 }
+export async function getByUserId(userId) {
+    const result = await db
+        .select()
+        .from(users)
+        .where(eq(users.slack_id, userId));
+    return result[0];
+}
 export async function updateSlackToken(user_id, refreshed_token_data) {
     const result = await db
         .update(slack_tokens)
