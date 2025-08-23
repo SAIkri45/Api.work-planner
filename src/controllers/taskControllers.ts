@@ -1,11 +1,12 @@
 import type { Context } from "hono";
+
+import type { NewTask, Task } from "../db/schema/tasks";
 import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes";
 
-import { NewTask, Task, Tasks } from "../db/schema/tasks";
+import { TASK_CREATED, TASKS_FETCHED } from "../constants/appMessages";
+import { Tasks } from "../db/schema/tasks";
 import { getPaginatedRecordsConditionally, saveSingleRecord } from "../services/db/baseDbService";
 import { sendSuccessResp } from "../utils/respUtils";
-
-import { TASKS_FETCHED, TASK_CREATED } from "../constants/appMessages";
 
 // Types
 // type Task = InferSelectModel<typeof tasks>;
@@ -16,7 +17,7 @@ export class TasksController {
   createTask = async (c: Context) => {
     const body = await c.req.json<NewTask>();
 
-    const insertedTask = await saveSingleRecord<Task>(Tasks, body); 
+    const insertedTask = await saveSingleRecord<Task>(Tasks, body);
 
     return sendSuccessResp(c, 201, TASK_CREATED, insertedTask);
   };
@@ -63,7 +64,7 @@ export class TasksController {
       page,
       pageSize,
       orderByQueryData,
-      whereQueryData
+      whereQueryData,
     );
 
     return sendSuccessResp(c, 200, TASKS_FETCHED, result);

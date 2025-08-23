@@ -1,9 +1,9 @@
 import { and, asc, count, desc, eq, getTableName, inArray, sql } from "drizzle-orm";
 
-import type { DBNewRecord, DBNewRecords, DBTable, DBTableRow, InQueryData, OrderByQueryData, PaginationInfo, Transaction, UpdateRecordData, WhereQueryData } from "../../types/dbTypes";
+import type { DBNewRecord, DBNewRecords, DBTable, DBTableRow, InQueryData, OrderByQueryData, PaginationInfo, Transaction, UpdateRecordData, WhereQueryData } from "../../types/dbTypes.js";
 
-import { db } from "../../db/configuration";
-import { executeQuery, prepareInQueryCondition, prepareOrderByQueryConditions, prepareSelectColumnsForQuery, prepareWhereQueryConditions } from "../../utils/dbUtils";
+import { db } from "../../db/configuration.js";
+import { executeQuery, prepareInQueryCondition, prepareOrderByQueryConditions, prepareSelectColumnsForQuery, prepareWhereQueryConditions } from "../../utils/dbUtils.js";
 
 // type SelectedKeys<T, K extends keyof T> = {
 //   [P in K]: T[P];

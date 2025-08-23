@@ -138,7 +138,6 @@ export const CONTACTS_IMPORT_FAILED = "Contacts import failed";
 export const CONTACTS_IMPORT_VALIDATION_FAILED = "Contacts import validation failed";
 export const RECORDS_NOT_FOUND = "NO records found tO import";
 
-
 // template messages
 export const TEMPLATE_NAME_MISSING = "Template name is required";
 export const TEMPLATE_CATEGORY_MISSING = "Template category is required";
@@ -303,8 +302,7 @@ export const PROJECT_TITLE_MISSING = "Project title is missing";
 export const PROJECT_TITLE_TOO_SHORT = "Minimum length of the project title is 3 characters";
 export const PROJECT_DESCRIPTION_INVALID = "Project description is invalid";
 
-
-//Tasks
+// Tasks
 export const TASK_TITLE_INVALID = "Task title is invalid";
 export const TASK_TITLE_MISSING = "Task title is missing";
 export const TASK_TITLE_TOO_SHORT = "Minimum length of the task title is 3 characters";

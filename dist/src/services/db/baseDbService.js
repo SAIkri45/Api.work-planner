@@ -227,6 +227,7 @@ async function updateMultipleRecordsByIds(table, ids, record) {
 async function deleteRecordsByColumn(table, column, value) {
     return await db.delete(table).where(eq(table[column], value));
 }
+// ../services/db/baseDbService.ts
 async function softDeleteRecordById(table, id, record) {
     return await db.update(table).set(record).where(eq(table.id, id)).returning();
 }

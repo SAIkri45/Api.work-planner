@@ -49,6 +49,7 @@ export const VUpdateProjectSchema = pipeAsync(
     project_status: projectStatus,
     due_date: projectDueDate,
     user_ids: projectUserIds,
+    // users_to_remove: optional(array(number())),
     id: optional(pipe(number())),
   }),
 );
