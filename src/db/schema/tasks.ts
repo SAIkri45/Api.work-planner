@@ -4,14 +4,10 @@ import { projects } from "./projects.js";
 
 // Task status enum
 export const taskStatuses = pgEnum("task_status", ["NEW","IN_PROGRESS","COMPLETED","REVIEW","OVERDUE","DONE",]);
-export const tasks = pgTable(
-  "tasks",
-  {
+export const Tasks = pgTable("tasks",{
     id: serial().primaryKey(),
     task_title: varchar().notNull(), 
-    project_id: integer()
-      .notNull()
-      .references(() => projects.id), 
+    project_id: integer().notNull().references(() => projects.id), 
     description: text(),
 
     task_status: taskStatuses("task_status").default("NEW"),
@@ -33,6 +29,6 @@ export const tasks = pgTable(
   ]
 );
 
-export type Task = typeof tasks.$inferSelect;
-export type NewTask = typeof tasks.$inferInsert;
-export type TasksTable = typeof tasks;
+export type Task = typeof Tasks.$inferSelect;
+export type NewTask = typeof Tasks.$inferInsert;
+export type TasksTable = typeof Tasks;

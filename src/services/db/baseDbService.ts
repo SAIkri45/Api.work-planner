@@ -442,6 +442,8 @@ async function deleteRecordsByColumn<T>(table: any, column: keyof T, value: any)
   return await db.delete(table).where(eq(table[column], value));
 }
 
+// ../services/db/baseDbService.ts
+
 async function softDeleteRecordById<R extends DBTableRow>(
   table: DBTable,
   id: number,

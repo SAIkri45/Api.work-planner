@@ -32,7 +32,7 @@ export const VCreateTaskSchema = object({
   task_status: 
     pipe(
       string(TASK_STATUS_INVALID),
-      transform((value) => value.trim().toUpperCase()),
+      transform((value) => value.trim()),
       picklist(allowedTaskStatuses, TASK_STATUS_INVALID),
     ),
   

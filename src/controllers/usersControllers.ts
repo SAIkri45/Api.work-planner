@@ -18,6 +18,7 @@ export class UsersController {
     const pageSize = +c.req.query("page_size")! || 10;
     const searchString = c.req.query("search_string")?.trim() || null;
     const orderBy = c.req.query("order_by");
+    const userType = c.req.query("user_type");
 
     let orderByQueryData: OrderByQueryData< User> = {
       columns: ["created_at"],
@@ -25,10 +26,14 @@ export class UsersController {
     };
 
     const whereQueryData: WhereQueryData<User> = {
-      columns: ["user_status","user_type"],
-      values: ["ACTIVE","EMPLOYEE"], 
+      columns: ["user_status"],
+      values: ["ACTIVE"], 
     };
-
+    if (userType) {
+      whereQueryData.columns.push("user_type");
+      whereQueryData.values.push(userType);
+    }
+    
     if (orderBy) {
       const orderByColumns: DBTableColumns<User>[] = [];
       const orderByValues: SortDirection[] = [];
@@ -54,7 +59,8 @@ export class UsersController {
       page,
       pageSize,
       orderByQueryData,
-      whereQueryData
+      whereQueryData,
+      
     );
 
     return sendSuccessResp(c, 200, USERS_FETCHED, result);
