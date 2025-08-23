@@ -6,9 +6,8 @@ import { DEF_ERROR_RESP } from "./constants/appMessages.js";
 import envData from "./env.js";
 import projectRouter from "./routes/projectRoutes.js";
 import oAuthRouter from "./routes/slackOAuthRouters.js";
-import usersRouter from "./routes/usersRouters.js";
 const apiVer = appConfig.version;
-const app = new Hono().basePath(`/${apiVer}`);
+const app = new Hono().basePath(`/v${apiVer}`);
 const port = envData.PORT || 3000;
 app.use("*", cors());
 app.get("/", (c) => {
@@ -16,7 +15,6 @@ app.get("/", (c) => {
 });
 app.route("/", oAuthRouter);
 app.route("/projects", projectRouter);
-app.route("/users", usersRouter);
 // handling errors globally
 app.onError((err, c) => {
     const statusCode = err.status || 555;
