@@ -19,7 +19,7 @@ export const projects = pgTable("projects", {
   deleted_at: timestamp(),
 }, t => [
   index("projects_id_idx").on(t.id),
-  index("projects_title_idx").on(t.title),
+  index("projects_title_idx").on(t.title),  
   index("projects_created_by_idx").on(t.created_by),
 
 ]);

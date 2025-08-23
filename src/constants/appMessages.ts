@@ -67,6 +67,7 @@ export const USER_FETCHED = "User details fetched successfully";
 export const USER_UPDATED = "User updated successfully";
 export const USER_ACTIVE_STATUS_REQUIRED = "Active status is required";
 export const USER_ACTIVE_STATUS_UPDATED = "User status updated successfully";
+export const USERS_FETCHED = "Users fetched successfully";
 
 export const PROFILE_PIC_MISSING = "Profile pic is missing";
 export const PROFILE_PIC_TOO_SHORT
@@ -136,6 +137,7 @@ export const CONTACTS_IMPORT_SUCCESS = "Contacts imported successfully";
 export const CONTACTS_IMPORT_FAILED = "Contacts import failed";
 export const CONTACTS_IMPORT_VALIDATION_FAILED = "Contacts import validation failed";
 export const RECORDS_NOT_FOUND = "NO records found tO import";
+
 
 // template messages
 export const TEMPLATE_NAME_MISSING = "Template name is required";
@@ -300,3 +302,18 @@ export const PROJECT_TITLE_INVALID = "Project title is invalid";
 export const PROJECT_TITLE_MISSING = "Project title is missing";
 export const PROJECT_TITLE_TOO_SHORT = "Minimum length of the project title is 3 characters";
 export const PROJECT_DESCRIPTION_INVALID = "Project description is invalid";
+
+
+//Tasks
+export const TASK_TITLE_INVALID = "Task title is invalid";
+export const TASK_TITLE_MISSING = "Task title is missing";
+export const TASK_TITLE_TOO_SHORT = "Minimum length of the task title is 3 characters";
+export const TASK_DESCRIPTION_INVALID = "Task description is invalid";
+export const TASK_PROJECT_ID_INVALID = "Task project ID is invalid";
+export const TASK_PROJECT_ID_MISSING = "Task project ID is missing";
+export const TASK_STATUS_INVALID = "Task status is invalid";
+export const TASK_STATUS_MISSING = "Task status is missing";
+export const TASK_CREATED_BY_MISSING = "Task created by is missing";
+export const TASK_CREATED_BY_INVALID = "Task created by is invalid";
+export const TASKS_FETCHED = "Tasks fetched successfully";
+export const TASK_CREATED = "Task created successfully";

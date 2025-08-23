@@ -1,9 +1,9 @@
 import { and, asc, count, desc, eq, getTableName, inArray, sql } from "drizzle-orm";
 
-import type { DBNewRecord, DBNewRecords, DBTable, DBTableRow, InQueryData, OrderByQueryData, PaginationInfo, Transaction, UpdateRecordData, WhereQueryData } from "../../types/dbTypes.js";
+import type { DBNewRecord, DBNewRecords, DBTable, DBTableRow, InQueryData, OrderByQueryData, PaginationInfo, Transaction, UpdateRecordData, WhereQueryData } from "../../types/dbTypes";
 
-import { db } from "../../db/configuration.js";
-import { executeQuery, prepareInQueryCondition, prepareOrderByQueryConditions, prepareSelectColumnsForQuery, prepareWhereQueryConditions } from "../../utils/dbUtils.js";
+import { db } from "../../db/configuration";
+import { executeQuery, prepareInQueryCondition, prepareOrderByQueryConditions, prepareSelectColumnsForQuery, prepareWhereQueryConditions } from "../../utils/dbUtils";
 
 // type SelectedKeys<T, K extends keyof T> = {
 //   [P in K]: T[P];
@@ -441,6 +441,8 @@ async function updateMultipleRecordsByIds<R extends DBTableRow>(
 async function deleteRecordsByColumn<T>(table: any, column: keyof T, value: any) {
   return await db.delete(table).where(eq(table[column], value));
 }
+
+// ../services/db/baseDbService.ts
 
 async function softDeleteRecordById<R extends DBTableRow>(
   table: DBTable,
