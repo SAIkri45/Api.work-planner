@@ -9,6 +9,7 @@ import { DEF_ERROR_RESP } from "./constants/appMessages.js";
 import envData from "./env.js";
 import projectRouter from "./routes/projectRoutes.js";
 import oAuthRouter from "./routes/slackOAuthRouters.js";
+import userRoutes from "./routes/usersRouters.js";
 
 const apiVer = appConfig.version;
 const app = new Hono().basePath(`/v${apiVer}`);
@@ -22,6 +23,7 @@ app.get("/", (c) => {
 
 app.route("/", oAuthRouter);
 app.route("/projects", projectRouter);
+app.route("/users", userRoutes);
 
 // handling errors globally
 app.onError((err: any, c: Context) => {

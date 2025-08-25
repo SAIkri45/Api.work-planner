@@ -54,7 +54,7 @@ class SlackOAuthController {
       let userDetails;
       if (existingToken && existingToken.expires_at > now) {
         // Token still valid → do nothing
-        const userDetails = await getByUserId(userData.slack_id);
+        userDetails = await getByUserId(userData.slack_id);
         return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
       }
       else {
