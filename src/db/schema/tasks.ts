@@ -9,14 +9,11 @@ export const Tasks = pgTable("tasks",{
     task_title: varchar().notNull(), 
     project_id: integer().notNull().references(() => projects.id), 
     description: text(),
-
     task_status: taskStatuses("task_status").default("NEW"),
-
     created_by: integer().references(() => users.id),
     updated_by: integer().references(() => users.id),
-    start_date: timestamp(),
-    end_date: timestamp(),
-
+    start_date: timestamp({ mode: "string" }),
+    end_date: timestamp({ mode: "string" }), 
     created_at: timestamp().defaultNow(),
     updated_at: timestamp(),
     deleted_at: timestamp(),

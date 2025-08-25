@@ -37,17 +37,15 @@ export const VCreateTaskSchema = object({
     ),
   
 
-  start_date: 
-    pipe(
-      string("Invalid start date"),
-      transform((value) => value.trim()),
-      
+  start_date: pipe(
+  string(),
+//   transform((value) => new Date(value)), 
     ),
-  end_date: 
-    pipe(
-      string("Invalid end date"),
-      transform((value) => value.trim()),
-    ),
+
+  end_date: pipe(
+    string(),
+    // transform((value) => new Date(value)),
+  ),
 
 });
 

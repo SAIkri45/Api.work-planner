@@ -2,14 +2,11 @@ import type { Context } from "hono";
 import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes";
 
 import { NewTask, Task, Tasks } from "../db/schema/tasks";
-import { getPaginatedRecordsConditionally, saveSingleRecord } from "../services/db/baseDbService";
+import { getPaginatedRecordsConditionally, getRecordById, saveSingleRecord } from "../services/db/baseDbService";
 import { sendSuccessResp } from "../utils/respUtils";
 
-import { TASKS_FETCHED, TASK_CREATED } from "../constants/appMessages";
+import { TASKS_FETCHED, TASK_CREATED, TASK_NOT_FOUND } from "../constants/appMessages";
 
-// Types
-// type Task = InferSelectModel<typeof tasks>;
-// type NewTask = InferInsertModel<typeof tasks>;
 
 export class TasksController {
   // 1. Create Task (POST)
@@ -19,7 +16,7 @@ export class TasksController {
     const insertedTask = await saveSingleRecord<Task>(Tasks, body); 
 
     return sendSuccessResp(c, 201, TASK_CREATED, insertedTask);
-  };
+  };  
 
   // 2. Get Paginated Tasks (GET)
   getPaginatedTasks = async (c: Context) => {
@@ -27,6 +24,7 @@ export class TasksController {
     const pageSize = +c.req.query("page_size")! || 10;
     const searchString = c.req.query("search_string")?.trim() || null;
     const orderBy = c.req.query("order_by");
+    const task_status = c.req.query("task_status");
 
     let orderByQueryData: OrderByQueryData<Task> = {
       columns: ["created_at"],
@@ -37,6 +35,10 @@ export class TasksController {
       columns: [],
       values: [],
     };
+    if (task_status) {
+      whereQueryData.columns.push("task_status");
+      whereQueryData.values.push(task_status);
+    }
 
     if (searchString) {
       whereQueryData.columns.push("task_title");
@@ -54,7 +56,7 @@ export class TasksController {
       }
       orderByQueryData = {
         columns: orderByColumns,
-        values: orderByValues,
+        values: orderByValues,              
       };
     }
 
@@ -68,6 +70,16 @@ export class TasksController {
 
     return sendSuccessResp(c, 200, TASKS_FETCHED, result);
   };
+
+  // 3. getbyid (GET)
+   getTaskById = async (c: Context) => {
+    const id = Number(c.req.param("id"));
+
+    const task = await getRecordById<Task>(Tasks, id);
+
+    return sendSuccessResp(c, 200, TASKS_FETCHED, task);
+  };
 }
 
 export default TasksController;
+

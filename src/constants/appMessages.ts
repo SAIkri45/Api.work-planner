@@ -311,3 +311,4 @@ export const TASK_CREATED_BY_MISSING = "Task created by is missing";
 export const TASK_CREATED_BY_INVALID = "Task created by is invalid";
 export const TASKS_FETCHED = "Tasks fetched successfully";
 export const TASK_CREATED = "Task created successfully";
+export const TASK_NOT_FOUND = "Task not found";

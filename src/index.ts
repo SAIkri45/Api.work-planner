@@ -9,6 +9,7 @@ import { DEF_ERROR_RESP } from "./constants/appMessages";
 import envData from "./env.js";
 import oAuthRouter from "./routes/slackOAuthRouters";
 import usersRouter from "./routes/usersRouters";
+import taskRouter from "./routes/taskRoutes";
 
 
 const apiVer = appConfig.version;
@@ -23,6 +24,7 @@ app.get("/", (c) => {
 
 app.route("/", oAuthRouter);
 app.route("/users", usersRouter);
+app.route("/tasks", taskRouter);
 
 console.log("✅ Registered Routes:");
 app.routes.forEach((r) => {
