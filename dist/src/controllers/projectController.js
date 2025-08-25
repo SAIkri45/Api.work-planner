@@ -5,7 +5,7 @@ import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { getMultipleRecordsByAColumnValue, getPaginatedRecordsConditionally, getRecordById, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
+import { getMultipleRecordsByAColumnValue, getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 class ProjectController {
@@ -65,7 +65,8 @@ class ProjectController {
             WhereQueryData.columns.push("project_status");
             WhereQueryData.values.push(projectStatus);
         }
-        const result = await getPaginatedRecordsConditionally(projects, page, pageSize, orderByQueryData, WhereQueryData);
+        const columnsToSelect = ["id", "title", "description", "logo_url", "project_status", "start_date", "due_date"];
+        const result = await getPaginatedRecordsConditionally(projects, page, pageSize, orderByQueryData, WhereQueryData, columnsToSelect);
         return sendSuccessResp(c, 200, PROJECTS_FETCHED, result);
     };
     getProjectById = async (c) => {
@@ -77,7 +78,8 @@ class ProjectController {
         if (!projectExists) {
             throw new NotFoundException(PROJECT_NOT_FOUND_ID);
         }
-        const result = await getRecordById(projects, projectId);
+        const columnsToSelect = ["id", "title", "description", "logo_url", "project_status", "created_by", "updated_by", "start_date", "due_date"];
+        const result = await getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [projectId, null], columnsToSelect);
         return sendSuccessResp(c, 200, PROJECTS_FETCHED_SUCCESS, result);
     };
     softDeleteProjectById = async (c) => {
