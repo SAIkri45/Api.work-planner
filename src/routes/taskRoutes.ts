@@ -7,5 +7,6 @@ const taskRoutes = new Hono();
 taskRoutes.post("/", tasksController.createTask);
 taskRoutes.get("/tasklist", tasksController.getPaginatedTasks);
 taskRoutes.get("/:id", tasksController.getTaskById);
+taskRoutes.patch("/:id", tasksController.editTask);
 
 export default taskRoutes;
