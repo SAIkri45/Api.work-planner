@@ -1,5 +1,7 @@
+import { relations } from "drizzle-orm";
 import { index, integer, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
+import { user_projects } from "./userProjects.js";
 import { users } from "./users.js";
 
 export const projectStatuses = pgEnum("project_status", ["NEW", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE", "DONE"]);
@@ -27,3 +29,7 @@ export const projects = pgTable("projects", {
 export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
 export type ProjectsTable = typeof projects;
+
+export const projectRelations = relations(projects, ({ many }) => ({
+  userProjects: many(user_projects),
+}));

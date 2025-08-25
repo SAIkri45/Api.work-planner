@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { index, integer, pgTable, serial, timestamp } from "drizzle-orm/pg-core";
 import { projects } from "./projects.js";
 import { users } from "./users.js";
@@ -13,3 +14,13 @@ export const user_projects = pgTable("user_projects", {
     index("user_projects_project_id_idx").on(t.project_id),
     index("user_projects_user_id_idx").on(t.user_id),
 ]);
+export const userProjectRelations = relations(user_projects, ({ one }) => ({
+    users: one(users, {
+        fields: [user_projects.user_id],
+        references: [users.id],
+    }),
+    projects: one(projects, {
+        fields: [user_projects.project_id],
+        references: [projects.id],
+    }),
+}));
