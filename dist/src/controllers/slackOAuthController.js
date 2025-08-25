@@ -4,6 +4,7 @@ import { slack_tokens } from "../db/schema/slackTokens.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import { getOAuthCode, refreshSlackToken } from "../helpers/oAuthHelper.js";
+import { getSlackId } from "../middlewares/slackMiddlewares.js";
 import { saveSingleRecord } from "../services/db/baseDbService.js";
 import { checkSlackUserExists, getByUserId, getSlackTokenByUserId, updateSlackToken } from "../services/db/slackOAuthService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
@@ -21,6 +22,7 @@ class SlackOAuthController {
             throw new BadRequestException(MISSING_CODE);
         }
         const { userData, tokenData } = await getOAuthCode(code);
+        getSlackId(userData.slack_id);
         const checkUserExist = await checkSlackUserExists(userData.email);
         let result;
         if (!checkUserExist) {
