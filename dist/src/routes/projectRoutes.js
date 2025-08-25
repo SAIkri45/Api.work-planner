@@ -1,8 +1,9 @@
 import { Hono } from "hono";
 import ProjectController from "../controllers/projectController.js";
+import { isEmployeeAuthorized } from "../middlewares/slackMiddlewares.js";
 const projectRouter = new Hono();
 const projectControllers = new ProjectController();
-projectRouter.post("/", projectControllers.createProject);
+projectRouter.post("/", isEmployeeAuthorized, projectControllers.createProject);
 projectRouter.get("/", projectControllers.getAllProjectsPaginated);
 projectRouter.get("/drop-down", projectControllers.getAllProjectsDropDown);
 projectRouter.patch("/:id", projectControllers.updateProject);

@@ -1,4 +1,4 @@
-import { array, minLength, nonEmpty, nullish, number, optional, picklist, pipe, string, transform } from "valibot";
+import { array, maxLength, minLength, nonEmpty, nullish, number, optional, picklist, pipe, string, transform } from "valibot";
 
 import { allowedProjectStatus, PROJECT_DESCRIPTION_REQUIRED, PROJECT_DESCRIPTION_TOO_SHORT, PROJECT_NAME_TOO_SHORT, PROJECT_REQUIRED, PROJECT_STATUS_REQUIRED } from "../../constants/appMessages.js";
 import ConflictException from "../../exceptions/conflictException.js";
@@ -8,6 +8,7 @@ export const projectTile = pipe(
   nonEmpty(PROJECT_REQUIRED),
   transform(value => value.trim().toLocaleLowerCase()),
   minLength(3, PROJECT_NAME_TOO_SHORT),
+  maxLength(20, PROJECT_NAME_TOO_SHORT),
 );
 
 export const ProjectDescription = pipe(

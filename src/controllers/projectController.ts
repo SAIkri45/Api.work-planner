@@ -20,6 +20,8 @@ import { validateRequest } from "../validations/validateRequest.js";
 class ProjectController {
   createProject = async (c: Context) => {
     const requestBody = await c.req.json();
+    const userId = c.get("userData");
+    console.log("userId------>: ", userId);
 
     const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
 
