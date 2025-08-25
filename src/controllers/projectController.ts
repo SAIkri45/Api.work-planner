@@ -11,7 +11,8 @@ import { user_projects } from "../db/schema/userProjects.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
-import { getMultipleRecordsByAColumnValue, getPaginatedRecordsConditionally, getRecordById, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
+import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
+import { getMultipleRecordsByAColumnValue, getPaginatedRecordsConditionally, getRecordById, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 
@@ -127,6 +128,29 @@ class ProjectController {
 
     await updateRecordByMultipleColumnValues<UserProjects>(user_projects, ["project_id"], [projectId], { deleted_at: new Date() });
     return sendSuccessResp(c, 200, PROJECT_DELETED);
+  };
+
+  getAllProjectsDropDown = async (c: Context) => {
+    const searchString = c.req.query("search_string") || null;
+
+    const orderByQueryData = parseOrderByQuery<Project>(undefined, "id", "asc");
+
+    const whereQueryData: WhereQueryData<Project> = {
+      columns: ["deleted_at"],
+      values: [null],
+    };
+
+    const columnsToSelect = ["id", "title"] as const;
+
+    if (searchString) {
+      // Add search string filter using LIKE
+      whereQueryData.columns.push("title");
+      whereQueryData.values.push(`%${searchString}%`);
+    }
+
+    const result = await getRecordsConditionally<Project>(projects, whereQueryData, columnsToSelect, orderByQueryData);
+
+    return sendSuccessResp(c, 200, PROJECTS_FETCHED, result);
   };
 
   updateProject = async (c: Context) => {
