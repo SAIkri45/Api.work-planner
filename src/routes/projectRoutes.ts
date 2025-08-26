@@ -7,7 +7,7 @@ const projectRouter = new Hono();
 const projectControllers = new ProjectController();
 
 projectRouter.get("/drop-down", projectControllers.getAllProjectsDropDown);
-projectRouter.post("/:id/users", projectControllers.assignUserToProject);
+projectRouter.post("/:id/users", projectControllers.assignUsersToProject);
 projectRouter.get("/users/:project_id", projectControllers.getProjectUsersById);
 projectRouter.patch("/:id", projectControllers.updateProject);
 projectRouter.get("/:id", projectControllers.getProjectById);

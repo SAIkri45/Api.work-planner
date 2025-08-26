@@ -5,7 +5,7 @@ import type { UserProjects } from "../db/schema/userProjects.js";
 import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes.js";
 import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedUpdateProject } from "../validations/schemas/vProjectSchema.js";
 
-import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS } from "../constants/appMessages.js";
+import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, USER_NOT_FOUND, USERS_ALREADY_ASSIGNED } from "../constants/appMessages.js";
 import { projects } from "../db/schema/projects.js";
 import { user_projects } from "../db/schema/userProjects.js";
 import BadRequestException from "../exceptions/badRequestException.js";
@@ -13,7 +13,7 @@ import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getMultipleRecordsByAColumnValue, getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
-import { checkedUsersInProject, getProjectUsersById, insertUsersToProject } from "../services/db/projectService.js";
+import { checkedUsersInProject, getProjectUsersById, insertUsersToProject, validateUsersExist } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 
@@ -221,34 +221,46 @@ class ProjectController {
     return sendSuccessResp(c, 200, PROJECT_UPDATED, updatedData);
   };
 
-  assignUserToProject = async (c: Context) => {
+  assignUsersToProject = async (c: Context) => {
     const projectId = +c.req.param("id");
     const requestBody = await c.req.json();
-    console.log("requestBody: ", requestBody);
-
-    const validatedReq = await validateRequest<ValidatedAddUsersToProject>("add-users-to-project", { ...requestBody, project_id: projectId }, PROJECT_USERS_VALIDATION_ERROR);
 
     if (!projectId) {
       throw new BadRequestException(INVALID_INPUT);
     }
 
-    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id", "title", "description", "created_by"]);
+    const validatedReq = await validateRequest<ValidatedAddUsersToProject>("add-users-to-project", { ...requestBody, project_id: projectId }, PROJECT_USERS_VALIDATION_ERROR);
+
+    const { user_ids } = validatedReq;
+
+    if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
+      throw new BadRequestException("User IDs are required");
+    }
+
+    const uniqueUserIds = [...new Set(user_ids)];
+
+    const [projectExists, existingUserIds, validUserIds] = await Promise.all([
+      getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]),
+      checkedUsersInProject(projectId),
+      validateUsersExist(uniqueUserIds),
+    ]);
 
     if (!projectExists) {
       throw new NotFoundException(PROJECT_NOT_FOUND_ID);
     }
 
-    const { user_ids } = validatedReq;
-
-    const existingUserIds: any = await checkedUsersInProject(projectId);
-    console.log("existingUserIds: ", existingUserIds);
-    const newUserIds = user_ids.filter(id => !existingUserIds.includes(user_ids));
-    console.log("newUserIds: ", newUserIds);
-    if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
-      throw new BadRequestException("User IDs are required");
+    if (validUserIds) {
+      throw new NotFoundException(USER_NOT_FOUND);
     }
 
-    const result = await insertUsersToProject(projectId, user_ids);
+    const existingUserSet = new Set(existingUserIds);
+    const newUserIds = uniqueUserIds.filter(id => !existingUserSet.has(id));
+
+    if (newUserIds.length === 0) {
+      return sendSuccessResp(c, 200, USERS_ALREADY_ASSIGNED);
+    }
+
+    const result = await insertUsersToProject(projectId, newUserIds);
 
     return sendSuccessResp(c, 200, PROJECT_USERS_ASSIGNED, result);
   };

@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
 import { user_projects } from "../../db/schema/userProjects.js";
+import { users } from "../../db/schema/users.js";
 import { saveRecords } from "./baseDbService.js";
 export async function getProjectUsersById(id) {
     const result = await db.query.projects.findFirst({
@@ -45,12 +46,22 @@ export async function getProjectUsersById(id) {
         users,
     };
 }
+// export async function insertUsersToProject(projectId: number, userIds: number[]) {
+//   const userProjectRecords = userIds.map((userId: number) => ({
+//     project_id: projectId,
+//     user_id: userId,
+//   }));
+//   console.log("userProjectRecords: ", userProjectRecords);
+//   await saveRecords<UserProjects>(user_projects, userProjectRecords);
+//   return userProjectRecords;
+// }
 export async function insertUsersToProject(projectId, userIds) {
+    if (!userIds.length)
+        return [];
     const userProjectRecords = userIds.map((userId) => ({
         project_id: projectId,
         user_id: userId,
     }));
-    console.log("userProjectRecords: ", userProjectRecords);
     await saveRecords(user_projects, userProjectRecords);
     return userProjectRecords;
 }
@@ -59,5 +70,12 @@ export async function checkedUsersInProject(projectId) {
         .select({ user_ids: user_projects.user_id })
         .from(user_projects)
         .where(eq(user_projects.project_id, projectId));
-    return existingUserProjects;
+    return [...new Set(existingUserProjects.map(record => record.user_ids))];
+}
+export async function validateUsersExist(userIds) {
+    const existingUsers = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(inArray(users.id, userIds));
+    return existingUsers.map(user => user.id);
 }
