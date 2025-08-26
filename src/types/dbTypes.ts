@@ -4,11 +4,13 @@ import type { NewSlackToken, SlackToken, SlackTokensTable } from "../db/schema/s
 import type { NewTask, Task, TasksTable } from "../db/schema/tasks.js";
 import type { NewUserProjects, UserProjects, UserProjectsTable } from "../db/schema/userProjects.js";
 import type { NewUser, User, UsersTable } from "../db/schema/users.js";
+import type { NewTaskAssignees,TaskAssignees,TaskAssigneesTable,} from "../db/schema/taskAssignees.js";
 
-export type DBTable = UsersTable | SlackTokensTable | TasksTable | ProjectsTable | UserProjectsTable;
-export type DBTableRow = User | SlackToken | Task | Project | UserProjects;
-export type DBNewRecord = NewUser | NewSlackToken | NewTask | NewProject | NewUserProjects;
-export type DBNewRecords = NewUser[] | NewSlackToken[] | NewTask[] | NewProject[] | NewUserProjects[];
+
+export type DBTable = UsersTable | SlackTokensTable | TasksTable | ProjectsTable | UserProjectsTable |TaskAssigneesTable ;
+export type DBTableRow = User | SlackToken | Task | Project | UserProjects | TaskAssignees;
+export type DBNewRecord = NewUser | NewSlackToken | NewTask | NewProject | NewUserProjects | NewTaskAssignees;
+export type DBNewRecords = NewUser[] | NewSlackToken[] | NewTask[] | NewProject[] | NewUserProjects[] | NewTaskAssignees[];
 
 export type DBTableColumns<T extends DBTableRow> = keyof T;
 export type SortDirection = "asc" | "desc";

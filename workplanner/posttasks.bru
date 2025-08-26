@@ -4,8 +4,23 @@ meta {
   seq: 1
 }
 
-post {
-  url: http
-  body: none
+get {
+  url: http://localhost:3000/v1.0/tasks/tasklist
+  body: json
   auth: inherit
+}
+
+body:json {
+  {
+    "task_title": "Implement User Authentication",
+    "project_id": 7,
+    "description": "Develop login and registration functionality with JWT authentication.",
+    "task_status": "NEW",
+    "created_by": 7,
+    "updated_by": 7,
+    "start_date": "2025-08-26T09:00:00Z",
+    "end_date": "2025-08-30T18:00:00Z"
+  }
+  
+  
 }

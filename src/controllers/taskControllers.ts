@@ -1,34 +1,33 @@
 import type { Context } from "hono";
-import type {
-  DBTableColumns,
-  OrderByQueryData,
-  SortDirection,
-  WhereQueryData,
-} from "../types/dbTypes";
+import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData,} from "../types/dbTypes";
 
 import { NewTask, Task, Tasks } from "../db/schema/tasks";
-import {
-  getPaginatedRecordsConditionally,
-  getRecordById,
-  saveSingleRecord,
-  getPaginatedRecords,
-  updateRecordById,
-} from "../services/db/baseDbService";
+import {getPaginatedRecordsConditionally,getRecordById,saveSingleRecord,updateRecordById,} from "../services/db/baseDbService";
 import { sendSuccessResp } from "../utils/respUtils";
 
-import {
-  TASKS_FETCHED,
-  TASK_CREATED,
-  TASK_NOT_FOUND,
-} from "../constants/appMessages";
-import { PgTableWithColumns, PgColumn } from "drizzle-orm/pg-core";
+import {  TASKS_FETCHED, TASK_CREATED,TASK_NOT_FOUND,} from "../constants/appMessages";
+import { TaskAssignees, task_assignees } from "../db/schema/taskAssignees";
 
 export class TasksController {
   // 1. Create Task (POST)
   createTask = async (c: Context) => {
     const body = await c.req.json<NewTask>();
+    const user = c.get("userDetails"); // from middleware
+    console.log("Creating task for user:", body);
 
-    const insertedTask = await saveSingleRecord<Task>(Tasks, body);
+    // 1. Insert into tasks
+    const insertedTask = await saveSingleRecord<Task>(Tasks, {
+      ...body,
+      created_by: user.id,
+    });
+
+    // 2. Insert into task_assignees
+    await saveSingleRecord<TaskAssignees>(task_assignees, {
+      task_id: insertedTask.id,
+      user_id: user.id,
+      task_title: insertedTask.task_title, 
+      created_by: user.id,
+    });
 
     return sendSuccessResp(c, 201, TASK_CREATED, insertedTask);
   };
@@ -94,8 +93,8 @@ export class TasksController {
 
     return sendSuccessResp(c, 200, TASKS_FETCHED, task);
   };
-  // 4. Edit Task (PATCH)
 
+  // 4. Edit Task (PATCH)
   editTask = async (c: Context) => {
     const id = Number(c.req.param("id"));
     const body = await c.req.json();
@@ -107,6 +106,8 @@ export class TasksController {
 
     return sendSuccessResp(c, 200, "Task updated successfully", updatedTask);
   };
+}
+
 
   //tasksdropdown
   // getAllTasksDropdown = async (c: Context) => {
@@ -145,5 +146,10 @@ export class TasksController {
   //     result
   //   );
   // };
-}
+
+
+
+
+
+
 export default TasksController;

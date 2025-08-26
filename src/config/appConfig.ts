@@ -4,3 +4,6 @@ export const appConfig = {
   port: Number(envData.PORT),
   version: envData.API_VERSION,
 };
+
+console.log(appConfig);
+
