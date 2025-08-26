@@ -6,7 +6,7 @@ import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getMultipleRecordsByAColumnValue, getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
-import { checkedUsersInProject, getProjectUsersById, insertUsersToProject } from "../services/db/projectService.js";
+import { getProjectUsersById, insertUsersToProject } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 class ProjectController {
@@ -166,10 +166,8 @@ class ProjectController {
             throw new NotFoundException(PROJECT_NOT_FOUND_ID);
         }
         const { user_ids } = validatedReq;
-        const existingUserIds = await checkedUsersInProject(projectId);
-        console.log("existingUserIds: ", existingUserIds);
-        const newUserIds = user_ids.filter(id => !existingUserIds.includes(user_ids));
-        console.log("newUserIds: ", newUserIds);
+        // const existingUserIds: any = await checkedUsersInProject(projectId);
+        // const newUserIds = user_ids.filter(id => !existingUserIds.includes(user_ids));
         if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
             throw new BadRequestException("User IDs are required");
         }
