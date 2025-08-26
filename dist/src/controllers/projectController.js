@@ -12,15 +12,15 @@ import { validateRequest } from "../validations/validateRequest.js";
 class ProjectController {
     createProject = async (c) => {
         const requestBody = await c.req.json();
-        const userDetails = c.get("userDetails");
+        // const userDetails = c.get("userDetails");
         const validatedReq = await validateRequest("create-project", requestBody, PROJECT_VALIDATION_ERROR);
         const columnsToSelect = ["id", "title", "deleted_at", "created_by"];
         const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["title", "deleted_at"], [validatedReq.title, null], columnsToSelect);
         if (projectExists) {
             throw new ConflictException(PROJECT_ALREADY_EXISTS);
         }
-        const savedProject = await saveSingleRecord(projects, { ...validatedReq, created_by: userDetails.id });
-        // const savedProject = await saveSingleRecord<Project>(projects, validatedReq);
+        // const savedProject = await saveSingleRecord<Project>(projects, { ...validatedReq, created_by: userDetails.id });
+        const savedProject = await saveSingleRecord(projects, validatedReq);
         if (validatedReq.user_ids?.length) {
             const userProjectRecords = validatedReq.user_ids.map(user_id => ({
                 user_id,
