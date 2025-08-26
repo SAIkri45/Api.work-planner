@@ -304,6 +304,7 @@ export const PROJECT_TITLE_TOO_SHORT = "Minimum length of the project title is 3
 export const PROJECT_DESCRIPTION_INVALID = "Project description is invalid";
 export const PROJECT_USERS_ASSIGNED = "Users assigned to project successfully";
 export const USERS_ALREADY_ASSIGNED = "All users already assigned to project";
+export const PROJECT_USERS_REMOVED = "Users removed from project successfully";
 
 // Tasks
 export const TASK_TITLE_INVALID = "Task title is invalid";

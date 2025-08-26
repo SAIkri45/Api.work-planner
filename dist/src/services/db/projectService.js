@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
 import { user_projects } from "../../db/schema/userProjects.js";
@@ -78,4 +78,13 @@ export async function validateUsersExist(userIds) {
         .from(users)
         .where(inArray(users.id, userIds));
     return existingUsers.map(user => user.id);
+}
+export async function removeUsersFromProject(projectId, userIds) {
+    const result = await db
+        .update(user_projects)
+        .set({
+        deleted_at: new Date(),
+    })
+        .where(and(eq(user_projects.project_id, projectId), inArray(user_projects.user_id, userIds), isNull(user_projects.deleted_at)));
+    return result;
 }

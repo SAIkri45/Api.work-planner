@@ -59,7 +59,16 @@ export const VAddUsersToProjectSchema = pipeAsync(
     project_id: pipe(number()),
     user_ids: projectUserIdsRequired,
   }),
-);// Types
+);
+
+export const VRemoveUsersFromProjectSchema = pipeAsync(
+  object({
+    user_ids: projectUserIdsRequired,
+  }),
+);
+
+// Types
 export type ValidatedCreateProject = InferOutput<typeof VCreateProjectSchema>;
 export type ValidatedUpdateProject = InferOutput<typeof VUpdateProjectSchema>;
 export type ValidatedAddUsersToProject = InferOutput<typeof VAddUsersToProjectSchema>;
+export type ValidatedRemoveUsersFromProject = InferOutput<typeof VRemoveUsersFromProjectSchema>;
