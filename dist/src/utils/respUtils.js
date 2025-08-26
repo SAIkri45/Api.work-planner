@@ -9,3 +9,6 @@ export function sendSuccessResp(c, status, message, data) {
     }
     return c.json(resp, status);
 }
+export function sendResponse(c, p0, p1, p2, status, message) {
+    return c.json({ status, success: false, message }, status);
+}

@@ -10,8 +10,9 @@ import { slack_tokens } from "../db/schema/slackTokens.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import { getOAuthCode, refreshSlackToken } from "../helpers/oAuthHelper.js";
+import { getSlackId } from "../middlewares/slackMiddlewares.js";
 import { saveSingleRecord } from "../services/db/baseDbService.js";
-import { checkSlackUserExists, getSlackTokenByUserId, updateSlackToken } from "../services/db/slackOAuthService.js";
+import { checkSlackUserExists, getByUserId, getSlackTokenByUserId, updateSlackToken } from "../services/db/slackOAuthService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 
@@ -42,6 +43,7 @@ class SlackOAuthController {
       // save user to db
       result = await saveSingleRecord<User>(users, validatedReq);
 
+      getSlackId(tokenData.user_id);
       // save slack tokens to db
       await saveSingleRecord<SlackToken>(slack_tokens, tokenData);
 
@@ -51,18 +53,20 @@ class SlackOAuthController {
       const existingToken = await getSlackTokenByUserId(userData.slack_id);
 
       const now = Math.floor(Date.now() / 1000);
-
+      let userDetails;
       if (existingToken && existingToken.expires_at > now) {
         // Token still valid → do nothing
-        return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
+        userDetails = await getByUserId(userData.slack_id);
+        getSlackId(tokenData.user_id);
+        return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
       }
       else {
         // 4. Refresh token
         const refreshed = await refreshSlackToken(existingToken.refresh_token);
 
         await updateSlackToken(existingToken.user_id!, refreshed);
-
-        return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
+        getSlackId(tokenData.user_id);
+        return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
       }
     }
   };

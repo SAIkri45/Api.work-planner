@@ -41,6 +41,7 @@ export const USER_INACTIVE = "Your status is inactive. Please contact manager";
 export const USER_NOT_FOUND = "User not found";
 export const RESET_TOKEN_NOT_FOUND = "Reset token not found";
 export const USER_TYPE_INVALID = "User type is invalid";
+
 export const NAME_INVALID = "Name is invalid";
 export const NAME_MISSING = "Name is missing";
 export const NAME_TOO_SHORT
@@ -136,7 +137,6 @@ export const CONTACTS_IMPORT_SUCCESS = "Contacts imported successfully";
 export const CONTACTS_IMPORT_FAILED = "Contacts import failed";
 export const CONTACTS_IMPORT_VALIDATION_FAILED = "Contacts import validation failed";
 export const RECORDS_NOT_FOUND = "NO records found tO import";
-
 
 // template messages
 export const TEMPLATE_NAME_MISSING = "Template name is required";
@@ -273,22 +273,27 @@ export const SLACK_ID_MISSING = "slack_id is missing";
 export const USER_STATUS_INVALID = "User status is invalid";
 
 // projects
+
+export const PROJECT_REQUIRED = "Project Name is required";
 export const PROJECT_NAME_MISSING = "Project name is missing";
 export const PROJECT_NAME_TOO_SHORT = "Minimum length of the project name is 3 characters";
 export const PROJECT_DESCRIPTION_TOO_SHORT = "Minimum length of the project description is 10 characters";
-export const PROJECT_DESCRIPTION_MISSING = "Project description is missing";
+export const PROJECT_DESCRIPTION_REQUIRED = "Project description is required";
+export const PROJECT_ALREADY_EXISTS = "Project with this name already exists";
 export const PROJECT_LOGO_URL_INVALID = "Project logo URL is invalid";
 export const PROJECT_LOGO_URL_MISSING = "Project logo URL is missing";
 export const PROJECT_LINKS_INVALID = "Project links are invalid";
 export const PROJECT_LINKS_MISSING = "Project links are missing";
+export const PROJECT_LINKS_TOO_SHORT = "Minimum length of the project links is 10 characters";
 export const PROJECT_CREATED = "Project created successfully";
 export const PROJECT_UPDATED = "Project updated successfully";
 export const PROJECT_DELETED = "Project deleted successfully";
 export const PROJECT_NOT_FOUND = "Project not found";
 export const PROJECTS_FETCHED = "Projects fetched successfully";
+export const PROJECTS_FETCHED_SUCCESS = "Projects fetched successfully";
 export const PROJECT_NOT_FOUND_ID = "Project not found with id";
 export const PROJECT_VALIDATION_ERROR = "Project details provided do not meet the required validation criteria";
-export const PROJECT_STATUS_INVALID = "Project status is invalid";
+export const PROJECT_STATUS_REQUIRED = "Project status is required";
 export const PROJECT_STATUS_MISSING = "Project status is missing";
 export const PROJECT_CREATED_BY_MISSING = "Project created by is missing";
 export const PROJECT_CREATED_BY_INVALID = "Project created by is invalid";
@@ -297,8 +302,7 @@ export const PROJECT_TITLE_MISSING = "Project title is missing";
 export const PROJECT_TITLE_TOO_SHORT = "Minimum length of the project title is 3 characters";
 export const PROJECT_DESCRIPTION_INVALID = "Project description is invalid";
 
-
-//Tasks
+// Tasks
 export const TASK_TITLE_INVALID = "Task title is invalid";
 export const TASK_TITLE_MISSING = "Task title is missing";
 export const TASK_TITLE_TOO_SHORT = "Minimum length of the task title is 3 characters";

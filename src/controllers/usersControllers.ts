@@ -1,15 +1,14 @@
+import type { InferSelectModel } from "drizzle-orm";
 import type { Context } from "hono";
-import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes";
 
-import { sendSuccessResp } from "../utils/respUtils";
-import { users } from "../db/schema/users";
-import { getPaginatedRecordsConditionally } from "../services/db/baseDbService";
+import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes.js";
 
-import { USERS_FETCHED } from "../constants/appMessages";
-import { InferSelectModel } from "drizzle-orm";
+import { USERS_FETCHED } from "../constants/appMessages.js";
+import { users } from "../db/schema/users.js";
+import { getPaginatedRecordsConditionally } from "../services/db/baseDbService.js";
+import { sendSuccessResp } from "../utils/respUtils.js";
 
 type User = InferSelectModel<typeof users>;
-
 
 export class UsersController {
   // 1. Get paginated users
@@ -20,20 +19,20 @@ export class UsersController {
     const orderBy = c.req.query("order_by");
     const userType = c.req.query("user_type");
 
-    let orderByQueryData: OrderByQueryData< User> = {
+    let orderByQueryData: OrderByQueryData<User> = {
       columns: ["created_at"],
       values: ["desc"],
     };
 
     const whereQueryData: WhereQueryData<User> = {
       columns: ["user_status"],
-      values: ["ACTIVE"], 
+      values: ["ACTIVE"],
     };
     if (userType) {
       whereQueryData.columns.push("user_type");
       whereQueryData.values.push(userType);
     }
-    
+
     if (orderBy) {
       const orderByColumns: DBTableColumns<User>[] = [];
       const orderByValues: SortDirection[] = [];
@@ -54,13 +53,13 @@ export class UsersController {
       whereQueryData.values.push(`%${searchString}%`);
     }
 
-    const result = await getPaginatedRecordsConditionally< User>(
+    const result = await getPaginatedRecordsConditionally<User>(
       users,
       page,
       pageSize,
       orderByQueryData,
       whereQueryData,
-      
+
     );
 
     return sendSuccessResp(c, 200, USERS_FETCHED, result);
@@ -82,13 +81,13 @@ export class UsersController {
       whereQueryData.values.push(`%${searchString}%`);
     }
 
-    const result = await getPaginatedRecordsConditionally< User>(
+    const result = await getPaginatedRecordsConditionally<User>(
       users,
       page,
       pageSize,
       { columns: ["created_at"], values: ["desc"] },
       whereQueryData,
-      ["id", "display_name"] 
+      ["id", "display_name"],
     );
 
     return sendSuccessResp(c, 200, "Dropdown users fetched successfully", result);
@@ -110,17 +109,16 @@ export class UsersController {
       whereQueryData.values.push(`%${searchString}%`);
     }
 
-    const result = await getPaginatedRecordsConditionally< User>(
+    const result = await getPaginatedRecordsConditionally<User>(
       users,
       page,
       pageSize,
       { columns: ["created_at"], values: ["desc"] },
-      whereQueryData
+      whereQueryData,
     );
 
     return sendSuccessResp(c, 200, "Employees list fetched successfully", result);
   };
-
 }
 
 export default UsersController;

@@ -4,6 +4,7 @@ import pg from "pg";
 import { dbConfig } from "../config/dbConfig.js";
 import * as projectSchema from "./schema/projects.js";
 import * as slackTokensSchema from "./schema/slackTokens.js";
+import * as taskSchema from "./schema/tasks.js";
 import * as userProjectsSchema from "./schema/userProjects.js";
 import * as userSchema from "./schema/users.js";
 const { Pool } = pg;
@@ -21,6 +22,7 @@ const pool = new Pool({
 export const db = drizzle({
     client: pool,
     schema: {
+        ...taskSchema,
         ...userSchema,
         ...projectSchema,
         ...userProjectsSchema,

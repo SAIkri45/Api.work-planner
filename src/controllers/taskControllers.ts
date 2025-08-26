@@ -80,7 +80,7 @@ export class TasksController {
       page,
       pageSize,
       orderByQueryData,
-      whereQueryData
+      whereQueryData,
     );
 
     return sendSuccessResp(c, 200, TASKS_FETCHED, result);

@@ -4,16 +4,19 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
-import { appConfig } from "./config/appConfig";
-import { DEF_ERROR_RESP } from "./constants/appMessages";
+import { appConfig } from "./config/appConfig.js";
+import { DEF_ERROR_RESP } from "./constants/appMessages.js";
 import envData from "./env.js";
 import oAuthRouter from "./routes/slackOAuthRouters";
 import usersRouter from "./routes/usersRouters";
 import taskRouter from "./routes/taskRoutes";
 
+import projectRouter from "./routes/projectRoutes.js";
+
+import userRoutes from "./routes/usersRouters.js";
 
 const apiVer = appConfig.version;
-const app = new Hono().basePath(`/${apiVer}`);
+const app = new Hono().basePath(`/v${apiVer}`);
 const port = envData.PORT || 3000;
 
 app.use("*", cors());
@@ -25,12 +28,8 @@ app.get("/", (c) => {
 app.route("/", oAuthRouter);
 app.route("/users", usersRouter);
 app.route("/tasks", taskRouter);
-
-console.log("✅ Registered Routes:");
-app.routes.forEach((r) => {
-  console.log(`${r.method} ${r.path}`);
-});
-
+app.route("/projects", projectRouter);
+app.route("/users", userRoutes);
 
 // handling errors globally
 app.onError((err: any, c: Context) => {

@@ -57,6 +57,71 @@ function prepareWhereQueryConditions(table, whereQueryData) {
     }
     return null;
 }
+// function prepareWhereQueryConditions<T extends DBTable>(table: T, whereQueryData?: WhereQueryData<T>): SQL[] | null {
+//   if (!whereQueryData || Object.keys(whereQueryData).length < 1 || whereQueryData.columns.length < 1) {
+//     return null;
+//   }
+//   const { columns, values, relations } = whereQueryData;
+//   const whereQueries: SQL[] = [];
+//   const orQueries: SQL[] = [];
+//   for (let i = 0; i < columns.length; i++) {
+//     const columnInfo = table[columns[i] as keyof typeof table] as unknown as SQLWrapper;
+//     const value = values[i];
+//     const relation = relations?.[i] ?? "=";
+//     switch (relation) {
+//       case "=":
+//         whereQueries.push(sql`${columnInfo} = ${value}`);
+//         break;
+//       case "!=":
+//         whereQueries.push(sql`${columnInfo} != ${value}`);
+//         break;
+//       case "<":
+//         whereQueries.push(sql`${columnInfo} < ${value}`);
+//         break;
+//       case "<=":
+//         whereQueries.push(sql`${columnInfo} <= ${value}`);
+//         break;
+//       case ">":
+//         whereQueries.push(sql`${columnInfo} > ${value}`);
+//         break;
+//       case ">=":
+//         whereQueries.push(sql`${columnInfo} >= ${value}`);
+//         break;
+//       case "ILIKE":
+//         whereQueries.push(sql`${columnInfo} ILIKE ${value}`);
+//         break;
+//       case "IS NULL":
+//         whereQueries.push(isNull(columnInfo));
+//         break;
+//       case "contains":
+//         orQueries.push(sql`${columnInfo} ILIKE ${`%${value}%`}`);
+//         break;
+//       case "@>":
+//         // Used for JSONB contains (e.g., for arrays like visible_to)
+//         whereQueries.push(sql`${columnInfo} @> ${sql.raw(`'[${value}]'::jsonb`)}`);
+//         break;
+//       case "BETWEEN":
+//         if (typeof value === "object" && value !== null && "gte" in value && "lte" in value) {
+//           whereQueries.push(sql`${columnInfo} BETWEEN ${value.gte} AND ${value.lte}`);
+//         }
+//         break;
+//       case "IN":
+//         if (Array.isArray(value) && value.length > 0) {
+//           whereQueries.push(sql`${columnInfo} IN (${sql.join(value, sql`, `)})`);
+//         }
+//         else {
+//           whereQueries.push(sql`FALSE`);
+//         }
+//         break;
+//       default:
+//         break;
+//     }
+//   }
+//   if (orQueries.length > 0) {
+//     whereQueries.push(sql`(${sql.join(orQueries, sql` OR `)})`);
+//   }
+//   return whereQueries;
+// }
 function prepareOrderByQueryConditions(table, orderByQueryData) {
     const orderByQueries = [];
     if (!orderByQueryData
