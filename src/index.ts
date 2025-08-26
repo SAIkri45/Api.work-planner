@@ -19,9 +19,10 @@ const port = envData.PORT || 3000;
 app.use(
   "*",
   cors({
-    origin: ["http://localhost:3000"],
-    allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    origin: [
+      "http://localhost:3000",
+    ],
+    credentials: true,
   }),
 );
 
