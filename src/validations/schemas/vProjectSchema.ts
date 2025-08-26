@@ -4,7 +4,7 @@ import { minLength, nonEmpty, nullish, number, object, optional, pipe, pipeAsync
 
 import { PROJECT_LINKS_INVALID, PROJECT_LINKS_MISSING, PROJECT_LINKS_TOO_SHORT, PROJECT_LOGO_URL_MISSING } from "../../constants/appMessages.js";
 import ConflictException from "../../exceptions/conflictException.js";
-import { ProjectDescription, projectDueDate, projectStartDate, projectStatus, projectTile, projectUserIds } from "./projectCommonValidatiors.js";
+import { ProjectDescription, projectDueDate, projectStartDate, projectStatus, projectTile, projectUserIds, projectUserIdsRequired } from "./projectCommonValidatiors.js";
 
 export const VCreateProjectSchema = pipeAsync(
   object({
@@ -54,6 +54,12 @@ export const VUpdateProjectSchema = pipeAsync(
   }),
 );
 
-// Types
+export const VAddUsersToProjectSchema = pipeAsync(
+  object({
+    project_id: pipe(number()),
+    user_ids: projectUserIdsRequired,
+  }),
+);// Types
 export type ValidatedCreateProject = InferOutput<typeof VCreateProjectSchema>;
 export type ValidatedUpdateProject = InferOutput<typeof VUpdateProjectSchema>;
+export type ValidatedAddUsersToProject = InferOutput<typeof VAddUsersToProjectSchema>;

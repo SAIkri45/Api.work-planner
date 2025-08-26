@@ -259,6 +259,7 @@ export const PROJECTS_FETCHED = "Projects fetched successfully";
 export const PROJECTS_FETCHED_SUCCESS = "Projects fetched successfully";
 export const PROJECT_NOT_FOUND_ID = "Project not found with id";
 export const PROJECT_VALIDATION_ERROR = "Project details provided do not meet the required validation criteria";
+export const PROJECT_USERS_VALIDATION_ERROR = "Details provided do not meet the required validation criteria";
 export const PROJECT_STATUS_REQUIRED = "Project status is required";
 export const PROJECT_STATUS_MISSING = "Project status is missing";
 export const PROJECT_CREATED_BY_MISSING = "Project created by is missing";
@@ -267,6 +268,7 @@ export const PROJECT_TITLE_INVALID = "Project title is invalid";
 export const PROJECT_TITLE_MISSING = "Project title is missing";
 export const PROJECT_TITLE_TOO_SHORT = "Minimum length of the project title is 3 characters";
 export const PROJECT_DESCRIPTION_INVALID = "Project description is invalid";
+export const PROJECT_USERS_ASSIGNED = "Users assigned to project successfully";
 // Tasks
 export const TASK_TITLE_INVALID = "Task title is invalid";
 export const TASK_TITLE_MISSING = "Task title is missing";

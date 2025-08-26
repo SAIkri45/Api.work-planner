@@ -12,17 +12,23 @@ import oAuthRouter from "./routes/slackOAuthRouters.js";
 import userRoutes from "./routes/usersRouters.js";
 
 const apiVer = appConfig.version;
-const app = new Hono().basePath(`/v${apiVer}`);
+const app = new Hono().basePath(`/${apiVer}`);
 const port = envData.PORT || 3000;
 
-app.use("*", cors());
+// app.use("*", cors());
+app.use(
+  "/*",
+  cors({
+    origin: "http://localhost:3000",
+  }),
+);
 
 app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
 
-app.route("/", oAuthRouter);
 app.route("/projects", projectRouter);
+app.route("/", oAuthRouter);
 app.route("/users", userRoutes);
 
 // handling errors globally

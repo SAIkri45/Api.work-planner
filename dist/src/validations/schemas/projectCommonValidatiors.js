@@ -26,3 +26,4 @@ export const projectDueDate = optional(pipe(string("due_date must be a string"),
     return date;
 })));
 export const projectUserIds = nullish(array(number()));
+export const projectUserIdsRequired = pipe(array(number()), minLength(1, "At least one user ID is required"));

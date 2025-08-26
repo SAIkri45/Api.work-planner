@@ -1,6 +1,6 @@
 import { flatten, safeParseAsync } from "valibot";
 import UnprocessableContentException from "../exceptions/unprocessableContentException.js";
-import { VCreateProjectSchema, VUpdateProjectSchema } from "./schemas/vProjectSchema.js";
+import { VAddUsersToProjectSchema, VCreateProjectSchema, VUpdateProjectSchema } from "./schemas/vProjectSchema.js";
 import { VCreateUserSchema } from "./schemas/vUserSchema.js";
 export async function validateRequest(actionType, reqData, errorMessage) {
     let schema;
@@ -13,6 +13,9 @@ export async function validateRequest(actionType, reqData, errorMessage) {
             break;
         case "update-project":
             schema = VUpdateProjectSchema;
+            break;
+        case "add-users-to-project":
+            schema = VAddUsersToProjectSchema;
             break;
         default:
             break;

@@ -65,3 +65,8 @@ export const projectDueDate = optional(
 );
 
 export const projectUserIds = nullish(array(number()));
+
+export const projectUserIdsRequired = pipe(
+  array(number()),
+  minLength(1, "At least one user ID is required"),
+);

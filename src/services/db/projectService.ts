@@ -1,7 +1,11 @@
 import { eq } from "drizzle-orm";
 
+import type { UserProjects } from "../../db/schema/userProjects.js";
+
 import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
+import { user_projects } from "../../db/schema/userProjects.js";
+import { saveRecords } from "./baseDbService.js";
 
 export async function getProjectUsersById(id: number) {
   const result = await db.query.projects.findFirst({
@@ -47,4 +51,25 @@ export async function getProjectUsersById(id: number) {
     project_status: result.project_status,
     users,
   };
+}
+
+export async function insertUsersToProject(projectId: number, userIds: number[]) {
+  const userProjectRecords = userIds.map((userId: number) => ({
+    project_id: projectId,
+    user_id: userId,
+  }));
+  console.log("userProjectRecords: ", userProjectRecords);
+
+  await saveRecords<UserProjects>(user_projects, userProjectRecords);
+
+  return userProjectRecords;
+}
+
+export async function checkedUsersInProject(projectId: number) {
+  const existingUserProjects = await db
+    .select({ user_ids: user_projects.user_id })
+    .from(user_projects)
+    .where(eq(user_projects.project_id, projectId));
+
+  return existingUserProjects;
 }
