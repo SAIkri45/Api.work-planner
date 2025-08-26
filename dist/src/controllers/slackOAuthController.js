@@ -22,13 +22,13 @@ class SlackOAuthController {
             throw new BadRequestException(MISSING_CODE);
         }
         const { userData, tokenData } = await getOAuthCode(code);
-        getSlackId(userData.slack_id);
         const checkUserExist = await checkSlackUserExists(userData.email);
         let result;
         if (!checkUserExist) {
             const validatedReq = await validateRequest("create-user", userData, USER_VALIDATION_ERROR);
             // save user to db
             result = await saveSingleRecord(users, validatedReq);
+            getSlackId(tokenData.user_id);
             // save slack tokens to db
             await saveSingleRecord(slack_tokens, tokenData);
             return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
@@ -40,12 +40,14 @@ class SlackOAuthController {
             if (existingToken && existingToken.expires_at > now) {
                 // Token still valid → do nothing
                 userDetails = await getByUserId(userData.slack_id);
+                getSlackId(tokenData.user_id);
                 return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
             }
             else {
                 // 4. Refresh token
                 const refreshed = await refreshSlackToken(existingToken.refresh_token);
                 await updateSlackToken(existingToken.user_id, refreshed);
+                getSlackId(tokenData.user_id);
                 return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
             }
         }

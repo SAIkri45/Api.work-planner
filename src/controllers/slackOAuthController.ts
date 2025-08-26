@@ -34,8 +34,6 @@ class SlackOAuthController {
 
     const { userData, tokenData } = await getOAuthCode(code);
 
-    getSlackId(userData.slack_id);
-
     const checkUserExist = await checkSlackUserExists(userData.email);
 
     let result;
@@ -45,6 +43,7 @@ class SlackOAuthController {
       // save user to db
       result = await saveSingleRecord<User>(users, validatedReq);
 
+      getSlackId(tokenData.user_id);
       // save slack tokens to db
       await saveSingleRecord<SlackToken>(slack_tokens, tokenData);
 
@@ -58,6 +57,7 @@ class SlackOAuthController {
       if (existingToken && existingToken.expires_at > now) {
         // Token still valid → do nothing
         userDetails = await getByUserId(userData.slack_id);
+        getSlackId(tokenData.user_id);
         return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
       }
       else {
@@ -65,7 +65,7 @@ class SlackOAuthController {
         const refreshed = await refreshSlackToken(existingToken.refresh_token);
 
         await updateSlackToken(existingToken.user_id!, refreshed);
-
+        getSlackId(tokenData.user_id);
         return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
       }
     }
