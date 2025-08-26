@@ -21,7 +21,6 @@ class ProjectController {
   createProject = async (c: Context) => {
     const requestBody = await c.req.json();
     const userDetails = c.get("userDetails");
-    console.log("userId------>: ", userDetails.id);
 
     const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
 
@@ -33,7 +32,7 @@ class ProjectController {
       throw new ConflictException(PROJECT_ALREADY_EXISTS);
     }
 
-    const savedProject = await saveSingleRecord<Project>(projects, validatedReq);
+    const savedProject = await saveSingleRecord<Project>(projects, { ...validatedReq, created_by: userDetails.id });
 
     if (validatedReq.user_ids?.length) {
       const userProjectRecords = validatedReq.user_ids.map(user_id => ({
