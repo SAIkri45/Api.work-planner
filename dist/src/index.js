@@ -11,8 +11,11 @@ const apiVer = appConfig.version;
 const app = new Hono().basePath(`/${apiVer}`);
 const port = envData.PORT || 3000;
 // app.use("*", cors());
-app.use("/*", cors({
-    origin: "http://localhost:3000",
+app.use("*", cors({
+    origin: "http://localhost:3000", // <-- set this to your Slack OAuth redirect URI
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
 }));
 app.get("/", (c) => {
     return c.text("Hello Hono!");

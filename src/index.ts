@@ -17,9 +17,12 @@ const port = envData.PORT || 3000;
 
 // app.use("*", cors());
 app.use(
-  "/*",
+  "*",
   cors({
-    origin: "http://localhost:3000",
+    origin: "http://localhost:3000", // <-- set this to your Slack OAuth redirect URI
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
   }),
 );
 
@@ -28,6 +31,7 @@ app.get("/", (c) => {
 });
 
 app.route("/projects", projectRouter);
+
 app.route("/", oAuthRouter);
 app.route("/users", userRoutes);
 
