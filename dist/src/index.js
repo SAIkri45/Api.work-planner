@@ -10,16 +10,13 @@ import userRoutes from "./routes/usersRouters.js";
 const apiVer = appConfig.version;
 const app = new Hono().basePath(`/${apiVer}`);
 const port = envData.PORT || 3000;
-app.use("*", cors());
-// app.use(
-//   "*",
-//   cors({
-//     origin: [
-//       "http://localhost:3000",
-//     ],
-//     credentials: true,
-//   }),
-// );
+// app.use("*", cors());
+app.use("*", cors({
+    origin: [
+        "http://localhost:3000",
+    ],
+    credentials: true,
+}));
 app.get("/", (c) => {
     return c.text("Hello Hono!");
 });
