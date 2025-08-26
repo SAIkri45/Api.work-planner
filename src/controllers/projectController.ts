@@ -249,7 +249,8 @@ class ProjectController {
       throw new NotFoundException(PROJECT_NOT_FOUND_ID);
     }
 
-    if (validUserIds) {
+    const invalidUserIds = uniqueUserIds.filter(id => !validUserIds.includes(id));
+    if (invalidUserIds.length > 0) {
       throw new NotFoundException(USER_NOT_FOUND);
     }
 
