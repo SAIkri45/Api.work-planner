@@ -20,6 +20,7 @@ class ProjectController {
             throw new ConflictException(PROJECT_ALREADY_EXISTS);
         }
         const savedProject = await saveSingleRecord(projects, { ...validatedReq, created_by: userDetails.id });
+        // const savedProject = await saveSingleRecord<Project>(projects, validatedReq);
         if (validatedReq.user_ids?.length) {
             const userProjectRecords = validatedReq.user_ids.map(user_id => ({
                 user_id,

@@ -209,6 +209,7 @@ export const TITLE_MISSING = "Title is missing";
 export const TITLE_TOO_SHORT = "Minimum length of the title is 3 characters";
 export const DATE_IS_MISSING = "Date is missing";
 export const DATE_IS_INVALID = "Date is invalid";
+export const DATE_REQUIRED = "Date is required";
 export const TOTAL_CONTACTS_MISSING = "Total Contacts is missing";
 export const DELIEVERY_PERCENTAGE_MISSING = "Delivery percentage is missing";
 export const COUPON_TOO_SHORT = "Minimum length of the COUPON is 3 characters";
