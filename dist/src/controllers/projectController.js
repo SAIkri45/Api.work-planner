@@ -5,7 +5,7 @@ import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { getMultipleRecordsByAColumnValue, getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { checkedUsersInProject, getProjectUsersById, insertUsersToProject, removeUsersFromProject, validateUsersExist } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
@@ -131,31 +131,17 @@ class ProjectController {
     };
     updateProject = async (c) => {
         const reqData = await c.req.json();
-        const project_id = +(c.req.param("id"));
-        const validatedReq = await validateRequest("update-project", { ...reqData, id: project_id }, PROJECT_VALIDATION_ERROR);
-        const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [project_id, null], ["id", "title", "deleted_at", "created_by"]);
+        const projectId = +(c.req.param("id"));
+        if (!projectId) {
+            throw new BadRequestException(INVALID_INPUT);
+        }
+        const validatedReq = await validateRequest("update-project", { ...reqData, id: projectId }, PROJECT_VALIDATION_ERROR);
+        const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [projectId, null], ["id", "title", "deleted_at", "created_by"]);
         if (!projectExists) {
             throw new NotFoundException(PROJECT_NOT_FOUND);
         }
-        const { user_ids, ...projectData } = validatedReq;
-        const updatedData = await updateRecordById(projects, project_id, projectData);
-        if ("user_ids" in validatedReq && validatedReq.user_ids) {
-            const incomingUserIds = [...new Set(validatedReq.user_ids)];
-            const existingUserProjects = await getMultipleRecordsByAColumnValue(user_projects, "project_id", project_id, ["user_id"]);
-            const existingUserIds = existingUserProjects.map(up => up.user_id);
-            const newUserIds = incomingUserIds.filter(userId => !existingUserIds.includes(userId));
-            //  add new user_ids (append, don't replace)
-            if (newUserIds.length > 0) {
-                const newRecords = newUserIds.map(user_id => ({
-                    project_id,
-                    user_id,
-                }));
-                await saveRecords(user_projects, newRecords);
-            }
-            const finalUserIds = [...existingUserIds, ...newUserIds];
-            return sendSuccessResp(c, 200, PROJECT_UPDATED, { ...updatedData, user_ids: finalUserIds });
-        }
-        return sendSuccessResp(c, 200, PROJECT_UPDATED, updatedData);
+        const result = await updateRecordById(projects, projectId, validatedReq);
+        return sendSuccessResp(c, 200, PROJECT_UPDATED, result);
     };
     assignUsersToProject = async (c) => {
         const projectId = +c.req.param("id");
