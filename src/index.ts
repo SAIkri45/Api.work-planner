@@ -1,68 +1,3 @@
-// import type { Context } from "hono";
-
-// import { serve } from "@hono/node-server";
-// import { Hono } from "hono";
-// import { cors } from "hono/cors";
-
-// import { appConfig } from "./config/appConfig.js";
-// import { DEF_ERROR_RESP } from "./constants/appMessages.js";
-// import envData from "./env.js";
-// import oAuthRouter from "./routes/slackOAuthRouters";
-// import usersRouter from "./routes/usersRouters";
-// import taskRouter from "./routes/taskRoutes";
-
-// import projectRouter from "./routes/projectRoutes.js";
-
-// import userRoutes from "./routes/usersRouters.js";
-
-// const apiVer = appConfig.version;
-// const app = new Hono().basePath(`/v${apiVer}`);
-// const port = envData.PORT || 3000;
-
-// app.use("*", cors());
-
-// app.get("/", (c) => {
-//   return c.text("Hello Hono!");
-// });
-
-// app.route("/", oAuthRouter);
-// app.route("/users", usersRouter);
-// app.route("/tasks", taskRouter);
-// app.route("/projects", projectRouter);
-// app.route("/users", userRoutes);
-
-// // handling errors globally
-// app.onError((err: any, c: Context) => {
-//   const statusCode = err.status || 555;
-//   const errorMessage = err.message || DEF_ERROR_RESP;
-//   const method = c.req.method;
-//   const requestUrl = c.req.url;
-//   const timestamp = new Date().toISOString();
-
-//   console.error(err);
-
-//   c.status(statusCode);
-//   return c.json({
-//     status: statusCode,
-//     success: false,
-//     message: errorMessage,
-//     name: err.name ?? "UnhandledError",
-//     errData: err.errData ?? undefined,
-//     path: requestUrl,
-//     method,
-//     timestamp,
-//   });
-// });
-
-// serve({
-//   fetch: app.fetch,
-//   port,
-// });
-
-// // eslint-disable-next-line no-console
-// console.log(`Server is running on port ${port}`);
-
-
 import type { Context } from "hono";
 
 import { serve } from "@hono/node-server";
@@ -72,19 +7,17 @@ import { cors } from "hono/cors";
 import { appConfig } from "./config/appConfig.js";
 import { DEF_ERROR_RESP } from "./constants/appMessages.js";
 import envData from "./env.js";
+import oAuthRouter from "./routes/slackOAuthRouters";
+import usersRouter from "./routes/usersRouters";
+import taskRouter from "./routes/taskRoutes";
+
 import projectRouter from "./routes/projectRoutes.js";
-import oAuthRouter from "./routes/slackOAuthRouters.js";
-import usersRouter from "./routes/usersRouters.js";
-import taskRouter from "./routes/taskRoutes.js"
+
+import userRoutes from "./routes/usersRouters.js";
 
 const apiVer = appConfig.version;
-console.log(`API Version: ${apiVer}`);
-
-const app = new Hono().basePath(`/v${apiVer}`);
-console.log(app);
-
+const app = new Hono().basePath(`/${apiVer}`);
 const port = envData.PORT || 3000;
-console.log(port);
 
 app.use("*", cors());
 
@@ -92,15 +25,9 @@ app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
 
-app.all("*", (c) => {
-  console.log("No route matched:", c.req.method, c.req.url);
-  return c.text("Route not found", 404);
-});
-
-
-app.route("/projects", projectRouter);
-app.route("/users", usersRouter);
 app.route("/tasks", taskRouter);
+app.route("/projects", projectRouter);
+app.route("/users", userRoutes);
 app.route("/", oAuthRouter);
 
 // handling errors globally

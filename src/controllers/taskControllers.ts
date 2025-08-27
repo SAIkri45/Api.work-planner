@@ -1,155 +1,184 @@
 import type { Context } from "hono";
-import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData,} from "../types/dbTypes";
+import type {
+  DBTableColumns,
+  OrderByQueryData,
+  SortDirection,
+  WhereQueryData,
+} from "../types/dbTypes";
 
-import { NewTask, Task, Tasks } from "../db/schema/tasks";
-import {getPaginatedRecordsConditionally,getRecordById,saveSingleRecord,updateRecordById,} from "../services/db/baseDbService";
-import { sendSuccessResp } from "../utils/respUtils";
-
-import {  TASKS_FETCHED, TASK_CREATED,TASK_NOT_FOUND,} from "../constants/appMessages";
+import {
+  TASKS_FETCHED,
+  TASK_CREATED,
+  TASK_VALIDATION_ERROR
+} from "../constants/appMessages";
 import { TaskAssignees, task_assignees } from "../db/schema/taskAssignees";
+import { Task, Tasks } from "../db/schema/tasks";
+import {
+  getPaginatedRecordsConditionally,
+  getRecordById,
+  saveRecords,
+  saveSingleRecord,
+  updateRecordById
+} from "../services/db/baseDbService";
+import { sendSuccessResp } from "../utils/respUtils";
+import { ValidatedCreateTask } from "../validations/schemas/vTaskSchema";
+import { validateRequest } from "../validations/validateRequest";
 
 export class TasksController {
-  // 1. Create Task (POST)
-  createTask = async (c: Context) => {
-    const body = await c.req.json<NewTask>();
-    const user = c.get("userDetails"); // from middleware
-    console.log("Creating task for user:", body);
+ createTask = async (c: Context) => {
+  const requestBody = await c.req.json();
+  console.log("req--->", requestBody);
 
-    // 1. Insert into tasks
-    const insertedTask = await saveSingleRecord<Task>(Tasks, {
-      ...body,
-      created_by: user.id,
+  // validate request
+  const validatedReq = await validateRequest<ValidatedCreateTask>(
+    "create-task",
+    requestBody,
+    TASK_VALIDATION_ERROR
+  );
+  console.log("validatedReq--->", validatedReq);
+
+  // CHANGED: remove `user_ids` before inserting task
+  const { user_ids, ...taskData } = validatedReq;
+
+  // 1. Save Task (only fields that belong to Tasks table)
+  const savedTask = await saveSingleRecord<Task>(Tasks, taskData);
+  console.log("savedTask--->", savedTask);
+
+  // 2. Save assignees if provided
+  if (user_ids && user_ids.length > 0) {
+    const taskAssigneeRecords = user_ids.map((user_id: number) => ({
+      user_id,
+      task_id: savedTask.id,
+      task_title: savedTask.task_title,
+
+      // CHANGED: add created_by + created_at so row won’t fail
+      created_by: validatedReq.created_by,
+      created_at: new Date(),
+    }));
+
+    await saveRecords<TaskAssignees>(task_assignees, taskAssigneeRecords);
+
+    return sendSuccessResp(c, 200, TASK_CREATED, {
+      ...savedTask,
+      user_ids,
     });
+  }
 
-    // 2. Insert into task_assignees
-    await saveSingleRecord<TaskAssignees>(task_assignees, {
-      task_id: insertedTask.id,
-      user_id: user.id,
-      task_title: insertedTask.task_title, 
-      created_by: user.id,
-    });
+  return sendSuccessResp(c, 200, TASK_CREATED, savedTask);
+};
 
-    return sendSuccessResp(c, 201, TASK_CREATED, insertedTask);
+
+// 2. Get Paginated Tasks (GET)
+getPaginatedTasks = async (c: Context) => {
+  const page = +c.req.query("page")! || 1;
+  const pageSize = +c.req.query("page_size")! || 10;
+  const searchString = c.req.query("search_string")?.trim() || null;
+  const orderBy = c.req.query("order_by");
+  const task_status = c.req.query("task_status");
+
+  let orderByQueryData: OrderByQueryData<Task> = {
+    columns: ["created_at"],
+    values: ["desc"],
   };
 
-  // 2. Get Paginated Tasks (GET)
-  getPaginatedTasks = async (c: Context) => {
-    const page = +c.req.query("page")! || 1;
-    const pageSize = +c.req.query("page_size")! || 10;
-    const searchString = c.req.query("search_string")?.trim() || null;
-    const orderBy = c.req.query("order_by");
-    const task_status = c.req.query("task_status");
+  const whereQueryData: WhereQueryData<Task> = {
+    columns: [],
+    values: [],
+  };
+  if (task_status) {
+    whereQueryData.columns.push("task_status");
+    whereQueryData.values.push(task_status);
+  }
 
-    let orderByQueryData: OrderByQueryData<Task> = {
-      columns: ["created_at"],
-      values: ["desc"],
+  if (searchString) {
+    whereQueryData.columns.push("task_title");
+    whereQueryData.values.push(`%${searchString}%`);
+  }
+
+  if (orderBy) {
+    const orderByColumns: DBTableColumns<Task>[] = [];
+    const orderByValues: SortDirection[] = [];
+    const queryStrings = orderBy.split(",");
+    for (const queryString of queryStrings) {
+      const [column, value] = queryString.split(":");
+      orderByColumns.push(column as DBTableColumns<Task>);
+      orderByValues.push(value as SortDirection);
+    }
+    orderByQueryData = {
+      columns: orderByColumns,
+      values: orderByValues,
     };
+  }
 
-    const whereQueryData: WhereQueryData<Task> = {
-      columns: [],
-      values: [],
-    };
-    if (task_status) {
-      whereQueryData.columns.push("task_status");
-      whereQueryData.values.push(task_status);
-    }
+  const result = await getPaginatedRecordsConditionally<Task>(
+    Tasks,
+    page,
+    pageSize,
+    orderByQueryData,
+    whereQueryData
+  );
 
-    if (searchString) {
-      whereQueryData.columns.push("task_title");
-      whereQueryData.values.push(`%${searchString}%`);
-    }
+  return sendSuccessResp(c, 200, TASKS_FETCHED, result);
+};
 
-    if (orderBy) {
-      const orderByColumns: DBTableColumns<Task>[] = [];
-      const orderByValues: SortDirection[] = [];
-      const queryStrings = orderBy.split(",");
-      for (const queryString of queryStrings) {
-        const [column, value] = queryString.split(":");
-        orderByColumns.push(column as DBTableColumns<Task>);
-        orderByValues.push(value as SortDirection);
-      }
-      orderByQueryData = {
-        columns: orderByColumns,
-        values: orderByValues,
-      };
-    }
+// 3. getbyid
+getTaskById = async (c: Context) => {
+  const id = Number(c.req.param("id"));
 
-    const result = await getPaginatedRecordsConditionally<Task>(
-      Tasks,
-      page,
-      pageSize,
-      orderByQueryData,
-      whereQueryData,
-    );
+  const task = await getRecordById<Task>(Tasks, id);
 
-    return sendSuccessResp(c, 200, TASKS_FETCHED, result);
-  };
+  return sendSuccessResp(c, 200, TASKS_FETCHED, task);
+};
 
-  // 3. getbyid
-  getTaskById = async (c: Context) => {
-    const id = Number(c.req.param("id"));
+// 4. Edit Task (PATCH)
+editTask = async (c: Context) => {
+  const id = Number(c.req.param("id"));
+  const body = await c.req.json();
 
-    const task = await getRecordById<Task>(Tasks, id);
+  const updatedTask = await updateRecordById<Task>(Tasks, id, {
+    ...body,
+    updated_at: new Date(),
+  });
 
-    return sendSuccessResp(c, 200, TASKS_FETCHED, task);
-  };
-
-  // 4. Edit Task (PATCH)
-  editTask = async (c: Context) => {
-    const id = Number(c.req.param("id"));
-    const body = await c.req.json();
-
-    const updatedTask = await updateRecordById<Task>(Tasks, id, {
-      ...body,
-      updated_at: new Date(),
-    });
-
-    return sendSuccessResp(c, 200, "Task updated successfully", updatedTask);
-  };
+  return sendSuccessResp(c, 200, "Task updated successfully", updatedTask);
+};
 }
+//tasksdropdown
+// getAllTasksDropdown = async (c: Context) => {
+//   const page = +c.req.query("page")! || 1;
+//   const pageSize = +c.req.query("page_size")! || 10;
+//   const search_string = c.req.query("search_string")?.trim() || null;
 
+//   const whereQueryData: WhereQueryData<Task> = {
+//     columns: [],
+//     values: [],
+//   };
 
-  //tasksdropdown
-  // getAllTasksDropdown = async (c: Context) => {
-  //   const page = +c.req.query("page")! || 1;
-  //   const pageSize = +c.req.query("page_size")! || 10;
-  //   const search_string = c.req.query("search_string")?.trim() || null;
+//   if (search_string) {
+//     whereQueryData.columns.push("task_title");
+//     whereQueryData.values.push(`%${search_string}%`);
+//   }
 
-  //   const whereQueryData: WhereQueryData<Task> = {
-  //     columns: [], 
-  //     values: [],
-  //   };
+//   const orderByQueryData: OrderByQueryData<Task> = {
+//     columns: ["created_at"],
+//     values: ["desc"],
+//   };
 
-  //   if (search_string) {
-  //     whereQueryData.columns.push("task_title");
-  //     whereQueryData.values.push(`%${search_string}%`);
-  //   }
+//   const result = await getPaginatedRecordsConditionally<Task>(
+//     Tasks,
+//     page,
+//     pageSize,
+//     orderByQueryData,
+//     whereQueryData,
+//     ["id", "task_title"]
+//   );
 
-  //   const orderByQueryData: OrderByQueryData<Task> = {
-  //     columns: ["created_at"],
-  //     values: ["desc"],
-  //   };
-
-  //   const result = await getPaginatedRecordsConditionally<Task>(
-  //     Tasks,
-  //     page,
-  //     pageSize,
-  //     orderByQueryData,
-  //     whereQueryData,
-  //     ["id", "task_title"]
-  //   );
-
-  //   return sendSuccessResp(
-  //     c,
-  //     200,
-  //     "Dropdown tasks fetched successfully",
-  //     result
-  //   );
-  // };
-
-
-
-
-
+//   return sendSuccessResp(
+//     c,
+//     200,
+//     "Dropdown tasks fetched successfully",
+//     result
+//   );
+// };
 
 export default TasksController;

@@ -12,7 +12,7 @@ export const Tasks = pgTable("tasks",{
     description: text(),
     task_status: taskStatuses("task_status").default("NEW"),
     created_by: integer().references(() => users.id),
-    updated_by: integer().references(() => users.id),
+updated_by: integer().references(() => users.id),
     start_date: timestamp({ mode: "string" }),
     end_date: timestamp({ mode: "string" }), 
     created_at: timestamp().defaultNow(),

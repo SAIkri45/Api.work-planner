@@ -5,6 +5,7 @@ import type { AppActivity, ValidatedRequest } from "../types/appTypes.js";
 import UnprocessableContentException from "../exceptions/unprocessableContentException.js";
 import { VCreateProjectSchema, VUpdateProjectSchema } from "./schemas/vProjectSchema.js";
 import { VCreateUserSchema } from "./schemas/vUserSchema.js";
+import { VCreateTaskAssigneeSchema } from "./schemas/vTaskAssigneesSchema"
 
 export async function validateRequest<R extends ValidatedRequest>(
   actionType: AppActivity,
@@ -22,6 +23,9 @@ export async function validateRequest<R extends ValidatedRequest>(
       break;
     case "update-project":
       schema = VUpdateProjectSchema;
+      break;
+    case "create-task":
+      schema = VCreateTaskAssigneeSchema;
       break;
     default:
       break;

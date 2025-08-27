@@ -1,16 +1,15 @@
 import type { InferOutput } from "valibot";
-import {object,string,number,transform,nonEmpty,pipe,optional,minLength,} from "valibot";
+import {object,string,number,transform,nonEmpty,pipe,optional,minLength,array} from "valibot";
+import { taskStatuses } from "../../db/schema/tasks";
+import { taskStatus,taskStartDate,taskEndDate,taskDescription} from "./taskCommonValidations.js";
 
 export const VCreateTaskAssigneeSchema = object({
-  task_id: pipe(
-    number("Task ID must be a number"),
-    transform((val) => Number(val)),
-  ),
 
-  user_id: pipe(
+
+  user_ids: array(pipe(
     number("User ID must be a number"),
     transform((val) => Number(val)),
-  ),
+  )),
 
   task_title: pipe(
     string("Task title must be a string"),
@@ -19,10 +18,10 @@ export const VCreateTaskAssigneeSchema = object({
     minLength(3, "Task title must be at least 3 characters"),
   ),
 
-  created_by: pipe(
+  created_by: optional(pipe(
     number("Created by must be a number"),
     transform((val) => Number(val)),
-  ),
+  )),
 
   updated_by: optional(
     pipe(
@@ -30,6 +29,16 @@ export const VCreateTaskAssigneeSchema = object({
       transform((val) => Number(val)),
     ),
   ),
+      task_status: taskStatus,
+
+      start_date: taskStartDate,
+
+      end_date: taskEndDate,
+
+      description: taskDescription,
+
+      
+
 });
 
 

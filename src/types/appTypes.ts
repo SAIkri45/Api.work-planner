@@ -7,12 +7,13 @@ import type { User } from "../db/schema/users.js";
 import type { ValidatedCreateProject, ValidatedUpdateProject } from "../validations/schemas/vProjectSchema.js";
 import type { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
 import type { ValidatedCreateTaskAssignee} from "../validations/schemas/vTaskAssigneesSchema";
+import { ValidatedCreateTask } from "../validations/schemas/vTaskSchema.js";
 
-export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject;
+export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask;
 export type AppActivity = UserActivity | CreateProjectActivity | CreateTaskAssigneeActivity;
 export type UserActivity = "create-user" | "update-user";
 export type CreateProjectActivity = "create-project" | "update-project";
-export type CreateTaskAssigneeActivity = "create-task-assignee";
+export type CreateTaskAssigneeActivity = "create-task-assignee" | "update-task-assignee"| "create-task";
 
 export type AppRespData = | User
   | User[]

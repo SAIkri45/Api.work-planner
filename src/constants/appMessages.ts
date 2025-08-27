@@ -316,3 +316,5 @@ export const TASK_CREATED_BY_INVALID = "Task created by is invalid";
 export const TASKS_FETCHED = "Tasks fetched successfully";
 export const TASK_CREATED = "Task created successfully";
 export const TASK_NOT_FOUND = "Task not found";
+export const TASK_VALIDATION_ERROR = "Task details provided do not meet the required validation criteria";
+export const TASK_ALREADY_EXISTS = "Task with this title already exists";
