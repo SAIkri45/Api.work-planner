@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import ProjectController from "../controllers/projectController.js";
+import { isEmployeAuthorized } from "../middlewares/slackMiddlewares.js";
 
 const projectRouter = new Hono();
 const projectControllers = new ProjectController();
@@ -13,6 +14,6 @@ projectRouter.patch("/:id", projectControllers.updateProject);
 projectRouter.get("/:id", projectControllers.getProjectById);
 projectRouter.delete("/:id", projectControllers.softDeleteProjectById);
 projectRouter.get("/", projectControllers.getAllProjectsPaginated);
-projectRouter.post("/", projectControllers.createProject);
+projectRouter.post("/", isEmployeAuthorized, projectControllers.createProject);
 
 export default projectRouter;
