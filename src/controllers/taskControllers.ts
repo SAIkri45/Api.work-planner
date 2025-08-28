@@ -36,22 +36,18 @@ export class TasksController {
     TASK_VALIDATION_ERROR
   );
   console.log("validatedReq--->", validatedReq);
-
-  // CHANGED: remove `user_ids` before inserting task
   const { user_ids, ...taskData } = validatedReq;
 
   // 1. Save Task (only fields that belong to Tasks table)
-  const savedTask = await saveSingleRecord<Task>(Tasks, taskData);
+  const savedTask = await saveRecords<Task>(Tasks, [taskData]);
   console.log("savedTask--->", savedTask);
 
   // 2. Save assignees if provided
   if (user_ids && user_ids.length > 0) {
     const taskAssigneeRecords = user_ids.map((user_id: number) => ({
       user_id,
-      task_id: savedTask.id,
-      task_title: savedTask.task_title,
-
-      // CHANGED: add created_by + created_at so row won’t fail
+      task_id: savedTask[0].id,
+      task_title: savedTask[0].task_title,
       created_by: validatedReq.created_by,
       created_at: new Date(),
     }));
