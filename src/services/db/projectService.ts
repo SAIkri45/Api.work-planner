@@ -1,8 +1,9 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, ilike, inArray, isNull, not } from "drizzle-orm";
 
 import type { UserProjects } from "../../db/schema/userProjects.js";
 
 import { db } from "../../db/configuration.js";
+import { projects } from "../../db/schema/projects.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import { saveRecords } from "./baseDbService.js";
@@ -180,4 +181,42 @@ export async function getProjectUsersByIdDropdown(id: number, search?: string) {
     title: result.title,
     users,
   };
+}
+
+export async function getNonExistingUsers(projectId: number, search?: string) {
+  const project = await db.query.projects.findFirst({
+    columns: { id: true },
+    with: {
+      userProjects: {
+        columns: { user_id: true },
+        where: isNull(user_projects.deleted_at),
+      },
+    },
+    where: eq(projects.id, projectId),
+  });
+
+  const assignedIds = project?.userProjects?.map((up: { user_id: number | null }) => up.user_id).filter((id): id is number => id !== null) || [];
+
+  // Build conditions
+  const conditions = [
+    isNull(users.deleted_at),
+    eq(users.user_status, "ACTIVE"),
+  ];
+
+  if (assignedIds.length > 0) {
+    conditions.push(not(inArray(users.id, assignedIds)));
+  }
+
+  if (search?.trim()) {
+    conditions.push(ilike(users.display_name, `%${search.trim()}%`));
+  }
+
+  // Get non-existing users
+  return await db
+    .select({
+      id: users.id,
+      display_name: users.display_name,
+    })
+    .from(users)
+    .where(and(...conditions));
 }

@@ -8,6 +8,7 @@ const projectControllers = new ProjectController();
 
 projectRouter.get("/drop-down", projectControllers.getAllProjectsDropDown);
 projectRouter.get("/remove-user-dropdown/:id", projectControllers.removeUserFromProjectDropdown);
+projectRouter.get("/add-users-dropdown/:id", projectControllers.getAllNonExistingUsers);
 projectRouter.post("/:id/users", projectControllers.assignUsersToProject);
 projectRouter.patch("/:id/users", projectControllers.deleteUserFromProject);
 projectRouter.get("/users/:id", projectControllers.getProjectUsersById);

@@ -6,7 +6,7 @@ import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
-import { checkedUsersInProject, getProjectUsersById, getProjectUsersByIdDropdown, insertUsersToProject, removeUsersFromProject, validateUsersExist } from "../services/db/projectService.js";
+import { checkedUsersInProject, getNonExistingUsers, getProjectUsersById, getProjectUsersByIdDropdown, insertUsersToProject, removeUsersFromProject, validateUsersExist } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 class ProjectController {
@@ -93,7 +93,7 @@ class ProjectController {
         if (!projectId) {
             throw new BadRequestException(INVALID_INPUT);
         }
-        const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [projectId, null], ["id", "title", "created_by"]);
+        const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at", "project_status"], [projectId, null, "COMPLETED"], ["id", "title", "created_by"]);
         if (!projectExists) {
             throw new NotFoundException(PROJECT_NOT_FOUND_ID);
         }
@@ -209,8 +209,25 @@ class ProjectController {
         if (!projectId) {
             throw new BadRequestException(INVALID_INPUT);
         }
+        const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [projectId, null], ["id", "title", "deleted_at", "created_by"]);
+        if (!projectExists) {
+            throw new NotFoundException(PROJECT_NOT_FOUND);
+        }
         const result = await getProjectUsersByIdDropdown(projectId, searchString);
         return sendSuccessResp(c, 200, PROJECTS_USERS_FETCHED_SUCCESS, result);
+    };
+    getAllNonExistingUsers = async (c) => {
+        const projectId = +c.req.param("id");
+        const searchString = c.req.query("search_string");
+        if (!projectId) {
+            throw new BadRequestException(INVALID_INPUT);
+        }
+        const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [projectId, null], ["id", "title", "deleted_at", "created_by"]);
+        if (!projectExists) {
+            throw new NotFoundException(PROJECT_NOT_FOUND);
+        }
+        const result = await getNonExistingUsers(projectId, searchString);
+        return sendSuccessResp(c, 200, "Non-existing users fetched successfully", result);
     };
 }
 export default ProjectController;
