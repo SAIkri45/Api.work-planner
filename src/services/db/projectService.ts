@@ -3,7 +3,6 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { UserProjects } from "../../db/schema/userProjects.js";
 
 import { db } from "../../db/configuration.js";
-import { projects } from "../../db/schema/projects.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import { saveRecords } from "./baseDbService.js";
@@ -19,7 +18,14 @@ export async function getProjectUsersById(id: number) {
     },
     with: {
       userProjects: {
-        columns: {},
+        columns: {
+          project_id: true,
+          deleted_at: true,
+        },
+        where: (userProjects, { isNull, eq }) => and(
+          isNull(userProjects.deleted_at),
+          eq(userProjects.project_id, id),
+        ),
         with: {
           users: {
             columns: {
@@ -28,20 +34,27 @@ export async function getProjectUsersById(id: number) {
               email: true,
               user_type: true,
               user_status: true,
+              deleted_at: true,
             },
           },
         },
       },
     },
-    where: eq(projects.id, id),
+    where: (projects, { eq }) => eq(projects.id, id),
   });
 
   if (!result)
     return null;
 
   const users = result.userProjects
-    ?.map(userProject => userProject.users)
-    .filter(Boolean)
+    ?.filter(userProject => userProject.users && userProject.users.deleted_at === null && userProject.users.user_status === "ACTIVE")
+    .map(userProject => ({
+      id: userProject.users!.id,
+      display_name: userProject.users!.display_name,
+      email: userProject.users!.email,
+      user_type: userProject.users!.user_type,
+      user_status: userProject.users!.user_status,
+    }))
     ?? [];
 
   return {
@@ -53,18 +66,6 @@ export async function getProjectUsersById(id: number) {
     users,
   };
 }
-
-// export async function insertUsersToProject(projectId: number, userIds: number[]) {
-//   const userProjectRecords = userIds.map((userId: number) => ({
-//     project_id: projectId,
-//     user_id: userId,
-//   }));
-//   console.log("userProjectRecords: ", userProjectRecords);
-
-//   await saveRecords<UserProjects>(user_projects, userProjectRecords);
-
-//   return userProjectRecords;
-// }
 
 export async function insertUsersToProject(projectId: number, userIds: number[]) {
   if (!userIds.length)

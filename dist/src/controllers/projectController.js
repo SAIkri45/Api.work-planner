@@ -118,7 +118,7 @@ class ProjectController {
         return sendSuccessResp(c, 200, PROJECTS_FETCHED, result);
     };
     getProjectUsersById = async (c) => {
-        const projectId = +c.req.param("project_id");
+        const projectId = +c.req.param("id");
         if (!projectId) {
             throw new BadRequestException(INVALID_INPUT);
         }
@@ -184,7 +184,7 @@ class ProjectController {
         }
         const uniqueUserIds = [...new Set(validatedReq.user_ids)];
         const [projectExists, existingUserIds, validUserIds] = await Promise.all([
-            getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at", "project_status"], [projectId, null, "COMPLETED"], ["id"]),
+            getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [projectId, null], ["id"]),
             checkedUsersInProject(projectId),
             validateUsersExist(uniqueUserIds),
         ]);
