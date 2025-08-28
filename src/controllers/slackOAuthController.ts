@@ -45,7 +45,7 @@ class SlackOAuthController {
 
       getSlackId(tokenData.user_id);
       // save slack tokens to db
-      await saveSingleRecord<SlackToken>(slack_tokens, tokenData);
+      result = await saveSingleRecord<SlackToken>(slack_tokens, tokenData);
 
       return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
     }

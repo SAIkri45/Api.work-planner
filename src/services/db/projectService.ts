@@ -122,65 +122,51 @@ export async function removeUsersFromProject(projectId: number, userIds: number[
   return result;
 }
 
-// users dropdown to remove from project
+// Get project users for dropdown with improved filtering and null checks
 export async function getProjectUsersByIdDropdown(id: number, search?: string) {
-  const result = await db.query.projects.findFirst({
-    columns: {
-      id: true,
-      title: true,
-      description: true,
-      logo_url: true,
-      project_status: true,
-    },
+  const result: any = await db.query.projects.findFirst({
+    where: and(eq(projects.id, id), isNull(projects.deleted_at)),
+    columns: {},
     with: {
       userProjects: {
-        columns: {
-          deleted_at: true,
-        },
-        where: (userProjects, { isNull }) => isNull(userProjects.deleted_at),
+        columns: {},
+        where: and(
+          eq(user_projects.project_id, id),
+          isNull(user_projects.deleted_at),
+        ),
         with: {
           users: {
+            where: and(
+              isNull(users.deleted_at),
+              eq(users.user_status, "ACTIVE"),
+            ),
             columns: {
               id: true,
               display_name: true,
-              user_status: true,
-              deleted_at: true,
             },
           },
         },
       },
     },
-    where: (projects, { eq }) => eq(projects.id, id),
-  });
+  } as any);
 
   if (!result)
-    return null;
+    return [];
 
-  let users
-    = result.userProjects
-      ?.filter(
-        userProject =>
-          userProject.users
-          && userProject.users.deleted_at === null
-          && userProject.users.user_status === "ACTIVE",
-      )
-      .map(userProject => ({
-        id: userProject.users!.id,
-        display_name: userProject.users!.display_name,
-      })) ?? [];
+  let usersList
+    = result.userProjects?.map((userProject: any) => ({
+      id: userProject.users.id,
+      display_name: userProject.users.display_name,
+    })) ?? [];
 
   if (search && search.trim()) {
-    const searchTerm = search.trim();
-    users = users.filter(user =>
-      user.display_name?.includes(searchTerm),
+    const searchTerm = search.trim().toLowerCase();
+    usersList = usersList.filter((u: any) =>
+      u.display_name?.toLowerCase().includes(searchTerm),
     );
   }
 
-  return {
-    id: result.id,
-    title: result.title,
-    users,
-  };
+  return usersList;
 }
 
 export async function getNonExistingUsers(projectId: number, search?: string) {
