@@ -7,7 +7,7 @@ import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import { saveRecords } from "./baseDbService.js";
 
-export async function getProjectUsersById(id: number) {
+export async function getProjectUsersById(id: number, search?: string) {
   const result = await db.query.projects.findFirst({
     columns: {
       id: true,
@@ -19,13 +19,9 @@ export async function getProjectUsersById(id: number) {
     with: {
       userProjects: {
         columns: {
-          project_id: true,
           deleted_at: true,
         },
-        where: (userProjects, { isNull, eq }) => and(
-          isNull(userProjects.deleted_at),
-          eq(userProjects.project_id, id),
-        ),
+        where: (userProjects, { isNull }) => isNull(userProjects.deleted_at),
         with: {
           users: {
             columns: {
@@ -46,8 +42,12 @@ export async function getProjectUsersById(id: number) {
   if (!result)
     return null;
 
-  const users = result.userProjects
-    ?.filter(userProject => userProject.users && userProject.users.deleted_at === null && userProject.users.user_status === "ACTIVE")
+  let users = result.userProjects
+    ?.filter(userProject =>
+      userProject.users
+      && userProject.users.deleted_at === null
+      && userProject.users.user_status === "ACTIVE",
+    )
     .map(userProject => ({
       id: userProject.users!.id,
       display_name: userProject.users!.display_name,
@@ -56,6 +56,13 @@ export async function getProjectUsersById(id: number) {
       user_status: userProject.users!.user_status,
     }))
     ?? [];
+
+  if (search && search.trim()) {
+    const searchTerm = search.trim();
+    users = users.filter(user =>
+      user.display_name?.includes(searchTerm),
+    );
+  }
 
   return {
     id: result.id,
@@ -112,4 +119,65 @@ export async function removeUsersFromProject(projectId: number, userIds: number[
     ));
 
   return result;
+}
+
+// users dropdown to remove from project
+export async function getProjectUsersByIdDropdown(id: number, search?: string) {
+  const result = await db.query.projects.findFirst({
+    columns: {
+      id: true,
+      title: true,
+      description: true,
+      logo_url: true,
+      project_status: true,
+    },
+    with: {
+      userProjects: {
+        columns: {
+          deleted_at: true,
+        },
+        where: (userProjects, { isNull }) => isNull(userProjects.deleted_at),
+        with: {
+          users: {
+            columns: {
+              id: true,
+              display_name: true,
+              user_status: true,
+              deleted_at: true,
+            },
+          },
+        },
+      },
+    },
+    where: (projects, { eq }) => eq(projects.id, id),
+  });
+
+  if (!result)
+    return null;
+
+  let users
+    = result.userProjects
+      ?.filter(
+        userProject =>
+          userProject.users
+          && userProject.users.deleted_at === null
+          && userProject.users.user_status === "ACTIVE",
+      )
+      .map(userProject => ({
+        id: userProject.users!.id,
+        display_name: userProject.users!.display_name,
+      })) ?? [];
+
+  if (search && search.trim()) {
+    const searchTerm = search.trim();
+    users = users.filter(user =>
+      user.display_name?.includes(searchTerm),
+    );
+  }
+
+  return {
+    id: result.id,
+    title: result.title,
+    users,
+  };
 }

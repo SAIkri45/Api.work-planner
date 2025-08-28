@@ -4,6 +4,7 @@ import { isEmployeAuthorized } from "../middlewares/slackMiddlewares.js";
 const projectRouter = new Hono();
 const projectControllers = new ProjectController();
 projectRouter.get("/drop-down", projectControllers.getAllProjectsDropDown);
+projectRouter.get("/remove-user-dropdown/:id", projectControllers.removeUserFromProjectDropdown);
 projectRouter.post("/:id/users", projectControllers.assignUsersToProject);
 projectRouter.patch("/:id/users", projectControllers.deleteUserFromProject);
 projectRouter.get("/users/:id", projectControllers.getProjectUsersById);

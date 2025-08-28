@@ -258,6 +258,7 @@ export const PROJECT_DELETED = "Project deleted successfully";
 export const PROJECT_NOT_FOUND = "Project not found";
 export const PROJECTS_FETCHED = "Projects fetched successfully";
 export const PROJECTS_FETCHED_SUCCESS = "Projects fetched successfully";
+export const PROJECTS_USERS_FETCHED_SUCCESS = "Projects users fetched successfully";
 export const PROJECT_NOT_FOUND_ID = "Project not found with id";
 export const PROJECT_VALIDATION_ERROR = "Project details provided do not meet the required validation criteria";
 export const PROJECT_USERS_VALIDATION_ERROR = "Details provided do not meet the required validation criteria";
