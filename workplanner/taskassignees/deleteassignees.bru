@@ -1,0 +1,18 @@
+meta {
+  name: deleteassignees
+  type: http
+  seq: 2
+}
+
+delete {
+  url: http://localhost:3000/v1.0/tasks/assignees
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "task_id": 34,
+    "user_ids": [5]
+  }
+}

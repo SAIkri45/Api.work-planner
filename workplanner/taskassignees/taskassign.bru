@@ -1,0 +1,25 @@
+meta {
+  name: taskassign
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/v1.0/tasks
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "task_title": "Backend API Integration",
+    "description": "Implement authentication and task APIs",
+    "created_by": 6,
+    "project_id": 2,
+    "task_status": "NEW",
+    "start_date": "2025-09-10",
+    "end_date": "2025-09-20",
+    "user_ids": [4, 7, 9]
+  }
+  
+}

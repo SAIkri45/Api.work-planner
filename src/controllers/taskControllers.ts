@@ -23,6 +23,8 @@ import {
 import { sendSuccessResp } from "../utils/respUtils";
 import { ValidatedCreateTask } from "../validations/schemas/vTaskSchema";
 import { validateRequest } from "../validations/validateRequest";
+import { and, eq, inArray } from "drizzle-orm";
+import { db } from "../db/configuration.js"
 
 export class TasksController {
  createTask = async (c: Context) => {
@@ -37,17 +39,19 @@ export class TasksController {
   );
   console.log("validatedReq--->", validatedReq);
   const { user_ids, ...taskData } = validatedReq;
+ 
+  console.log("preparedTaskData--->", taskData);
 
   // 1. Save Task (only fields that belong to Tasks table)
-  const savedTask = await saveRecords<Task>(Tasks, [taskData]);
+  const savedTask = await saveSingleRecord<Task>(Tasks, taskData);
   console.log("savedTask--->", savedTask);
 
   // 2. Save assignees if provided
   if (user_ids && user_ids.length > 0) {
-    const taskAssigneeRecords = user_ids.map((user_id: number) => ({
-      user_id,
-      task_id: savedTask[0].id,
-      task_title: savedTask[0].task_title,
+    const taskAssigneeRecords = user_ids.map((userId: number) => ({
+      user_id: userId,
+      task_id: savedTask.id,
+      task_title: savedTask.task_title,
       created_by: validatedReq.created_by,
       created_at: new Date(),
     }));
@@ -62,6 +66,36 @@ export class TasksController {
 
   return sendSuccessResp(c, 200, TASK_CREATED, savedTask);
 };
+
+// In TasksController.ts
+
+
+
+// 5. Delete Task Assignees (DELETE)
+deleteTaskAssignees = async (c: Context) => {
+  const { task_id, user_ids } = await c.req.json();
+
+  if (!task_id || !Array.isArray(user_ids) || user_ids.length === 0) {
+    return sendSuccessResp(c, 400, "task_id and user_ids[] are required");
+  }
+
+  // delete matching records using drizzle
+  await db.delete(task_assignees).where(
+    and(
+      eq(task_assignees.task_id, task_id),
+      inArray(task_assignees.user_id, user_ids)
+    )
+  );
+
+  return sendSuccessResp(
+    c,
+    200,
+    "Task assignees deleted successfully",
+    { task_id, deleted_user_ids: user_ids }
+  );
+};
+
+
 
 
 // 2. Get Paginated Tasks (GET)
