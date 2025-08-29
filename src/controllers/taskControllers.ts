@@ -89,6 +89,8 @@ export class TasksController {
       deleted_at: now,
     });
   };
+
+  
     //delete task along with its assignees
   deleteTask = async (c: Context) => {
     const id = Number(c.req.param("id"));
@@ -118,7 +120,6 @@ export class TasksController {
       { task_id: id, deleted_at: now }
     );
   };
-
 
 
   // Get Paginated Tasks (GET)

@@ -1,0 +1,15 @@
+meta {
+  name: userslist
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:3000/v1.0/users/dropdown?search_string=bhavishya
+  body: none
+  auth: inherit
+}
+
+params:query {
+  search_string: bhavishya
+}
