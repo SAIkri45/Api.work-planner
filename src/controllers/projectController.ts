@@ -5,7 +5,7 @@ import type { UserProjects } from "../db/schema/userProjects.js";
 import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes.js";
 import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject } from "../validations/schemas/vProjectSchema.js";
 
-import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, USER_FETCHED, USER_NOT_FOUND } from "../constants/appMessages.js";
+import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, USER_FETCHED } from "../constants/appMessages.js";
 import { projects } from "../db/schema/projects.js";
 import { user_projects } from "../db/schema/userProjects.js";
 import BadRequestException from "../exceptions/badRequestException.js";
@@ -13,7 +13,7 @@ import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
-import { assignUsersToProject, checkedUsersInProject, getNonExistingUsers, getProjectUsersById, getProjectUsersByIdDropdown, removeUsersFromProject, validateUsersExist } from "../services/db/projectService.js";
+import { assignUsersToProject, getNonExistingUsers, getProjectUsersById, getProjectUsersByIdDropdown, removeUsersFromProject } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 
@@ -126,7 +126,7 @@ class ProjectController {
       throw new BadRequestException(INVALID_INPUT);
     }
 
-    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at", "project_status"], [projectId, null, "COMPLETED"], ["id", "title", "created_by"]);
+    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at", "project_status"], [projectId, null, "COMPLETED"], ["id"]);
 
     if (!projectExists) {
       throw new NotFoundException(PROJECT_NOT_FOUND_ID);
@@ -169,7 +169,7 @@ class ProjectController {
       throw new BadRequestException(INVALID_INPUT);
     }
 
-    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id", "title", "description", "created_by"]);
+    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
 
     if (!projectExists) {
       throw new NotFoundException(PROJECT_NOT_FOUND_ID);
@@ -189,9 +189,9 @@ class ProjectController {
       throw new BadRequestException(INVALID_INPUT);
     }
 
-    const validatedReq = await validateRequest<ValidatedUpdateProject>("update-project", { ...reqData, id: projectId }, PROJECT_VALIDATION_ERROR);
+    const validatedReq = await validateRequest<ValidatedUpdateProject>("update-project", reqData, PROJECT_VALIDATION_ERROR);
 
-    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id", "title", "deleted_at", "created_by"]);
+    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
 
     if (!projectExists) {
       throw new NotFoundException(PROJECT_NOT_FOUND);
@@ -216,27 +216,12 @@ class ProjectController {
     const { user_ids } = validatedReq;
     const uniqueUserIds = [...new Set(user_ids)];
 
-    const [projectExists, validUserIds] = await Promise.all([
-      getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]),
-      validateUsersExist(uniqueUserIds),
-    ]);
-
-    if (!projectExists) {
-      throw new NotFoundException(PROJECT_NOT_FOUND_ID);
-    }
-
-    const invalidUserIds = uniqueUserIds.filter(id => !validUserIds.includes(id));
-
-    if (invalidUserIds.length > 0) {
-      throw new NotFoundException(USER_NOT_FOUND);
-    }
-
     const result = await assignUsersToProject(projectId, uniqueUserIds);
 
     return sendSuccessResp(c, 200, PROJECT_USERS_ASSIGNED, result);
   };
 
-  deleteUserFromProject = async (c: Context) => {
+  removeUserFromProject = async (c: Context) => {
     const projectId = +c.req.param("id");
     const reqBody = await c.req.json();
     const validatedReq = await validateRequest<ValidatedRemoveUsersFromProject>("remove-users-from-project", reqBody, PROJECT_USERS_VALIDATION_ERROR);
@@ -246,27 +231,6 @@ class ProjectController {
     }
 
     const uniqueUserIds = [...new Set(validatedReq.user_ids)];
-
-    const [projectExists, existingUserIds, validUserIds] = await Promise.all([
-
-      getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]),
-      checkedUsersInProject(projectId),
-      validateUsersExist(uniqueUserIds),
-    ]);
-
-    if (!projectExists) {
-      throw new NotFoundException(PROJECT_NOT_FOUND_ID);
-    }
-
-    const invalidUserIds = uniqueUserIds.filter(id => !validUserIds.includes(id));
-    if (invalidUserIds.length > 0) {
-      throw new NotFoundException(USER_NOT_FOUND);
-    }
-
-    const usersNotInProject = uniqueUserIds.filter(id => !existingUserIds.includes(id));
-    if (usersNotInProject.length > 0) {
-      throw new BadRequestException("Users not found in project");
-    }
 
     await removeUsersFromProject(projectId, uniqueUserIds);
 
@@ -300,7 +264,7 @@ class ProjectController {
       throw new BadRequestException(INVALID_INPUT);
     }
 
-    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id", "title", "deleted_at", "created_by"]);
+    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
 
     if (!projectExists) {
       throw new NotFoundException(PROJECT_NOT_FOUND);

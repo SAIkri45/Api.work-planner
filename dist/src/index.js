@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 import { appConfig } from "./config/appConfig.js";
 import { DEF_ERROR_RESP } from "./constants/appMessages.js";
 import envData from "./env.js";
+import dashBoardRoutes from "./routes/dashBoardRoutes.js";
 import projectRouter from "./routes/projectRoutes.js";
 import oAuthRouter from "./routes/slackOAuthRouters.js";
 import userRoutes from "./routes/usersRouters.js";
@@ -24,6 +25,7 @@ app.get("/", (c) => {
     return c.text("Hello Hono!");
 });
 app.route("/projects", projectRouter);
+app.route("/dash-board", dashBoardRoutes);
 app.route("/", oAuthRouter);
 app.route("/users", userRoutes);
 // handling errors globally

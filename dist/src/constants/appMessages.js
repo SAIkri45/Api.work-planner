@@ -286,3 +286,5 @@ export const TASK_CREATED_BY_MISSING = "Task created by is missing";
 export const TASK_CREATED_BY_INVALID = "Task created by is invalid";
 export const TASKS_FETCHED = "Tasks fetched successfully";
 export const TASK_CREATED = "Task created successfully";
+// dash board
+export const DASHBOARD_FETCHED = "Dashboard fetched successfully";

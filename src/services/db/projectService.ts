@@ -14,9 +14,6 @@ export async function getProjectUsersById(id: number, search?: string) {
   const result: any = await db.query.projects.findFirst({
     where: and(eq(projects.id, id), isNull(projects.deleted_at)),
     columns: {
-      id: true,
-      title: true,
-      project_status: true,
     },
     with: {
       userProjects: {
