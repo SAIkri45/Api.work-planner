@@ -1,4 +1,4 @@
-import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, PROJECTS_USERS_FETCHED_SUCCESS, USER_NOT_FOUND } from "../constants/appMessages.js";
+import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, USER_FETCHED, USER_NOT_FOUND } from "../constants/appMessages.js";
 import { projects } from "../db/schema/projects.js";
 import { user_projects } from "../db/schema/userProjects.js";
 import BadRequestException from "../exceptions/badRequestException.js";
@@ -6,7 +6,7 @@ import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
-import { checkedUsersInProject, getNonExistingUsers, getProjectUsersById, getProjectUsersByIdDropdown, insertUsersToProject, removeUsersFromProject, validateUsersExist } from "../services/db/projectService.js";
+import { assignUsersToProject, checkedUsersInProject, getNonExistingUsers, getProjectUsersById, getProjectUsersByIdDropdown, removeUsersFromProject, validateUsersExist } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 class ProjectController {
@@ -125,7 +125,7 @@ class ProjectController {
             throw new NotFoundException(PROJECT_NOT_FOUND_ID);
         }
         const result = await getProjectUsersById(projectId, searchString);
-        return sendSuccessResp(c, 200, PROJECTS_FETCHED_SUCCESS, result);
+        return sendSuccessResp(c, 200, USER_FETCHED, result);
     };
     updateProject = async (c) => {
         const reqData = await c.req.json();
@@ -150,9 +150,8 @@ class ProjectController {
         const validatedReq = await validateRequest("add-users-to-project", { ...requestBody, project_id: projectId }, PROJECT_USERS_VALIDATION_ERROR);
         const { user_ids } = validatedReq;
         const uniqueUserIds = [...new Set(user_ids)];
-        const [projectExists, existingUserIds, validUserIds] = await Promise.all([
+        const [projectExists, validUserIds] = await Promise.all([
             getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [projectId, null], ["id"]),
-            checkedUsersInProject(projectId),
             validateUsersExist(uniqueUserIds),
         ]);
         if (!projectExists) {
@@ -162,9 +161,7 @@ class ProjectController {
         if (invalidUserIds.length > 0) {
             throw new NotFoundException(USER_NOT_FOUND);
         }
-        const existingUserSet = new Set(existingUserIds);
-        const newUserIds = uniqueUserIds.filter(id => !existingUserSet.has(id));
-        const result = await insertUsersToProject(projectId, newUserIds);
+        const result = await assignUsersToProject(projectId, uniqueUserIds);
         return sendSuccessResp(c, 200, PROJECT_USERS_ASSIGNED, result);
     };
     deleteUserFromProject = async (c) => {
@@ -205,7 +202,7 @@ class ProjectController {
             throw new NotFoundException(PROJECT_NOT_FOUND);
         }
         const result = await getProjectUsersByIdDropdown(projectId, searchString);
-        return sendSuccessResp(c, 200, PROJECTS_USERS_FETCHED_SUCCESS, result);
+        return sendSuccessResp(c, 200, USER_FETCHED, result);
     };
     getAllNonExistingUsers = async (c) => {
         const projectId = +c.req.param("id");

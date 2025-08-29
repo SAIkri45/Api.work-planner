@@ -1,4 +1,4 @@
-import { and, eq, ilike, inArray, isNull, not } from "drizzle-orm";
+import { and, eq, exists, ilike, inArray, isNotNull, isNull, not } from "drizzle-orm";
 
 import type { UserProjects } from "../../db/schema/userProjects.js";
 
@@ -6,6 +6,7 @@ import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
+import ConflictException from "../../exceptions/conflictException.js";
 import { saveRecords } from "./baseDbService.js";
 
 export async function getProjectUsersById(id: number, search?: string) {
@@ -31,6 +32,9 @@ export async function getProjectUsersById(id: number, search?: string) {
               id: true,
               display_name: true,
               user_status: true,
+              user_type: true,
+              profile_pic: true,
+              designation: true,
             },
           },
         },
@@ -43,6 +47,10 @@ export async function getProjectUsersById(id: number, search?: string) {
     ?.map((userProject: any) => ({
       id: userProject.users.id,
       display_name: userProject.users.display_name,
+      user_status: userProject.users.user_status,
+      user_type: userProject.users.user_type,
+      profile_pic: userProject.users.profile_pic,
+      designation: userProject.users.designation,
     })) ?? [];
 
   return usersList;
@@ -65,11 +73,40 @@ export async function checkedUsersInProject(projectId: number) {
   const existingUserProjects = await db
     .select({ user_ids: user_projects.user_id })
     .from(user_projects)
-    .where(eq(user_projects.project_id, projectId));
-
+    .where(and(
+      eq(user_projects.project_id, projectId),
+      isNull(user_projects.deleted_at),
+    ));
   return [...new Set(existingUserProjects.map(record => record.user_ids))];
 }
 
+// helper to reactivate previously soft-deleted users
+export async function reactivateUsersInProject(projectId: number, userIds: number[]) {
+  if (userIds.length === 0)
+    return [];
+
+  return db
+    .update(user_projects)
+    .set({ deleted_at: null, updated_at: new Date() })
+    .where(
+      and(
+        eq(user_projects.project_id, projectId),
+        inArray(user_projects.user_id, userIds),
+        isNotNull(user_projects.deleted_at),
+      ),
+    )
+    .returning();
+}
+
+// New helper function to get ALL users in project (active + soft-deleted)
+export async function getAllUsersInProject(projectId: number) {
+  const allUserProjects = await db
+    .select({ user_ids: user_projects.user_id })
+    .from(user_projects)
+    .where(eq(user_projects.project_id, projectId)); // No deleted_at filter
+
+  return [...new Set(allUserProjects.map(record => record.user_ids))];
+}
 export async function validateUsersExist(userIds: number[]) {
   const existingUsers = await db
     .select({ id: users.id })
@@ -96,6 +133,7 @@ export async function removeUsersFromProject(projectId: number, userIds: number[
 
 // Get project users for dropdown with improved filtering and null checks
 export async function getProjectUsersByIdDropdown(id: number, search?: string) {
+  const searchString = search?.trim();
   const result: any = await db.query.projects.findFirst({
     where: and(eq(projects.id, id), isNull(projects.deleted_at)),
     columns: {},
@@ -111,6 +149,7 @@ export async function getProjectUsersByIdDropdown(id: number, search?: string) {
             where: and(
               isNull(users.deleted_at),
               eq(users.user_status, "ACTIVE"),
+              searchString ? ilike(users.display_name, `%${searchString}%`) : undefined,
             ),
             columns: {
               id: true,
@@ -122,59 +161,79 @@ export async function getProjectUsersByIdDropdown(id: number, search?: string) {
     },
   } as any);
 
-  if (!result)
-    return [];
-
-  let usersList
-    = result.userProjects?.map((userProject: any) => ({
+  const usersList = result?.userProjects
+    ?.filter((userProject: any) => userProject.users !== null)
+    ?.map((userProject: any) => ({
       id: userProject.users.id,
       display_name: userProject.users.display_name,
     })) ?? [];
-
-  if (search && search.trim()) {
-    const searchTerm = search.trim().toLowerCase();
-    usersList = usersList.filter((u: any) =>
-      u.display_name?.toLowerCase().includes(searchTerm),
-    );
-  }
 
   return usersList;
 }
 
 export async function getNonExistingUsers(projectId: number, search?: string) {
-  const project = await db.query.projects.findFirst({
-    columns: { id: true },
-    with: {
-      userProjects: {
-        columns: { user_id: true },
-        where: isNull(user_projects.deleted_at),
-      },
-    },
-    where: eq(projects.id, projectId),
-  });
+  const searchTerm = search?.trim();
 
-  const assignedIds = project?.userProjects?.map((up: { user_id: number | null }) => up.user_id).filter((id): id is number => id !== null) || [];
-
-  // Build conditions
-  const conditions = [
-    isNull(users.deleted_at),
-    eq(users.user_status, "ACTIVE"),
-  ];
-
-  if (assignedIds.length > 0) {
-    conditions.push(not(inArray(users.id, assignedIds)));
-  }
-
-  if (search?.trim()) {
-    conditions.push(ilike(users.display_name, `%${search.trim()}%`));
-  }
-
-  // Get non-existing users
   return await db
     .select({
       id: users.id,
       display_name: users.display_name,
     })
     .from(users)
-    .where(and(...conditions));
+    .where(
+      and(
+        isNull(users.deleted_at),
+        eq(users.user_status, "ACTIVE"),
+        not(
+          exists(
+            db
+              .select()
+              .from(user_projects)
+              .where(
+                and(
+                  eq(user_projects.user_id, users.id),
+                  eq(user_projects.project_id, projectId),
+                  isNull(user_projects.deleted_at),
+                ),
+              ),
+          ),
+        ),
+        searchTerm ? ilike(users.display_name, `%${searchTerm}%`) : undefined,
+      ),
+    );
+}
+
+export async function assignUsersToProject(projectId: number, uniqueUserIds: number[]) {
+  const [activeUserIds, allUserIds] = await Promise.all([
+    checkedUsersInProject(projectId),
+    getAllUsersInProject(projectId),
+  ]);
+
+  const activeSet = new Set(activeUserIds);
+  const allUsersSet = new Set(allUserIds);
+
+  const alreadyActiveUsers = uniqueUserIds.filter(id => activeSet.has(id));
+
+  if (alreadyActiveUsers.length > 0) {
+    throw new ConflictException(`Users already exist in project: ${alreadyActiveUsers.join(", ")}`);
+  }
+
+  const softDeletedUsers = uniqueUserIds.filter(
+    id => !activeSet.has(id) && allUsersSet.has(id),
+  );
+
+  const newUsers = uniqueUserIds.filter(id => !allUsersSet.has(id));
+
+  const usersToInsert = [...softDeletedUsers, ...newUsers];
+
+  const result = [];
+
+  if (usersToInsert.length > 0) {
+    const insertedRecords = await insertUsersToProject(projectId, usersToInsert);
+    result.push(...insertedRecords);
+  }
+
+  return {
+    assigned_users: result,
+  };
 }
