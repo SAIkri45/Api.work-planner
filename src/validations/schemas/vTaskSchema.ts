@@ -1,8 +1,8 @@
 import type { InferOutput } from "valibot";
 
-import {array, minLength,nonEmpty,nullish,number,object,optional,picklist,pipe,string,transform,} from "valibot";
+import {array, minLength,nonEmpty,number,object,optional,picklist,pipe,string,transform,} from "valibot";
 
-import {TASK_DESCRIPTION_INVALID,TASK_PROJECT_ID_INVALID,TASK_PROJECT_ID_MISSING,TASK_STATUS_INVALID,TASK_TITLE_INVALID,TASK_TITLE_MISSING,TASK_TITLE_TOO_SHORT,} from "../../constants/appMessages.js";
+import {TASK_DESCRIPTION_INVALID,TASK_STATUS_INVALID,TASK_TITLE_INVALID,TASK_TITLE_MISSING,TASK_TITLE_TOO_SHORT,} from "../../constants/appMessages.js";
 
 // Allowed statuses
 export const allowedTaskStatuses = ["NEW","IN_PROGRESS","COMPLETED","REVIEW","OVERDUE","DONE"] as const;
@@ -39,10 +39,7 @@ project_id: pipe(
   end_date: pipe(string()),
 
   user_ids: optional(
-    array(
-      
-        number("User ID must be a number")
-      )
+    array(number("User ID must be a number"))
   )
 });
 

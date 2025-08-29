@@ -1,8 +1,6 @@
 import type { InferSelectModel } from "drizzle-orm";
 import type { Context } from "hono";
-
 import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes.js";
-
 import { USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import { getPaginatedRecordsConditionally } from "../services/db/baseDbService.js";

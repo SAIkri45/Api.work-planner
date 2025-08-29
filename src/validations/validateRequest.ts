@@ -1,11 +1,8 @@
 import { flatten, safeParseAsync } from "valibot";
-
 import type { AppActivity, ValidatedRequest } from "../types/appTypes.js";
-
 import UnprocessableContentException from "../exceptions/unprocessableContentException.js";
 import { VCreateProjectSchema, VUpdateProjectSchema } from "./schemas/vProjectSchema.js";
 import { VCreateUserSchema } from "./schemas/vUserSchema.js";
-import { VCreateTaskAssigneeSchema } from "./schemas/vTaskAssigneesSchema"
 import { VCreateTaskSchema } from "./schemas/vTaskSchema.js";
 
 export async function validateRequest<R extends ValidatedRequest>(
