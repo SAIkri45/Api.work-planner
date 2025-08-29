@@ -89,6 +89,35 @@ export class TasksController {
       deleted_at: now,
     });
   };
+    //delete task along with its assignees
+  deleteTask = async (c: Context) => {
+    const id = Number(c.req.param("id"));
+
+    if (!id) {
+      return sendSuccessResp(c, 400, "Task ID is required");
+    }
+
+    const now = new Date();
+
+    await db
+      .update(task_assignees)
+      .set({ deleted_at: now })
+      .where(
+        and(eq(task_assignees.task_id, id), isNull(task_assignees.deleted_at))
+      );
+
+    await db
+      .update(Tasks)
+      .set({ deleted_at: now })
+      .where(and(eq(Tasks.id, id), isNull(Tasks.deleted_at)));
+
+    return sendSuccessResp(
+      c,
+      200,
+      "Task and its assignees soft deleted successfully",
+      { task_id: id, deleted_at: now }
+    );
+  };
 
 
 

@@ -8,6 +8,7 @@ const tasksController = new TasksController();
 taskRoutes.get("/tasklist", tasksController.getPaginatedTasks);
 taskRoutes.delete("/assignees", tasksController.deleteTaskAssignees);
 taskRoutes.post("/", isEmployeAuthorized, tasksController.createTask);
+taskRoutes.delete("/:id", tasksController.deleteTask);
 taskRoutes.get("/:id", tasksController.getTaskById);
 taskRoutes.patch("/:id", tasksController.editTask);
 
