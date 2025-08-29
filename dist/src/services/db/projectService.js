@@ -5,62 +5,37 @@ import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import { saveRecords } from "./baseDbService.js";
 export async function getProjectUsersById(id, search) {
+    const searchString = search?.trim();
     const result = await db.query.projects.findFirst({
+        where: and(eq(projects.id, id), isNull(projects.deleted_at)),
         columns: {
             id: true,
             title: true,
-            description: true,
-            logo_url: true,
             project_status: true,
         },
         with: {
             userProjects: {
-                columns: {
-                    deleted_at: true,
-                },
-                where: (userProjects, { isNull }) => isNull(userProjects.deleted_at),
+                where: and(isNull(user_projects.deleted_at), eq(user_projects.project_id, id)),
                 with: {
                     users: {
+                        where: and(isNull(users.deleted_at), eq(users.user_status, "ACTIVE"), searchString ? ilike(users.display_name, `%${searchString}%`) : undefined),
                         columns: {
                             id: true,
                             display_name: true,
-                            email: true,
-                            user_type: true,
                             user_status: true,
-                            deleted_at: true,
                         },
                     },
                 },
             },
         },
-        where: (projects, { eq }) => eq(projects.id, id),
     });
-    if (!result)
-        return null;
-    let users = result.userProjects
-        ?.filter(userProject => userProject.users
-        && userProject.users.deleted_at === null
-        && userProject.users.user_status === "ACTIVE")
-        .map(userProject => ({
+    const usersList = result?.userProjects
+        ?.filter((userProject) => userProject.users !== null)
+        ?.map((userProject) => ({
         id: userProject.users.id,
         display_name: userProject.users.display_name,
-        email: userProject.users.email,
-        user_type: userProject.users.user_type,
-        user_status: userProject.users.user_status,
-    }))
-        ?? [];
-    if (search && search.trim()) {
-        const searchTerm = search.trim();
-        users = users.filter(user => user.display_name?.includes(searchTerm));
-    }
-    return {
-        id: result.id,
-        title: result.title,
-        description: result.description,
-        logo_url: result.logo_url,
-        project_status: result.project_status,
-        users,
-    };
+    })) ?? [];
+    return usersList;
 }
 export async function insertUsersToProject(projectId, userIds) {
     if (!userIds.length)
