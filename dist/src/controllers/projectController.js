@@ -13,6 +13,7 @@ class ProjectController {
     createProject = async (c) => {
         const requestBody = await c.req.json();
         const userDetails = c.get("userDetails");
+        console.log("userDetails", userDetails);
         const validatedReq = await validateRequest("create-project", requestBody, PROJECT_VALIDATION_ERROR);
         const columnsToSelect = ["id", "title", "deleted_at", "created_by"];
         const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["title", "deleted_at"], [validatedReq.title, null], columnsToSelect);
