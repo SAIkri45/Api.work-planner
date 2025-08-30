@@ -17,7 +17,7 @@ export const VCreateProjectSchema = pipeAsync(
       transform(value => value.trim()),
       minLength(10, PROJECT_LINKS_TOO_SHORT),
     )),
-    created_by: pipe(number()),
+    // created_by: pipe(number()),
     updated_by: nullish(number()),
     project_status: projectStatus,
 
