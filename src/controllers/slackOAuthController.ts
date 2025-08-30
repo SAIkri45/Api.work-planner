@@ -18,56 +18,88 @@ import { validateRequest } from "../validations/validateRequest.js";
 
 class SlackOAuthController {
   slackOAuth = async (c: Context) => {
-    const slackAuthUrl = `https://slack.com/oauth/v2/authorize?client_id=${slackConfig.clientId}`
-      + `&user_scope=${encodeURIComponent(slackConfig.userScope)}` // <-- changed here
-      + `&redirect_uri=${encodeURIComponent(slackConfig.redirectUri)}`;
+    try {
+      const slackAuthUrl = `https://slack.com/oauth/v2/authorize?client_id=${slackConfig.clientId}`
+        + `&user_scope=${encodeURIComponent(slackConfig.userScope)}`
+        + `&redirect_uri=${encodeURIComponent(slackConfig.redirectUri)}`;
 
-    return sendSuccessResp(c, 200, "Slack OAuth Initiated", { authUrl: slackAuthUrl });
+      return sendSuccessResp(c, 200, "Slack OAuth Initiated", { authUrl: slackAuthUrl });
+    }
+    catch (error) {
+      throw error;
+    }
   };
 
   slackOAuthCallback = async (c: Context) => {
-    const code = c.req.query("code");
+    try {
+      const code = c.req.query("code");
+      const error = c.req.query("error");
 
-    if (!code) {
-      throw new BadRequestException(MISSING_CODE);
-    }
+      // Handle OAuth errors from Slack
+      if (error) {
+        throw new BadRequestException(`OAuth error: ${error}`);
+      }
 
-    const { userData, tokenData } = await getOAuthCode(code);
+      if (!code) {
+        throw new BadRequestException(MISSING_CODE);
+      }
 
-    const checkUserExist = await checkSlackUserExists(userData.email);
+      const { userData, tokenData } = await getOAuthCode(code);
 
-    let result;
-    if (!checkUserExist) {
-      const validatedReq = await validateRequest<ValidatedCreateUserOrAdmin>("create-user", userData, USER_VALIDATION_ERROR);
+      const checkUserExist = await checkSlackUserExists(userData.email);
 
-      // save user to db
-      result = await saveSingleRecord<User>(users, validatedReq);
+      let result;
+      if (!checkUserExist) {
+        const validatedReq = await validateRequest<ValidatedCreateUserOrAdmin>("create-user", userData, USER_VALIDATION_ERROR);
 
-      getSlackId(tokenData.user_id);
-      // save slack tokens to db
-      result = await saveSingleRecord<SlackToken>(slack_tokens, tokenData);
+        // Save user to db
+        result = await saveSingleRecord<User>(users, validatedReq);
 
-      return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
-    }
-    else {
-      const existingToken = await getSlackTokenByUserId(userData.slack_id);
-
-      const now = Math.floor(Date.now() / 1000);
-      let userDetails;
-      if (existingToken && existingToken.expires_at > now) {
-        // Token still valid → do nothing
-        userDetails = await getByUserId(userData.slack_id);
+        // Save slack tokens to db
+        await saveSingleRecord<SlackToken>(slack_tokens, tokenData);
         getSlackId(tokenData.user_id);
-        return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
+        return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
       }
       else {
-        // 4. Refresh token
-        const refreshed = await refreshSlackToken(existingToken.refresh_token);
+        // User exists, check for existing token
+        const existingToken = await getSlackTokenByUserId(userData.slack_id);
+        const now = Math.floor(Date.now() / 1000);
 
-        await updateSlackToken(existingToken.user_id!, refreshed);
-        getSlackId(tokenData.user_id);
-        return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
+        const userDetails = await getByUserId(userData.slack_id);
+
+        if (existingToken && existingToken.expires_at > now) {
+          // Token still valid
+          getSlackId(tokenData.user_id);
+          return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
+        }
+        else if (existingToken && existingToken.refresh_token) {
+          // Token exists but expired, try to refresh
+          try {
+            const refreshed = await refreshSlackToken(existingToken.refresh_token);
+            await updateSlackToken(existingToken.user_id!, refreshed);
+
+            getSlackId(tokenData.user_id);
+            return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: refreshed });
+          }
+          catch (refreshError) {
+            // If refresh fails, save the new token
+            await saveSingleRecord<SlackToken>(slack_tokens, tokenData);
+
+            getSlackId(tokenData.user_id);
+            return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
+          }
+        }
+        else {
+          // No existing token or no refresh token available, save new one
+          await saveSingleRecord<SlackToken>(slack_tokens, tokenData);
+
+          getSlackId(tokenData.user_id);
+          return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
+        }
       }
+    }
+    catch (error) {
+      throw error;
     }
   };
 }
