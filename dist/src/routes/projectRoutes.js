@@ -10,6 +10,7 @@ projectRouter.post("/:id/users", projectControllers.assignUsersToProject);
 projectRouter.patch("/:id/users", projectControllers.removeUserFromProject);
 projectRouter.get("/users/:id", projectControllers.getProjectUsersById);
 projectRouter.get("/:id/tasks", projectControllers.getAllTasksByProjectId);
+projectRouter.get("/:id/tasks/status", projectControllers.getTasksStatusByProjectId);
 projectRouter.patch("/:id", projectControllers.updateProject);
 projectRouter.get("/:id", projectControllers.getProjectById);
 projectRouter.delete("/:id", projectControllers.softDeleteProjectById);

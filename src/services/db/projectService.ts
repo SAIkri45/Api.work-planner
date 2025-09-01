@@ -1,4 +1,4 @@
-import { and, count, desc, eq, exists, ilike, inArray, isNotNull, isNull, not, sql } from "drizzle-orm";
+import { and, desc, eq, exists, ilike, inArray, isNotNull, isNull, not, sql } from "drizzle-orm";
 
 import type { UserProjects } from "../../db/schema/userProjects.js";
 

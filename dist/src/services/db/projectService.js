@@ -212,3 +212,18 @@ export async function getTasksByProjectId(projectId, search, offset, pageSize, o
     }));
     return { result: tasks, total_records };
 }
+export async function getProjectTaskStatusCounts(projectId) {
+    const result = await db
+        .select({
+        completed_count: sql `CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'COMPLETED') AS INTEGER)`,
+        inProgress_count: sql `CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'IN_PROGRESS') AS INTEGER)`,
+        new_count: sql `CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'NEW') AS INTEGER)`,
+        review_count: sql `CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'REVIEW') AS INTEGER)`,
+        overdue_count: sql `CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'OVERDUE') AS INTEGER)`,
+        done_count: sql `CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'DONE') AS INTEGER)`,
+    })
+        .from(Tasks)
+        .where(and(eq(Tasks.project_id, projectId), isNull(Tasks.deleted_at)))
+        .groupBy(Tasks.project_id);
+    return result[0];
+}

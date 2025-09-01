@@ -344,7 +344,6 @@ class ProjectController {
     const result = await getProjectTaskStatusCounts(projectId);
 
     return sendSuccessResp(c, 200, "Task status fetched successfully", result);
-  }
-
+  };
 }
 export default ProjectController;
