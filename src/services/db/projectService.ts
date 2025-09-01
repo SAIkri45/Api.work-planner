@@ -1,9 +1,11 @@
-import { and, eq, exists, ilike, inArray, isNotNull, isNull, not } from "drizzle-orm";
+import { and, desc, eq, exists, ilike, inArray, isNotNull, isNull, not, sql } from "drizzle-orm";
 
 import type { UserProjects } from "../../db/schema/userProjects.js";
 
+import { allowedTaskStatus } from "../../constants/appMessages.js";
 import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
+import { Tasks } from "../../db/schema/tasks.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import ConflictException from "../../exceptions/conflictException.js";
@@ -233,4 +235,73 @@ export async function assignUsersToProject(projectId: number, uniqueUserIds: num
   return {
     assigned_users: result,
   };
+}
+
+export async function getTasksByProjectId(
+  projectId: number,
+  search?: string,
+  offset?: number,
+  pageSize?: number,
+  orderBy?: string,
+  taskStatus?: any,
+  dueDate?: string,
+) {
+  const filters: any[] = [
+    eq(Tasks.project_id, projectId),
+    isNull(Tasks.deleted_at),
+  ];
+
+  if (search?.trim()) {
+    filters.push(ilike(Tasks.task_title, `%${search.trim()}%`));
+  }
+
+  if (taskStatus && allowedTaskStatus.includes(taskStatus.toUpperCase())) {
+    filters.push(eq(Tasks.task_status, taskStatus.toUpperCase() as any));
+  }
+
+  if (dueDate) {
+    const dueDateObj = new Date(dueDate);
+    filters.push(eq(Tasks.end_date, dueDateObj));
+  }
+
+  let orderByClause;
+  if (orderBy) {
+    const [column, direction] = orderBy.split(":");
+    const dir = direction?.toLowerCase() === "desc" ? "desc" : "asc";
+    orderByClause = dir === "desc"
+      ? sql`${sql.identifier(column)} DESC`
+      : sql`${sql.identifier(column)} ASC`;
+  }
+  else {
+    orderByClause = desc(Tasks.created_at);
+  }
+
+  const result = await db.query.Tasks.findMany({
+    where: and(...filters),
+    orderBy: orderByClause,
+    offset,
+    limit: pageSize,
+    columns: {
+      id: true,
+      task_title: true,
+      task_status: true,
+      end_date: true,
+      created_at: true,
+    },
+  });
+
+  const total_records = (await db
+    .select({ count: sql<number>`count(*)` })
+    .from(Tasks)
+    .where(and(...filters)))[0]?.count || 0;
+
+  const tasks = result.map(task => ({
+    id: task.id,
+    task_title: task.task_title,
+    task_status: task.task_status,
+    end_date: task.end_date,
+    created_at: task.created_at,
+  }));
+
+  return { result: tasks, total_records };
 }

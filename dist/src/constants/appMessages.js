@@ -163,6 +163,14 @@ export const allowedProjectStatus = [
     "OVERDUE",
     "DONE",
 ];
+export const allowedTaskStatus = [
+    "NEW",
+    "IN_PROGRESS",
+    "COMPLETED",
+    "REVIEW",
+    "OVERDUE",
+    "DONE",
+];
 export const COMPONENT_TYPE_MISSING = "Component type is required.";
 export const COMPONENT_TEXT_MISSING = "Component text is required.";
 export const COMPONENT_FORMAT_INVALID = "Component format is invalid.";

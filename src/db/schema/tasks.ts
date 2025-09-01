@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { index, integer, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 import { projects } from "./projects.js";
@@ -31,3 +32,10 @@ export const Tasks = pgTable("tasks", {
 export type Task = typeof Tasks.$inferSelect;
 export type NewTask = typeof Tasks.$inferInsert;
 export type TasksTable = typeof Tasks;
+
+export const taskRelations = relations(Tasks, ({ one }) => ({
+  project: one(projects, {
+    fields: [Tasks.project_id],
+    references: [projects.id],
+  }),
+}));

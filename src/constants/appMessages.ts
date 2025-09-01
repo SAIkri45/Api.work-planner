@@ -181,10 +181,20 @@ export const allowedProjectStatus = [
   "OVERDUE",
   "DONE",
 ] as const;
+
+export const allowedTaskStatus = [
+  "NEW",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "REVIEW",
+  "OVERDUE",
+  "DONE",
+] as const;
 // Type exports for use elsewhere if needed
 export type UserType = typeof allowedUserTypes[number];
 export type UserStatus = typeof allowedUserStatuses[number];
 export type ProjectStatus = typeof allowedProjectStatus[number];
+export type TaskStatus = typeof allowedTaskStatus[number];
 
 export const COMPONENT_TYPE_MISSING = "Component type is required.";
 export const COMPONENT_TEXT_MISSING = "Component text is required.";

@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { index, integer, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { projects } from "./projects.js";
 import { users } from "./users.js";
@@ -22,3 +23,9 @@ export const Tasks = pgTable("tasks", {
     index("tasks_created_by_idx").on(t.created_by),
     index("tasks_status_idx").on(t.task_status),
 ]);
+export const taskRelations = relations(Tasks, ({ one }) => ({
+    project: one(projects, {
+        fields: [Tasks.project_id],
+        references: [projects.id],
+    }),
+}));

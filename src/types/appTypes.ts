@@ -4,6 +4,7 @@ import type { UserProjects } from "../db/schema/userProjects.js";
 import type { User } from "../db/schema/users.js";
 import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject } from "../validations/schemas/vProjectSchema.js";
 import type { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
+import type { PaginationInfo } from "./dbTypes.js";
 
 export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedAddUsersToProject | ValidatedRemoveUsersFromProject;
 export type AppActivity = UserActivity | CreateProjectActivity;
@@ -51,4 +52,16 @@ export interface RefreshedTokenData {
   access_token: string;
   expires_at: number;
   refresh_token: string;
+}
+
+export interface TaskResponse {
+  id: number;
+  task_title: string;
+  task_status: "NEW" | "IN_PROGRESS" | "COMPLETED" | "REVIEW" | "OVERDUE" | "DONE" | null;
+  end_date: Date | null;
+}
+
+export interface ProjectTasksResp {
+  pagination: PaginationInfo;
+  records: TaskResponse[];
 }
