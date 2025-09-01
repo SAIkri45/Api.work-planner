@@ -58,7 +58,7 @@ class ProjectController {
     const searchString = c.req.query("search_string") || null;
     const orderBy = c.req.query("order_by");
     const projectStatus = c.req.query("project_status")?.toLocaleUpperCase() || null;
-
+    const dueDate = c.req.query("due_date");
     let orderByQueryData: OrderByQueryData<Project> = {
       columns: ["created_at"],
       values: ["desc"],
@@ -93,6 +93,11 @@ class ProjectController {
     if (projectStatus) {
       WhereQueryData.columns.push("project_status");
       WhereQueryData.values.push(projectStatus);
+    }
+
+    if (dueDate) {
+      WhereQueryData.columns.push("due_date");
+      WhereQueryData.values.push(dueDate);
     }
 
     const columnsToSelect = ["id", "title", "description", "logo_url", "project_status", "start_date", "due_date"] as const;
