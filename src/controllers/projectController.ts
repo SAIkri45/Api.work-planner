@@ -362,6 +362,6 @@ class ProjectController {
     const result = await userCreatedProjectById(projectId);
 
     return sendSuccessResp(c, 200, "Project created by user fetched successfully", result);
-  }
+  };
 }
 export default ProjectController;

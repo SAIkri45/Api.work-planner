@@ -23,7 +23,15 @@ export const projects = pgTable("projects", {
     index("projects_title_idx").on(t.title),
     index("projects_created_by_idx").on(t.created_by),
 ]);
-export const projectRelations = relations(projects, ({ many }) => ({
+export const projectRelations = relations(projects, ({ many, one }) => ({
     userProjects: many(user_projects),
     tasks: many(Tasks),
+    createdByUser: one(users, {
+        fields: [projects.created_by],
+        references: [users.id],
+    }),
+    updatedByUser: one(users, {
+        fields: [projects.updated_by],
+        references: [users.id],
+    }),
 }));
