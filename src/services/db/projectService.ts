@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, ilike, inArray, isNotNull, isNull, not, sql } from "drizzle-orm";
+import { and, desc, eq, exists, ilike, inArray, isNull, not, sql } from "drizzle-orm";
 
 import type { UserProjects } from "../../db/schema/userProjects.js";
 
@@ -77,24 +77,6 @@ export async function checkedUsersInProject(projectId: number) {
       isNull(user_projects.deleted_at),
     ));
   return [...new Set(existingUserProjects.map(record => record.user_ids))];
-}
-
-// helper to reactivate previously soft-deleted users
-export async function reactivateUsersInProject(projectId: number, userIds: number[]) {
-  if (userIds.length === 0)
-    return [];
-
-  return db
-    .update(user_projects)
-    .set({ deleted_at: null, updated_at: new Date() })
-    .where(
-      and(
-        eq(user_projects.project_id, projectId),
-        inArray(user_projects.user_id, userIds),
-        isNotNull(user_projects.deleted_at),
-      ),
-    )
-    .returning();
 }
 
 // New helper function to get ALL users in project (active + soft-deleted)
@@ -309,7 +291,7 @@ export async function getTasksByProjectId(
 export async function getProjectTaskStatusCounts(projectId: number) {
   const result = await db
     .select({
-
+      total_count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
       completed_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'COMPLETED') AS INTEGER)`,
       inProgress_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'IN_PROGRESS') AS INTEGER)`,
       new_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'NEW') AS INTEGER)`,
