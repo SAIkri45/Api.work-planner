@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import { index, pgEnum, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 
 import { user_projects } from "./userProjects.js";
+import { projects } from "./projects.js";
 
 export const userTypesEnum = pgEnum("user_type", ["SUPER_ADMIN", "EMPLOYEE", "MANAGER", "ADMIN", "TL"]);
 export const userStatuses = pgEnum("user_status", ["ACTIVE", "INACTIVE"]);
@@ -33,4 +34,12 @@ export type UsersTable = typeof users;
 
 export const userRelations = relations(users, ({ many }) => ({
   user_projects: many(user_projects),
+  projects: many(projects),
+
+  _createdProjects: many(projects, {
+    relationName: 'createdByUser'
+  }),
+  _updatedProjects: many(projects, {
+    relationName: 'updatedByUser'
+  }),
 }));

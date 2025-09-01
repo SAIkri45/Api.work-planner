@@ -15,7 +15,7 @@ import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
-import { assignUsersToProject, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject } from "../services/db/projectService.js";
+import { assignUsersToProject, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 
@@ -345,5 +345,23 @@ class ProjectController {
 
     return sendSuccessResp(c, 200, "Task status fetched successfully", result);
   };
+
+  getProjectCreatedByUser = async (c: Context) => {
+    const projectId = +c.req.param("id");
+
+    if (!projectId) {
+      throw new BadRequestException(INVALID_INPUT);
+    }
+
+    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
+
+    if (!projectExists) {
+      throw new NotFoundException(PROJECT_NOT_FOUND_ID);
+    }
+
+    const result = await userCreatedProjectById(projectId);
+
+    return sendSuccessResp(c, 200, "Project created by user fetched successfully", result);
+  }
 }
 export default ProjectController;

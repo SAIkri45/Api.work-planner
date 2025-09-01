@@ -308,3 +308,35 @@ export async function getProjectTaskStatusCounts(projectId: number) {
 
   return result[0];
 }
+
+
+export async function userCreatedProjectById(projectId: number) {
+  const result = await db.query.projects.findFirst({
+    where: and(eq(projects.id, projectId), isNull(projects.deleted_at)),
+    columns: {
+      id: true,
+      title: true,
+      description: true,
+      logo_url: true,
+      project_status: true,
+      created_by: true,
+      updated_by: true,
+      start_date: true,
+      due_date: true,
+    },
+    with: {
+      createdByUser: {
+        columns: {
+          display_name: true,
+          profile_pic: true,
+        },
+      },
+    },
+  });
+
+  if (!result) {
+    return null;
+  }
+
+  return result;
+}
