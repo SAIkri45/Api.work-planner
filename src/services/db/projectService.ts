@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, ilike, inArray, isNotNull, isNull, not, sql } from "drizzle-orm";
+import { and, count, desc, eq, exists, ilike, inArray, isNotNull, isNull, not, sql } from "drizzle-orm";
 
 import type { UserProjects } from "../../db/schema/userProjects.js";
 
@@ -304,4 +304,25 @@ export async function getTasksByProjectId(
   }));
 
   return { result: tasks, total_records };
+}
+
+export async function getProjectTaskStatusCounts(projectId: number) {
+  const result = await db
+    .select({
+
+      completed_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'COMPLETED') AS INTEGER)`,
+      inProgress_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'IN_PROGRESS') AS INTEGER)`,
+      new_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'NEW') AS INTEGER)`,
+      review_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'REVIEW') AS INTEGER)`,
+      overdue_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'OVERDUE') AS INTEGER)`,
+      done_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'DONE') AS INTEGER)`,
+    })
+    .from(Tasks)
+    .where(and(
+      eq(Tasks.project_id, projectId),
+      isNull(Tasks.deleted_at),
+    ))
+    .groupBy(Tasks.project_id);
+
+  return result[0];
 }
