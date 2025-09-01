@@ -190,6 +190,7 @@ class ProjectController {
 
   updateProject = async (c: Context) => {
     const reqData = await c.req.json();
+    const userDetails = c.get("userDetails");
 
     const projectId = +(c.req.param("id"));
 
@@ -205,7 +206,7 @@ class ProjectController {
       throw new NotFoundException(PROJECT_NOT_FOUND);
     }
 
-    const result = await updateRecordById<Project>(projects, projectId, validatedReq);
+    const result = await updateRecordById<Project>(projects, projectId, { ...validatedReq, updated_by: userDetails.id });
 
     return sendSuccessResp(c, 200, PROJECT_UPDATED, result);
   };

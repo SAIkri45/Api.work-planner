@@ -26,7 +26,7 @@ export const VUpdateProjectSchema = pipeAsync(object({
     title: projectTile,
     description: ProjectDescription,
     logo_url: optional(string(PROJECT_LOGO_URL_MISSING)),
-    updated_by: pipe(number()),
+    // updated_by: pipe(number()),
     project_status: projectStatus,
     start_date: projectStartDate,
     due_date: projectDueDate,
