@@ -247,7 +247,8 @@ export const TITLE_MISSING = "Title is missing";
 export const TITLE_TOO_SHORT = "Minimum length of the title is 3 characters";
 export const DATE_IS_MISSING = "Date is missing";
 export const DATE_IS_INVALID = "Date is invalid";
-export const DATE_REQUIRED = "Date is required";
+export const DATE_REQUIRED = "Start Date is required";
+export const DUE_DATE_REQUIRED = "Due Date is required";
 
 export const TOTAL_CONTACTS_MISSING = "Total Contacts is missing";
 export const DELIEVERY_PERCENTAGE_MISSING = "Delivery percentage is missing";
@@ -286,12 +287,12 @@ export const USER_STATUS_INVALID = "User status is invalid";
 
 // projects
 
-export const PROJECT_TITLE_REQUIRED = "Title is required";
-export const PROJECT_TITLE_MIN_LENGTH = "Title min 3 letters";
-export const VALID_TITLE = "Title should contain letters only";
+export const PROJECT_TITLE_REQUIRED = "Project Title is required";
+export const PROJECT_TITLE_MIN_LENGTH = "Project Title min 3 letters";
+export const VALID_TITLE = "Project Title should contain letters only";
 
-export const PROJECT_DESCRIPTION_REQUIRED = "Description is required";
-export const PROJECT_DESCRIPTION_MIN_LENGTH = "Description min 8 letters";
+export const PROJECT_DESCRIPTION_REQUIRED = "Project Description is required";
+export const PROJECT_DESCRIPTION_MIN_LENGTH = "Project Description min 8 letters";
 export const VALID_DESCRIPTION = "Title should contain letters only";
 export const PROJECT_LINKS_REQUIRED = "Project links are required";
 

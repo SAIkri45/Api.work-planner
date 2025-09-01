@@ -17,7 +17,7 @@ export const VCreateProjectSchema = pipeAsync(object({
     // Cross-field validation
     if (data.due_date && data.start_date) {
         if (data.due_date <= data.start_date) {
-            throw new ConflictException("Due date must be after start date");
+            throw new ConflictException("Due Date must be after Start Date");
         }
     }
     return data;
