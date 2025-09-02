@@ -301,7 +301,7 @@ class ProjectController {
     const paginationInfo = getPaginationData(page, pageSize, total_records);
 
     const finalResponse: ProjectTasksResp = {
-      pagination: paginationInfo,
+      pagination_info: paginationInfo,
       records: result,
     };
 

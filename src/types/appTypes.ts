@@ -63,6 +63,6 @@ export interface TaskResponse {
 }
 
 export interface ProjectTasksResp {
-  pagination: PaginationInfo;
+  pagination_info: PaginationInfo;
   records: TaskResponse[];
 }

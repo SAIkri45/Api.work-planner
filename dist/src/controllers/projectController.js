@@ -204,7 +204,7 @@ class ProjectController {
         const { result, total_records } = await getTasksByProjectId(projectId, search, offset, pageSize, orderBy, taskStatus, dueDate);
         const paginationInfo = getPaginationData(page, pageSize, total_records);
         const finalResponse = {
-            pagination: paginationInfo,
+            pagination_info: paginationInfo,
             records: result,
         };
         return sendSuccessResp(c, 200, "Project tasks fetched successfully", finalResponse);
