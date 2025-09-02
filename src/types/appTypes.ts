@@ -3,15 +3,17 @@ import type { SlackToken } from "../db/schema/slackTokens.js";
 import type { TaskAssignees } from "../db/schema/taskAssignees.js";
 import type { UserProjects } from "../db/schema/userProjects.js";
 import type { User } from "../db/schema/users.js";
+import type { Task } from "../db/schema/tasks.js";
 import type { ValidatedCreateProject, ValidatedUpdateProject } from "../validations/schemas/vProjectSchema.js";
+import { ValidatedCreateTaskAssignee } from "../validations/schemas/vTaskAssigneesSchema.js";
 import { ValidatedCreateTask } from "../validations/schemas/vTaskSchema.js";
 import type { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
 
-export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask;
+export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask | ValidatedCreateTaskAssignee;
 export type AppActivity = UserActivity | CreateProjectActivity | CreateTaskAssigneeActivity;
 export type UserActivity = "create-user" | "update-user";
 export type CreateProjectActivity = "create-project" | "update-project";
-export type CreateTaskAssigneeActivity = "create-task" | "create-task-assignee" | "update-task-assignee" ;
+export type CreateTaskAssigneeActivity = "create-task" | "create-task-assignee" | "update-task-assignee";
 
 export type AppRespData = | User
   | User[]
@@ -22,7 +24,9 @@ export type AppRespData = | User
   | UserProjects
   | UserProjects[]
   | TaskAssignees
-  | TaskAssignees[];
+  | TaskAssignees[]
+  | Task
+  | Task[];
 
 export interface JWTUserPayload {
   sub: number;

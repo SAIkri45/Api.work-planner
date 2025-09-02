@@ -1,127 +1,31 @@
+import { and, eq, isNull } from "drizzle-orm";
 import type { Context } from "hono";
+import {
+  TASKS_FETCHED,
+  TASK_UPDATED,
+  TASK_NOT_FOUND,
+  TASK_ID_REQUIRED,
+} from "../constants/appMessages";
+import { db } from "../db/configuration.js";
+import { Task, Tasks } from "../db/schema/tasks";
+import {
+  getPaginatedRecordsConditionally,
+  getRecordById,
+  updateRecordById,
+} from "../services/db/baseDbService";
 import type {
   DBTableColumns,
   OrderByQueryData,
   SortDirection,
   WhereQueryData,
 } from "../types/dbTypes";
-import {
-  TASKS_FETCHED,
-  TASK_CREATED,
-  TASK_VALIDATION_ERROR,
-} from "../constants/appMessages";
-import { TaskAssignees, task_assignees } from "../db/schema/taskAssignees";
-import { Task, Tasks } from "../db/schema/tasks";
-import {
-  getPaginatedRecordsConditionally,
-  getRecordById,
-  saveRecords,
-  saveSingleRecord,
-  updateRecordById,
-} from "../services/db/baseDbService";
 import { sendSuccessResp } from "../utils/respUtils";
-import { ValidatedCreateTask } from "../validations/schemas/vTaskSchema";
-import { validateRequest } from "../validations/validateRequest";
-import { and, count, eq, inArray, isNull } from "drizzle-orm";
-import { db } from "../db/configuration.js";
+
+// exceptions
+import BadRequestException from "../exceptions/badRequestException.js";
+import NotFoundException from "../exceptions/notFoundException.js";
 
 export class TasksController {
-  createTask = async (c: Context) => {
-    const requestBody = await c.req.json();
-    console.log("req--->", requestBody);
-
-    const validatedReq = await validateRequest<ValidatedCreateTask>(
-      "create-task",
-      requestBody,
-      TASK_VALIDATION_ERROR
-    );
-    console.log("validatedReq--->", validatedReq);
-    const { user_ids, ...taskData } = validatedReq;
-
-    console.log("preparedTaskData--->", taskData);
-
-    const savedTask = await saveSingleRecord<Task>(Tasks, taskData);
-    console.log("savedTask--->", savedTask);
-
-    if (user_ids && user_ids.length > 0) {
-      const taskAssigneeRecords = user_ids.map((userId: number) => ({
-        user_id: userId,
-        task_id: savedTask.id,
-        task_title: savedTask.task_title,
-        created_by: validatedReq.created_by,
-        created_at: new Date(),
-      }));
-
-      await saveRecords<TaskAssignees>(task_assignees, taskAssigneeRecords);
-
-      return sendSuccessResp(c, 200, TASK_CREATED, {
-        ...savedTask,
-        user_ids,
-      });
-    }
-
-    return sendSuccessResp(c, 200, TASK_CREATED, savedTask);
-  };
-
-  //delete taskassignees
-  deleteTaskAssignees = async (c: Context) => {
-    const { task_id, user_ids } = await c.req.json();
-
-    if (!task_id || !Array.isArray(user_ids) || user_ids.length === 0) {
-      return sendSuccessResp(c, 400, "task_id and user_ids are required");
-    }
-    const now = new Date();
-
-    await db
-      .update(task_assignees)
-      .set({ deleted_at: now })
-      .where(
-        and(
-          eq(task_assignees.task_id, task_id),
-          inArray(task_assignees.user_id, user_ids),
-          isNull(task_assignees.deleted_at)
-        )
-      );
-
-    return sendSuccessResp(c, 200, "Task assignees soft deleted successfully", {
-      task_id,
-      deleted_user_ids: user_ids,
-      deleted_at: now,
-    });
-  };
-
-  
-    //delete task along with its assignees
-  deleteTask = async (c: Context) => {
-    const id = Number(c.req.param("id"));
-
-    if (!id) {
-      return sendSuccessResp(c, 400, "Task ID is required");
-    }
-
-    const now = new Date();
-
-    await db
-      .update(task_assignees)
-      .set({ deleted_at: now })
-      .where(
-        and(eq(task_assignees.task_id, id), isNull(task_assignees.deleted_at))
-      );
-
-    await db
-      .update(Tasks)
-      .set({ deleted_at: now })
-      .where(and(eq(Tasks.id, id), isNull(Tasks.deleted_at)));
-
-    return sendSuccessResp(
-      c,
-      200,
-      "Task and its assignees soft deleted successfully",
-      { task_id: id, deleted_at: now }
-    );
-  };
-
-
   // Get Paginated Tasks (GET)
   getPaginatedTasks = async (c: Context) => {
     const page = +c.req.query("page")! || 1;
@@ -175,11 +79,21 @@ export class TasksController {
     return sendSuccessResp(c, 200, TASKS_FETCHED, result);
   };
 
-  // getbyid
+  // Get Task By Id
   getTaskById = async (c: Context) => {
     const id = Number(c.req.param("id"));
 
-    const task = await getRecordById<Task>(Tasks, id);
+    if (!id) {
+      throw new BadRequestException(TASK_ID_REQUIRED);
+    }
+
+    const task = await db.query.Tasks.findFirst({
+      where: and(eq(Tasks.id, id), isNull(Tasks.deleted_at)),
+    });
+
+    if (!task) {
+      throw new NotFoundException(TASK_NOT_FOUND);
+    }
 
     return sendSuccessResp(c, 200, TASKS_FETCHED, task);
   };
@@ -187,18 +101,29 @@ export class TasksController {
   // Edit Task (PATCH)
   editTask = async (c: Context) => {
     const id = Number(c.req.param("id"));
-    const body = await c.req.json();
+
+    const body = await c.req.json().catch(() => null);
+    if (!body) {
+      throw new BadRequestException(TASK_ID_REQUIRED);
+    }
+
+    const existingTask = await getRecordById<Task>(Tasks, id, [
+      "id",
+      "deleted_at",
+    ]);
+
+    if (!existingTask || existingTask.deleted_at !== null) {
+      throw new NotFoundException(TASK_NOT_FOUND);
+    }
 
     const updatedTask = await updateRecordById<Task>(Tasks, id, {
       ...body,
-      updated_at: new Date(),
     });
 
-    return sendSuccessResp(c, 200, "Task updated successfully", updatedTask);
+    return sendSuccessResp(c, 200, TASK_UPDATED, updatedTask);
   };
-
-  
 }
+
 //tasksdropdown
 // getAllTasksDropdown = async (c: Context) => {
 //   const page = +c.req.query("page")! || 1;

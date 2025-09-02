@@ -68,6 +68,8 @@ export const USER_UPDATED = "User updated successfully";
 export const USER_ACTIVE_STATUS_REQUIRED = "Active status is required";
 export const USER_ACTIVE_STATUS_UPDATED = "User status updated successfully";
 export const USERS_FETCHED = "Users fetched successfully";
+export const FAILED_TO_FETCH_USERS = "Failed to fetch users";
+export const EMPLOYEES_FETCHED = " Employees fetched successfully";
 
 export const PROFILE_PIC_MISSING = "Profile pic is missing";
 export const PROFILE_PIC_TOO_SHORT
@@ -271,6 +273,7 @@ export const SLACK_ID_INVALID = "slack_id is invalid";
 export const SLACK_ID_MISSING = "slack_id is missing";
 
 export const USER_STATUS_INVALID = "User status is invalid";
+export const USER_IDS_REQUIRED = "User IDs are required";
 
 // projects
 
@@ -318,3 +321,12 @@ export const TASK_CREATED = "Task created successfully";
 export const TASK_NOT_FOUND = "Task not found";
 export const TASK_VALIDATION_ERROR = "Task details provided do not meet the required validation criteria";
 export const TASK_ALREADY_EXISTS = "Task with this title already exists";
+export const TASK_DELETED = "Task deleted successfully";
+export const TASK_USERS_DELETED = "Task and its users deleted successfully";
+export const TASK_UPDATED = "Task updated successfully";
+export const TASK_ID_REQUIRED = "Task is required";
+export const TASK_ID_INVALID = "Task ID is invalid";
+export const TASK_CANNOT_DELETED = "Task cannot be deleted because it still has active assignees";
+export const TASK_STATUS_NOT_COMPLETED = "Task status is not completed";
+export const TRANSACTION_ROLLBACK = "task is required";
+export const TASK_ASSIGNEES_DELETED = "Task assignees deleted successfully";

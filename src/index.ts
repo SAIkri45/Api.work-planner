@@ -15,6 +15,8 @@ import projectRouter from "./routes/projectRoutes.js";
 
 import userRoutes from "./routes/usersRouters.js";
 
+import taskAssigneesRoutes from "./routes/taskAssigneesRoutes.js";
+
 const apiVer = appConfig.version;
 const app = new Hono().basePath(`/${apiVer}`);
 const port = envData.PORT || 3000;
@@ -28,6 +30,7 @@ app.get("/", (c) => {
 app.route("/tasks", taskRouter);
 app.route("/projects", projectRouter);
 app.route("/users", userRoutes);
+app.route("/task-assignees", taskAssigneesRoutes);
 app.route("/", oAuthRouter);
 
 // handling errors globally
