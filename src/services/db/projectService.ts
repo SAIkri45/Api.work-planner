@@ -268,6 +268,7 @@ export async function getTasksByProjectId(
       task_title: true,
       task_status: true,
       end_date: true,
+      start_date: true,
       created_at: true,
     },
   });
@@ -282,6 +283,7 @@ export async function getTasksByProjectId(
     task_title: task.task_title,
     task_status: task.task_status,
     end_date: task.end_date,
+    start_date: task.start_date,
     created_at: task.created_at,
   }));
 

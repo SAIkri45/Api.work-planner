@@ -58,6 +58,7 @@ export interface TaskResponse {
   id: number;
   task_title: string;
   task_status: "NEW" | "IN_PROGRESS" | "COMPLETED" | "REVIEW" | "OVERDUE" | "DONE" | null;
+  start_date: Date | null;
   end_date: Date | null;
 }
 
