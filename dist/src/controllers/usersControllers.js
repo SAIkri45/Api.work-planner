@@ -1,6 +1,7 @@
 import { USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
-import { getPaginatedRecordsConditionally } from "../services/db/baseDbService.js";
+import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 export class UsersController {
     // 1. Get paginated users
@@ -43,20 +44,20 @@ export class UsersController {
         const result = await getPaginatedRecordsConditionally(users, page, pageSize, orderByQueryData, whereQueryData);
         return sendSuccessResp(c, 200, USERS_FETCHED, result);
     };
-    // 2. Dropdown list (id + full_name only) with pagination
     getUsersDropdown = async (c) => {
-        const page = +c.req.query("page") || 1;
-        const pageSize = +c.req.query("page_size") || 10;
-        const searchString = c.req.query("search_string")?.trim() || null;
+        const searchString = c.req.query("search_string");
+        const orderByQueryData = parseOrderByQuery("id", "asc");
         const whereQueryData = {
-            columns: ["user_status"],
-            values: ["ACTIVE"],
+            columns: ["deleted_at"],
+            values: [null],
         };
+        const columnsToSelect = ["id", "display_name"];
         if (searchString) {
+            // Add search string filter using LIKE
             whereQueryData.columns.push("display_name");
             whereQueryData.values.push(`%${searchString}%`);
         }
-        const result = await getPaginatedRecordsConditionally(users, page, pageSize, { columns: ["created_at"], values: ["desc"] }, whereQueryData, ["id", "display_name"]);
+        const result = await getRecordsConditionally(users, whereQueryData, columnsToSelect, orderByQueryData);
         return sendSuccessResp(c, 200, "Dropdown users fetched successfully", result);
     };
     // 3. Employees list (exclude admins) with pagination
