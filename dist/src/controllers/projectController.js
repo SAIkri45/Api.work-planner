@@ -1,4 +1,4 @@
-import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, USER_FETCHED } from "../constants/appMessages.js";
+import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
 import { projects } from "../db/schema/projects.js";
 import { user_projects } from "../db/schema/userProjects.js";
 import BadRequestException from "../exceptions/badRequestException.js";
@@ -78,19 +78,6 @@ class ProjectController {
         const columnsToSelect = ["id", "title", "description", "logo_url", "project_status", "start_date", "due_date"];
         const result = await getPaginatedRecordsConditionally(projects, page, pageSize, orderByQueryData, WhereQueryData, columnsToSelect);
         return sendSuccessResp(c, 200, PROJECTS_FETCHED, result);
-    };
-    getProjectById = async (c) => {
-        const projectId = +c.req.param("id");
-        if (!projectId) {
-            throw new BadRequestException(INVALID_INPUT);
-        }
-        const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
-        if (!projectExists) {
-            throw new NotFoundException(PROJECT_NOT_FOUND_ID);
-        }
-        const columnsToSelect = ["id", "title", "description", "logo_url", "project_status", "created_by", "updated_by", "start_date", "due_date"];
-        const result = await getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [projectId, null], columnsToSelect);
-        return sendSuccessResp(c, 200, PROJECTS_FETCHED_SUCCESS, result);
     };
     softDeleteProjectById = async (c) => {
         const projectId = +c.req.param("id");
@@ -234,7 +221,7 @@ class ProjectController {
         const result = await getProjectTaskStatusCounts(projectId);
         return sendSuccessResp(c, 200, "Task status fetched successfully", result);
     };
-    getProjectCreatedByUser = async (c) => {
+    getProjectById = async (c) => {
         const projectId = +c.req.param("id");
         if (!projectId) {
             throw new BadRequestException(INVALID_INPUT);
@@ -244,7 +231,7 @@ class ProjectController {
             throw new NotFoundException(PROJECT_NOT_FOUND_ID);
         }
         const result = await userCreatedProjectById(projectId);
-        return sendSuccessResp(c, 200, "Project created by user fetched successfully", result);
+        return sendSuccessResp(c, 200, "Project fetched successfully", result);
     };
 }
 export default ProjectController;
