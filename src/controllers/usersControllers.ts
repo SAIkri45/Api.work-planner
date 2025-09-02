@@ -5,8 +5,7 @@ import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } 
 
 import { USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
-import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { getPaginatedRecordsConditionally, getRecordsConditionally } from "../services/db/baseDbService.js";
+import { getPaginatedRecordsConditionally } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 
 type User = InferSelectModel<typeof users>;
@@ -66,25 +65,30 @@ export class UsersController {
     return sendSuccessResp(c, 200, USERS_FETCHED, result);
   };
 
+  // 2. Dropdown list (id + full_name only) with pagination
   getUsersDropdown = async (c: Context) => {
-    const searchString = c.req.query("search_string");
-
-    const orderByQueryData = parseOrderByQuery<User>("id", "asc");
+    const page = +c.req.query("page")! || 1;
+    const pageSize = +c.req.query("page_size")! || 10;
+    const searchString = c.req.query("search_string")?.trim() || null;
 
     const whereQueryData: WhereQueryData<User> = {
-      columns: ["deleted_at"],
-      values: [null],
+      columns: ["user_status"],
+      values: ["ACTIVE"],
     };
 
-    const columnsToSelect = ["id", "display_name"] as const;
-
     if (searchString) {
-      // Add search string filter using LIKE
       whereQueryData.columns.push("display_name");
       whereQueryData.values.push(`%${searchString}%`);
     }
 
-    const result = await getRecordsConditionally<User>(users, whereQueryData, columnsToSelect, orderByQueryData);
+    const result = await getPaginatedRecordsConditionally<User>(
+      users,
+      page,
+      pageSize,
+      { columns: ["created_at"], values: ["desc"] },
+      whereQueryData,
+      ["id", "display_name"],
+    );
 
     return sendSuccessResp(c, 200, "Dropdown users fetched successfully", result);
   };
