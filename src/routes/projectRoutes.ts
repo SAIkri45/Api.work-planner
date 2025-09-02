@@ -11,7 +11,6 @@ projectRouter.get("/:id/users/assigned", projectControllers.getProjectBasedAssig
 projectRouter.get("/:id/users/available", projectControllers.getAllNonExistingUsers);
 projectRouter.post("/:id/users", projectControllers.assignUsersToProject);
 projectRouter.patch("/:id/users", projectControllers.removeUserFromProject);
-projectRouter.get("/:id/users/created-by", projectControllers.getProjectCreatedByUser);
 projectRouter.get("/users/:id", projectControllers.getProjectUsersById);
 projectRouter.get("/:id/tasks", projectControllers.getAllTasksByProjectId);
 projectRouter.get("/:id/tasks/status", projectControllers.getTasksStatusByProjectId);

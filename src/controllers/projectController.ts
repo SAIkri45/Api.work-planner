@@ -107,26 +107,6 @@ class ProjectController {
     return sendSuccessResp(c, 200, PROJECTS_FETCHED, result);
   };
 
-  getProjectById = async (c: Context) => {
-    const projectId = +c.req.param("id");
-
-    if (!projectId) {
-      throw new BadRequestException(INVALID_INPUT);
-    }
-
-    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
-
-    if (!projectExists) {
-      throw new NotFoundException(PROJECT_NOT_FOUND_ID);
-    }
-
-    const columnsToSelect = ["id", "title", "description", "logo_url", "project_status", "created_by", "updated_by", "start_date", "due_date"] as const;
-
-    const result = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], columnsToSelect);
-
-    return sendSuccessResp(c, 200, PROJECTS_FETCHED_SUCCESS, result);
-  };
-
   softDeleteProjectById = async (c: Context) => {
     const projectId = +c.req.param("id");
 
@@ -346,7 +326,7 @@ class ProjectController {
     return sendSuccessResp(c, 200, "Task status fetched successfully", result);
   };
 
-  getProjectCreatedByUser = async (c: Context) => {
+  getProjectById = async (c: Context) => {
     const projectId = +c.req.param("id");
 
     if (!projectId) {
@@ -361,7 +341,7 @@ class ProjectController {
 
     const result = await userCreatedProjectById(projectId);
 
-    return sendSuccessResp(c, 200, "Project created by user fetched successfully", result);
+    return sendSuccessResp(c, 200, "Project fetched successfully", result);
   };
 }
 export default ProjectController;
