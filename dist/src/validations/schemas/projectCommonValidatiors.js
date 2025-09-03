@@ -1,7 +1,8 @@
 import { array, isoDate, minLength, nonEmpty, nullish, number, optional, picklist, pipe, regex, string, transform } from "valibot";
-import { allowedProjectStatus, DATE_REQUIRED, DUE_DATE_REQUIRED, PROJECT_DESCRIPTION_MIN_LENGTH, PROJECT_DESCRIPTION_REQUIRED, PROJECT_STATUS_REQUIRED, PROJECT_TITLE_MIN_LENGTH, PROJECT_TITLE_REQUIRED, VALID_TITLE } from "../../constants/appMessages.js";
+import { allowedProjectStatus, DATE_REQUIRED, DUE_DATE_REQUIRED, PROJECT_DESCRIPTION_MIN_LENGTH, PROJECT_DESCRIPTION_REQUIRED, PROJECT_LINKS_REQUIRED, PROJECT_LINKS_TOO_SHORT, PROJECT_STATUS_REQUIRED, PROJECT_TITLE_MIN_LENGTH, PROJECT_TITLE_REQUIRED, VALID_TITLE } from "../../constants/appMessages.js";
 export const projectTile = pipe(string(PROJECT_TITLE_REQUIRED), nonEmpty(PROJECT_TITLE_REQUIRED), transform(value => value.trim().toLocaleLowerCase()), regex(/^[A-Z ]+$/i, VALID_TITLE), minLength(3, PROJECT_TITLE_MIN_LENGTH));
 export const ProjectDescription = pipe(string(PROJECT_DESCRIPTION_REQUIRED), nonEmpty(PROJECT_DESCRIPTION_REQUIRED), transform(value => value.trim()), minLength(3, PROJECT_DESCRIPTION_MIN_LENGTH));
+export const projectLinks = optional(pipe(string(PROJECT_LINKS_REQUIRED), nonEmpty(PROJECT_LINKS_REQUIRED), transform(value => value.trim()), minLength(10, PROJECT_LINKS_TOO_SHORT)));
 export const projectStatus = optional(pipe(string(PROJECT_STATUS_REQUIRED), nonEmpty(PROJECT_STATUS_REQUIRED), transform(value => value.trim().toUpperCase()), picklist(allowedProjectStatus, PROJECT_STATUS_REQUIRED)));
 export const projectStartDate = pipe(string(DATE_REQUIRED), isoDate(DATE_REQUIRED), transform(str => new Date(str)));
 export const projectDueDate = pipe(string(DUE_DATE_REQUIRED), isoDate(DUE_DATE_REQUIRED), transform(str => new Date(str)));

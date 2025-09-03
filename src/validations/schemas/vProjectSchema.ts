@@ -1,10 +1,10 @@
 import type { InferOutput } from "valibot";
 
-import { minLength, nonEmpty, nullish, number, object, optional, pipe, pipeAsync, string, transform } from "valibot";
+import { minLength, nonEmpty, number, object, optional, pipe, pipeAsync, string, transform } from "valibot";
 
 import { PROJECT_LINKS_REQUIRED, PROJECT_LINKS_TOO_SHORT, PROJECT_LOGO_URL_MISSING } from "../../constants/appMessages.js";
 import ConflictException from "../../exceptions/conflictException.js";
-import { ProjectDescription, projectDueDate, projectStartDate, projectStatus, projectTile, projectUserIds, projectUserIdsRequired } from "./projectCommonValidatiors.js";
+import { ProjectDescription, projectDueDate, projectLinks, projectStartDate, projectStatus, projectTile, projectUserIds, projectUserIdsRequired } from "./projectCommonValidatiors.js";
 
 export const VCreateProjectSchema = pipeAsync(
   object({
@@ -18,7 +18,7 @@ export const VCreateProjectSchema = pipeAsync(
       minLength(10, PROJECT_LINKS_TOO_SHORT),
     )),
     // created_by: pipe(number()),
-    updated_by: nullish(number()),
+    // updated_by: nullish(number()),
     project_status: projectStatus,
 
     start_date: projectStartDate,
@@ -49,9 +49,20 @@ export const VUpdateProjectSchema = pipeAsync(
     project_status: projectStatus,
     start_date: projectStartDate,
     due_date: projectDueDate,
+    project_links: projectLinks,
     // user_ids: projectUserIds,
     // users_to_remove: optional(array(number())),
-    id: optional(pipe(number())),
+    // id: optional(pipe(number())),
+  }),
+  transform((data) => {
+    // Cross-field validation
+    if (data.due_date && data.start_date) {
+      if (data.due_date <= data.start_date) {
+        throw new ConflictException("Due Date must be after Start Date");
+      }
+    }
+
+    return data;
   }),
 );
 
