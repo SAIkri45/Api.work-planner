@@ -1,5 +1,5 @@
 import { and, desc, eq, exists, ilike, inArray, isNull, not, sql } from "drizzle-orm";
-import { allowedTaskStatus } from "../../constants/appMessages.js";
+import { allowedProjectStatus, allowedTaskStatus } from "../../constants/appMessages.js";
 import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
 import { Tasks } from "../../db/schema/tasks.js";
@@ -247,4 +247,73 @@ export async function userCreatedProjectById(projectId) {
         return null;
     }
     return result;
+}
+export async function getAllUsersInProjectWithPagination(offset, pageSize, search, orderBy, projectStatus) {
+    const filters = [
+        isNull(projects.deleted_at),
+    ];
+    if (search?.trim()) {
+        filters.push(ilike(projects.title, `%${search.trim()}%`));
+    }
+    if (projectStatus && allowedProjectStatus.includes(projectStatus.toUpperCase())) {
+        filters.push(eq(projects.project_status, projectStatus.toUpperCase()));
+    }
+    let orderByClause;
+    if (orderBy) {
+        const [column, direction] = orderBy.split(":");
+        const dir = direction?.toLowerCase() === "desc" ? "desc" : "asc";
+        orderByClause = dir === "desc"
+            ? sql `${sql.identifier(column)} DESC`
+            : sql `${sql.identifier(column)} ASC`;
+    }
+    else {
+        orderByClause = desc(projects.created_at);
+    }
+    const result = await db.query.projects.findMany({
+        where: and(...filters),
+        orderBy: orderByClause,
+        offset,
+        limit: pageSize,
+        columns: {
+            id: true,
+            title: true,
+            logo_url: true,
+            project_status: true,
+        },
+        with: {
+            userProjects: {
+                where: isNull(user_projects.deleted_at),
+                with: {
+                    users: {
+                        where: and(isNull(users.deleted_at), eq(users.user_status, "ACTIVE")),
+                        columns: {
+                            id: true,
+                            display_name: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+    const totalCountResult = await db
+        .select({ count: sql `count(*)` })
+        .from(projects)
+        .where(and(...filters));
+    const total_records = totalCountResult[0].count;
+    const mappedResult = result.map((project) => ({
+        projectId: project.id,
+        projectName: project.title,
+        projectLogoUrl: project.logo_url,
+        projectStatus: project.project_status,
+        users: project.userProjects
+            .filter((userProject) => userProject.users)
+            .map((userProject) => ({
+            userId: userProject.users.id,
+            displayName: userProject.users.display_name,
+        })),
+    }));
+    return {
+        result: mappedResult,
+        total_records,
+    };
 }

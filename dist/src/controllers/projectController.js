@@ -7,7 +7,7 @@ import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
-import { assignUsersToProject, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, userCreatedProjectById } from "../services/db/projectService.js";
+import { assignUsersToProject, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 class ProjectController {
@@ -232,6 +232,22 @@ class ProjectController {
         }
         const result = await userCreatedProjectById(projectId);
         return sendSuccessResp(c, 200, "Project fetched successfully", result);
+    };
+    getAllProjectUsersList = async (c) => {
+        const query = c.req.query();
+        const page = +query.page || 1;
+        const pageSize = +(c.req.query("page_size") || 10);
+        const offset = (page - 1) * pageSize;
+        const search = c.req.query("search_string");
+        const orderBy = c.req.query("order_by");
+        const projectStatus = c.req.query("status");
+        const { result, total_records } = await getAllUsersInProjectWithPagination(offset, pageSize, search, orderBy, projectStatus);
+        const paginationInfo = getPaginationData(page, pageSize, total_records);
+        const finalResponse = {
+            pagination_info: paginationInfo,
+            records: result,
+        };
+        return sendSuccessResp(c, 200, "Project users fetched successfully", finalResponse);
     };
 }
 export default ProjectController;

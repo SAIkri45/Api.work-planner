@@ -66,3 +66,23 @@ export interface ProjectTasksResp {
   pagination_info: PaginationInfo;
   records: TaskResponse[];
 }
+
+export interface ProjectUser {
+  userId: number;
+  displayName: string;
+}
+
+// Single project with users response
+export interface ProjectWithUsersResponse {
+  projectId: number;
+  projectName: string;
+  projectLogoUrl: string | null;
+  projectStatus: string;
+  users: ProjectUser[];
+}
+
+// Main response interface with pagination
+export interface ProjectUsersResponse {
+  pagination_info: PaginationInfo;
+  records: ProjectWithUsersResponse[];
+}
