@@ -68,16 +68,16 @@ export interface ProjectTasksResp {
 }
 
 export interface ProjectUser {
-  userId: number;
-  displayName: string;
+  user_id: number;
+  display_name: string;
 }
 
 // Single project with users response
 export interface ProjectWithUsersResponse {
-  projectId: number;
-  projectName: string;
-  projectLogoUrl: string | null;
-  projectStatus: string;
+  id: number;
+  project_name: string;
+  logo_url: string | null;
+  project_status: string;
   users: ProjectUser[];
 }
 

@@ -412,15 +412,15 @@ export async function getAllUsersInProjectWithPagination(
   const total_records = totalCountResult[0].count;
 
   const mappedResult: ProjectWithUsersResponse[] = result.map((project: any) => ({
-    projectId: project.id,
-    projectName: project.title,
-    projectLogoUrl: project.logo_url,
-    projectStatus: project.project_status,
+    id: project.id,
+    project_name: project.title,
+    logo_url: project.logo_url,
+    project_status: project.project_status,
     users: project.userProjects
       .filter((userProject: any) => userProject.users)
       .map((userProject: any): ProjectUser => ({
-        userId: userProject.users.id,
-        displayName: userProject.users.display_name,
+        user_id: userProject.users.id,
+        display_name: userProject.users.display_name,
       })),
   }));
 
