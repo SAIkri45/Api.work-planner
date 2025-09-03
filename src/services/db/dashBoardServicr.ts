@@ -9,7 +9,6 @@ export async function getUserTaskStatistics() {
   return await db.query.users.findMany({
     where: isNull(users.deleted_at),
     columns: {
-
       display_name: true,
     },
     with: {

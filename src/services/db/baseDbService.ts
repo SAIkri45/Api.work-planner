@@ -451,7 +451,39 @@ async function softDeleteRecordById<R extends DBTableRow>(
 ) {
   return await db.update(table).set(record).where(eq(table.id, id)).returning();
 }
+
+async function saveSingleRecordWithTrx<R extends DBTableRow>(
+  table: DBTable,
+  record: DBNewRecord,
+  trx?: Transaction, // ← optional trx
+) {
+  const client = trx ?? db; // ← fallback to db if trx not passed
+
+  const dataWithTimeStamps = {
+    ...record,
+    created_at: new Date(),
+  };
+  const recordSaved = await db.insert(table).values(dataWithTimeStamps).returning();
+  return recordSaved[0] as R;
+}
+
+async function saveRecordsWithTrx<R extends DBTableRow>(
+  table: DBTable,
+  records: DBNewRecords,
+  trx?: Transaction, // ← optional trx
+) {
+  const client = trx ?? db; // ← fallback to db if trx not passed
+
+  const dataWithTimeStamps = {
+    ...records,
+    created_at: new Date(),
+  };
+  const recordsSaved = await db.insert(table).values(dataWithTimeStamps).returning();
+  return recordsSaved as R[];
+}
 export {
+  saveSingleRecordWithTrx,
+  saveRecordsWithTrx,
   deleteRecordById,
   deleteRecordsByColumn,
   exportData,

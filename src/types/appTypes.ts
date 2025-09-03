@@ -78,6 +78,8 @@ export interface ProjectWithUsersResponse {
   projectName: string;
   projectLogoUrl: string | null;
   projectStatus: string;
+  project_start_date: Date | null;
+  project_end_date: Date | null;
   users: ProjectUser[];
 }
 

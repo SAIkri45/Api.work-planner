@@ -14,44 +14,91 @@ import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveRecordsWithTrx, saveSingleRecord, saveSingleRecordWithTrx, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { assignUsersToProject, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
+import { db } from "../db/configuration.js";
 
 class ProjectController {
+  // createProject = async (c: Context) => {
+  //   const requestBody = await c.req.json();
+  //   const userDetails = c.get("userDetails");
+  //   console.log("userDetails", userDetails);
+
+  //   const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
+
+  //   const columnsToSelect = ["id", "title", "deleted_at", "created_by"] as const;
+
+  //   const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["title", "deleted_at"], [validatedReq.title, null], columnsToSelect);
+
+  //   if (projectExists) {
+  //     throw new ConflictException(PROJECT_ALREADY_EXISTS);
+  //   }
+
+  //   const savedProject = await saveSingleRecord<Project>(projects, { ...validatedReq, created_by: userDetails.id });
+  //   // const savedProject = await saveSingleRecord<Project>(projects, validatedReq);
+
+  //   if (validatedReq.user_ids?.length) {
+  //     const userProjectRecords = validatedReq.user_ids.map(user_id => ({
+  //       user_id,
+  //       project_id: savedProject.id,
+  //     }));
+
+  //     await saveRecords<UserProjects>(user_projects, userProjectRecords);
+
+  //     return sendSuccessResp(c, 200, PROJECT_CREATED, { ...savedProject, user_ids: validatedReq.user_ids });
+  //   }
+
+  //   return sendSuccessResp(c, 200, PROJECT_CREATED, savedProject);
+  // };
+
   createProject = async (c: Context) => {
     const requestBody = await c.req.json();
-    const userDetails = c.get("userDetails");
-    console.log("userDetails", userDetails);
+    console.log('requestBody: ', requestBody);
+    // const userDetails = c.get("userDetails");
+    // console.log("userDetails", userDetails);
 
     const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
+    console.log('validatedReq: ', validatedReq);
 
     const columnsToSelect = ["id", "title", "deleted_at", "created_by"] as const;
 
-    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["title", "deleted_at"], [validatedReq.title, null], columnsToSelect);
+    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(
+      projects,
+      ["title", "deleted_at"],
+      [validatedReq.title, null],
+      columnsToSelect
+    );
 
     if (projectExists) {
       throw new ConflictException(PROJECT_ALREADY_EXISTS);
     }
 
-    const savedProject = await saveSingleRecord<Project>(projects, { ...validatedReq, created_by: userDetails.id });
-    // const savedProject = await saveSingleRecord<Project>(projects, validatedReq);
+    let insertedData: any = null;
 
-    if (validatedReq.user_ids?.length) {
-      const userProjectRecords = validatedReq.user_ids.map(user_id => ({
-        user_id,
-        project_id: savedProject.id,
-      }));
+    await db.transaction(async (trx) => {
+      console.log("inside transaction");
 
-      await saveRecords<UserProjects>(user_projects, userProjectRecords);
+      // insertedData = await saveSingleRecordWithTrx<Project>(projects, { ...validatedReq, created_by: userDetails.id }, trx);
+      insertedData = saveSingleRecordWithTrx<Project>(projects, validatedReq, trx);
 
-      return sendSuccessResp(c, 200, PROJECT_CREATED, { ...savedProject, user_ids: validatedReq.user_ids });
-    }
+      if (validatedReq.user_ids?.length) {
+        const userProjectRecords = validatedReq.user_ids.map(user_id => ({
+          user_id,
+          project_id: insertedData.id,
+        }));
 
-    return sendSuccessResp(c, 200, PROJECT_CREATED, savedProject);
+        const usersData = saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
+
+        console.log("usersData: ", { ...insertedData, user_ids: usersData });
+
+        return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, user_ids: usersData });
+      }
+    });
+
+    return sendSuccessResp(c, 201, PROJECT_CREATED, insertedData);
   };
-
   getAllProjectsPaginated = async (c: Context) => {
     const page = +c.req.query("page")! || 1;
     const pageSize = +c.req.query("page_size")! || 10;
