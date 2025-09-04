@@ -231,4 +231,41 @@ async function deleteRecordsByColumn(table, column, value) {
 async function softDeleteRecordById(table, id, record) {
     return await db.update(table).set(record).where(eq(table.id, id)).returning();
 }
-export { deleteRecordById, deleteRecordsByColumn, exportData, getMultipleRecordsByAColumnValue, getMultipleRecordsByMultipleColumnValues, getPaginatedRecords, getPaginatedRecordsConditionally, getRecordById, getRecordsConditionally, getRecordsCount, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateMultipleRecordsByIds, updateRecordByColumnValue, updateRecordById, updateRecordByMultipleColumnValues, };
+async function saveSingleRecordWithTrx(table, record, trx) {
+    const client = trx ?? db; // ← fallback to db if trx not passed
+    const dataWithTimeStamps = {
+        ...record,
+        created_at: new Date(),
+    };
+    const recordSaved = await client.insert(table).values(dataWithTimeStamps).returning();
+    return recordSaved[0];
+}
+async function saveRecordsWithTrx(table, records, trx) {
+    const client = trx ?? db;
+    // Always handle as array - convert single record to array if needed
+    const recordsArray = Array.isArray(records) ? records : [records];
+    const recordsWithTimeStamps = recordsArray.map(record => ({
+        ...record,
+        created_at: new Date(),
+    }));
+    const recordsSaved = await client.insert(table).values(recordsWithTimeStamps).returning();
+    return recordsSaved;
+}
+async function softDeleteRecordByIdWithTrx(table, id, record, trx) {
+    const client = trx ?? db;
+    return await client.update(table).set(record).where(eq(table.id, id)).returning();
+}
+async function updateRecordByMultipleColumnValuesWithTrx(table, columns, values, record, trx, id) {
+    const client = trx ?? db;
+    const whereQueryData = {
+        columns,
+        values,
+    };
+    const dataWithTimeStamps = { id, ...record, updated_at: new Date() };
+    const whereConditions = whereQueryData.columns.map((column, index) => eq(sql.raw(`${getTableName(table)}.${String(column)}`), whereQueryData.values[index]));
+    return await client
+        .update(table)
+        .set(dataWithTimeStamps)
+        .where(and(...whereConditions));
+}
+export { deleteRecordById, deleteRecordsByColumn, exportData, getMultipleRecordsByAColumnValue, getMultipleRecordsByMultipleColumnValues, getPaginatedRecords, getPaginatedRecordsConditionally, getRecordById, getRecordsConditionally, getRecordsCount, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveRecords, saveRecordsWithTrx, saveSingleRecord, saveSingleRecordWithTrx, softDeleteRecordById, softDeleteRecordByIdWithTrx, updateMultipleRecordsByIds, updateRecordByColumnValue, updateRecordById, updateRecordByMultipleColumnValues, updateRecordByMultipleColumnValuesWithTrx, };

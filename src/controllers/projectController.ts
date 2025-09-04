@@ -1,55 +1,63 @@
 import type { Context } from "hono";
 
 import type { Project } from "../db/schema/projects.js";
+import type { Task } from "../db/schema/tasks.js";
 import type { UserProjects } from "../db/schema/userProjects.js";
 import type { ProjectTasksResp, ProjectUsersResponse } from "../types/appTypes.js";
 import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes.js";
 import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject } from "../validations/schemas/vProjectSchema.js";
 
-import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
+import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
+import { db } from "../db/configuration.js";
 import { projects } from "../db/schema/projects.js";
+import { Tasks } from "../db/schema/tasks.js";
 import { user_projects } from "../db/schema/userProjects.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecords, saveSingleRecord, softDeleteRecordById, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
-import { assignUsersToProject, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, userCreatedProjectById } from "../services/db/projectService.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
+import { assignUsersToProject, checkTaskExist, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 
 class ProjectController {
   createProject = async (c: Context) => {
-    const requestBody = await c.req.json();
-    const userDetails = c.get("userDetails");
-    console.log("userDetails", userDetails);
+    try {
+      const requestBody = await c.req.json();
+      const userDetails = c.get("userDetails");
 
-    const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
+      const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
 
-    const columnsToSelect = ["id", "title", "deleted_at", "created_by"] as const;
+      const { user_ids, ...projectData } = validatedReq;
 
-    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["title", "deleted_at"], [validatedReq.title, null], columnsToSelect);
+      const columnsToSelect = ["id", "title", "deleted_at", "created_by"] as const;
 
-    if (projectExists) {
-      throw new ConflictException(PROJECT_ALREADY_EXISTS);
+      const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["title", "deleted_at"], [validatedReq.title, null], columnsToSelect);
+
+      if (projectExists) {
+        throw new ConflictException(PROJECT_ALREADY_EXISTS);
+      }
+
+      let insertedData: any;
+      await db.transaction(async (trx) => {
+        insertedData = await saveSingleRecordWithTrx<Project>(projects, { ...projectData, created_by: userDetails.id }, trx);
+        if (user_ids?.length) {
+          const userProjectRecords = user_ids.map(user_id => ({
+            user_id,
+            project_id: insertedData.id,
+          }));
+
+          await saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
+        }
+      });
+      return sendSuccessResp(c, 201, PROJECT_CREATED, insertedData);
     }
-
-    const savedProject = await saveSingleRecord<Project>(projects, { ...validatedReq, created_by: userDetails.id });
-    // const savedProject = await saveSingleRecord<Project>(projects, validatedReq);
-
-    if (validatedReq.user_ids?.length) {
-      const userProjectRecords = validatedReq.user_ids.map(user_id => ({
-        user_id,
-        project_id: savedProject.id,
-      }));
-
-      await saveRecords<UserProjects>(user_projects, userProjectRecords);
-
-      return sendSuccessResp(c, 200, PROJECT_CREATED, { ...savedProject, user_ids: validatedReq.user_ids });
+    catch (error: any) {
+      console.error("Error at create Project", error.message);
+      throw error;
     }
-
-    return sendSuccessResp(c, 200, PROJECT_CREATED, savedProject);
   };
 
   getAllProjectsPaginated = async (c: Context) => {
@@ -114,15 +122,32 @@ class ProjectController {
       throw new BadRequestException(INVALID_INPUT);
     }
 
-    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at", "project_status"], [projectId, null, "COMPLETED"], ["id"]);
+    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
 
     if (!projectExists) {
       throw new NotFoundException(PROJECT_NOT_FOUND_ID);
     }
 
-    await softDeleteRecordById<Project>(projects, projectId, { deleted_at: new Date() });
+    const incompleteTasks = await checkTaskExist(projectId);
 
-    await updateRecordByMultipleColumnValues<UserProjects>(user_projects, ["project_id"], [projectId], { deleted_at: new Date() });
+    if (incompleteTasks.length > 0) {
+      throw new ConflictException(PROJECT_TASKS_IN_COMPLETED);
+    }
+
+    const projectStatus = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at", "project_status"], [projectId, null, "COMPLETED"], ["id"]);
+
+    if (!projectStatus) {
+      throw new ConflictException(PROJECT_STATUS);
+    }
+
+    await db.transaction(async (trx) => {
+      await softDeleteRecordByIdWithTrx<Project>(projects, projectId, { deleted_at: new Date() }, trx);
+
+      await updateRecordByMultipleColumnValuesWithTrx<UserProjects>(user_projects, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
+
+      await updateRecordByMultipleColumnValuesWithTrx<Task>(Tasks, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
+    });
+
     return sendSuccessResp(c, 200, PROJECT_DELETED);
   };
 

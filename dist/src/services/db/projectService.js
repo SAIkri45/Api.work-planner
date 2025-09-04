@@ -1,11 +1,12 @@
 import { and, desc, eq, exists, ilike, inArray, isNull, not, sql } from "drizzle-orm";
-import { allowedProjectStatus, allowedTaskStatus } from "../../constants/appMessages.js";
+import { allowedTaskStatus } from "../../constants/appMessages.js";
 import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
 import { Tasks } from "../../db/schema/tasks.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import ConflictException from "../../exceptions/conflictException.js";
+import { buildOrderByClause, buildProjectFilters } from "../../helpers/projectHelper.js";
 import { saveRecords } from "./baseDbService.js";
 export async function getProjectUsersById(id, search) {
     const searchString = search?.trim();
@@ -249,26 +250,8 @@ export async function userCreatedProjectById(projectId) {
     return result;
 }
 export async function getAllUsersInProjectWithPagination(offset, pageSize, search, orderBy, projectStatus) {
-    const filters = [
-        isNull(projects.deleted_at),
-    ];
-    if (search?.trim()) {
-        filters.push(ilike(projects.title, `%${search.trim()}%`));
-    }
-    if (projectStatus && allowedProjectStatus.includes(projectStatus.toUpperCase())) {
-        filters.push(eq(projects.project_status, projectStatus.toUpperCase()));
-    }
-    let orderByClause;
-    if (orderBy) {
-        const [column, direction] = orderBy.split(":");
-        const dir = direction?.toLowerCase() === "desc" ? "desc" : "asc";
-        orderByClause = dir === "desc"
-            ? sql `${sql.identifier(column)} DESC`
-            : sql `${sql.identifier(column)} ASC`;
-    }
-    else {
-        orderByClause = desc(projects.created_at);
-    }
+    const filters = buildProjectFilters(search, projectStatus);
+    const orderByClause = buildOrderByClause(orderBy);
     const result = await db.query.projects.findMany({
         where: and(...filters),
         orderBy: orderByClause,
@@ -277,6 +260,8 @@ export async function getAllUsersInProjectWithPagination(offset, pageSize, searc
         columns: {
             id: true,
             title: true,
+            start_date: true,
+            due_date: true,
             logo_url: true,
             project_status: true,
         },
@@ -286,6 +271,7 @@ export async function getAllUsersInProjectWithPagination(offset, pageSize, searc
                 with: {
                     users: {
                         where: and(isNull(users.deleted_at), eq(users.user_status, "ACTIVE")),
+                        orderBy: desc(users.created_at),
                         columns: {
                             id: true,
                             display_name: true,
@@ -316,4 +302,10 @@ export async function getAllUsersInProjectWithPagination(offset, pageSize, searc
         result: mappedResult,
         total_records,
     };
+}
+export async function checkTaskExist(projectId) {
+    const incompleteTasks = await db.query.Tasks.findMany({
+        where: and(eq(Tasks.project_id, projectId), isNull(Tasks.deleted_at), not(eq(Tasks.task_status, "COMPLETED"))),
+    });
+    return incompleteTasks;
 }
