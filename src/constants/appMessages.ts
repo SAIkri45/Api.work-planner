@@ -70,6 +70,13 @@ export const USER_ACTIVE_STATUS_UPDATED = "User status updated successfully";
 export const USERS_FETCHED = "Users fetched successfully";
 export const FAILED_TO_FETCH_USERS = "Failed to fetch users";
 export const EMPLOYEES_FETCHED = " Employees fetched successfully";
+export const USER_ALREADY_ASSIGNED = " Users were already assigned for this task";
+export const USER_ALREADY_DELETE = "Assignee not found or already removed";
+export const USER_NOT_ADDED = " User not assigned ";
+export const TASKID_USERID_REQUIRED = " Task id and User id required ";
+export const NO_NEW_ASSIGNEES = "No new assignees to add";
+
+
 
 export const PROFILE_PIC_MISSING = "Profile pic is missing";
 export const PROFILE_PIC_TOO_SHORT
@@ -139,6 +146,7 @@ export const CONTACTS_IMPORT_SUCCESS = "Contacts imported successfully";
 export const CONTACTS_IMPORT_FAILED = "Contacts import failed";
 export const CONTACTS_IMPORT_VALIDATION_FAILED = "Contacts import validation failed";
 export const RECORDS_NOT_FOUND = "NO records found tO import";
+
 
 // template messages
 export const TEMPLATE_NAME_MISSING = "Template name is required";
@@ -304,7 +312,7 @@ export const PROJECT_TITLE_INVALID = "Project title is invalid";
 export const PROJECT_TITLE_MISSING = "Project title is missing";
 export const PROJECT_TITLE_TOO_SHORT = "Minimum length of the project title is 3 characters";
 export const PROJECT_DESCRIPTION_INVALID = "Project description is invalid";
-
+export const PROJECT_ID_REQUIRED = " Project id is required";
 // Tasks
 export const TASK_TITLE_INVALID = "Task title is invalid";
 export const TASK_TITLE_MISSING = "Task title is missing";
@@ -322,11 +330,13 @@ export const TASK_NOT_FOUND = "Task not found";
 export const TASK_VALIDATION_ERROR = "Task details provided do not meet the required validation criteria";
 export const TASK_ALREADY_EXISTS = "Task with this title already exists";
 export const TASK_DELETED = "Task deleted successfully";
-export const TASK_USERS_DELETED = "Task and its users deleted successfully";
+export const TASK_USERS_DELETED = "Task assigned users deleted successfully";
 export const TASK_UPDATED = "Task updated successfully";
 export const TASK_ID_REQUIRED = "Task is required";
 export const TASK_ID_INVALID = "Task ID is invalid";
 export const TASK_CANNOT_DELETED = "Task cannot be deleted because it still has active assignees";
 export const TASK_STATUS_NOT_COMPLETED = "Task status is not completed";
-export const TRANSACTION_ROLLBACK = "task is required";
+export const TRANSACTION_ROLLBACK = "Task Title is required";
 export const TASK_ASSIGNEES_DELETED = "Task assignees deleted successfully";
+export const TASK_ASSIGNEES_FETCHED = "Task assignees fetched successfully";
+export const TASK_FAILED_TO_FETCH = " Tasks failed to fetch ";

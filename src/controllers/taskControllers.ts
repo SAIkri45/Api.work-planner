@@ -87,11 +87,11 @@ export class TasksController {
       throw new BadRequestException(TASK_ID_REQUIRED);
     }
 
-    const task = await db.query.Tasks.findFirst({
-      where: and(eq(Tasks.id, id), isNull(Tasks.deleted_at)),
-    });
+    
+    const task = await getRecordById<Task>(Tasks, id);
 
-    if (!task) {
+    
+    if (!task || task.deleted_at !== null) {
       throw new NotFoundException(TASK_NOT_FOUND);
     }
 
@@ -102,7 +102,7 @@ export class TasksController {
   editTask = async (c: Context) => {
     const id = Number(c.req.param("id"));
 
-    const body = await c.req.json().catch(() => null);
+    const body = await c.req.json();
     if (!body) {
       throw new BadRequestException(TASK_ID_REQUIRED);
     }

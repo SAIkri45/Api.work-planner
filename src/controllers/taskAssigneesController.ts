@@ -10,11 +10,24 @@ import {
   TASK_USERS_DELETED,
   TASK_VALIDATION_ERROR,
   TRANSACTION_ROLLBACK,
-  USER_IDS_REQUIRED
+  USER_IDS_REQUIRED,
+  TASK_ALREADY_EXISTS,
+  USER_ALREADY_ASSIGNED,
+  USER_ALREADY_DELETE,
+  USER_DELETED,
+  TASK_ASSIGNEES_FETCHED,
+  FAILED_TO_FETCH_USERS,
+  USER_ADDED,
+  USER_NOT_ADDED,
+  TASKID_USERID_REQUIRED,
+  NO_NEW_ASSIGNEES,
+  PROJECT_ID_REQUIRED,
+  TASKS_FETCHED,
+  TASK_FAILED_TO_FETCH,
 } from "../constants/appMessages";
 import { db } from "../db/configuration.js";
 import { TaskAssignees, task_assignees } from "../db/schema/taskAssignees";
-import { Tasks,Task} from "../db/schema/tasks.js";
+import { Tasks, Task } from "../db/schema/tasks.js";
 import BadRequestException from "../exceptions/badRequestException";
 import NotFoundException from "../exceptions/notFoundException";
 import {
@@ -23,114 +36,72 @@ import {
   getSingleRecordByMultipleColumnValueswithtrx,
   saveSingleRecord,
   updateRecordByColumnValuewithtrx,
-  updateRecordById
+  updateRecordById,
+  updateRecordByMultipleColumnValues,
+  getRecordsConditionally,
+  saveRecordswithtrx,
+  getMultipleRecordsByAColumnValue,
 } from "../services/db/baseDbService";
 
 import { sendSuccessResp } from "../utils/respUtils";
 import { ValidatedCreateTask } from "../validations/schemas/vTaskSchema";
 import { validateRequest } from "../validations/validateRequest";
-
+import { PgTableWithColumns, PgColumn } from "drizzle-orm/pg-core";
+import { Project, projects } from "../db/schema/projects";
 
 export class TaskAssigneesController {
   // Create Task (with transaction)
   createTask = async (c: Context) => {
-  try {
-    const requestBody = await c.req.json();
+    try {
+      const requestBody = await c.req.json();
+      const userDetails = c.get("userDetails");
 
-    const validatedReq = await validateRequest<ValidatedCreateTask>(
-      "create-task",
-      requestBody,
-      TASK_VALIDATION_ERROR
-    );
-
-    const { user_ids, ...taskData } = validatedReq;
-
-    const task = await db.transaction(async (trx) => {
-      const task = await saveSingleRecord<Task>(
-        Tasks,
-        taskData,
-        trx
+      const validatedReq = await validateRequest<ValidatedCreateTask>(
+        "create-task",
+        requestBody,
+        TASK_VALIDATION_ERROR
       );
 
-      if (user_ids && user_ids.length > 0) {
-        for (const uid of user_ids) {
-          const assignee =
-            await getSingleRecordByMultipleColumnValueswithtrx<TaskAssignees>(
-              task_assignees,
-              ["task_id", "user_id"],
-              [task.id, uid],
-              trx
-            );
+      const { user_ids, ...taskData } = validatedReq;
 
-          if (!assignee) {
-            await saveSingleRecord<TaskAssignees>(
-              task_assignees,
-              {
-                task_id: task.id,
-                user_id: uid,
-              },
-              trx
-            );
-          }
-        }
+      // check duplicate task
+      const taskExists = await getSingleRecordByMultipleColumnValues<Task>(
+        Tasks,
+        ["task_title", "deleted_at"],
+        [taskData.task_title, null]
+      );
+
+      if (taskExists) {
+        throw new BadRequestException(TASK_ALREADY_EXISTS);
       }
 
-      return task; 
-    });
+      let task: any;
+      await db.transaction(async (trx) => {
+        // create task
+        task = await saveSingleRecord<Task>(Tasks, { ...taskData }, trx);
 
-   
-    return sendSuccessResp(c, 200, TASK_CREATED, task);
-  } catch (err) {
-    throw new BadRequestException(TRANSACTION_ROLLBACK);
-  }
- };
+        // assign users if provided
+        if (user_ids?.length) {
+          const assigneeRecords = user_ids.map((user_id) => ({
+            task_id: task.id,
+            user_id,
+          }));
 
-
-  // //delete taskassignees
-  // deleteTaskAssignees = async (c: Context) => {
-  //   const id = Number(c.req.param("id"));
-  //   const body = await c.req.json<{ user_ids?: number[] }>();
-  //   const { user_ids } = body;
-
-  //   if (!id) {
-  //     throw new BadRequestException(TASK_ID_REQUIRED);
-  //   }
-
-  //   if (!user_ids || user_ids.length === 0) {
-  //     throw new BadRequestException(USER_IDS_REQUIRED);
-  //   }
-
-  //   const now = new Date();
-
-  //   const result = await db.transaction(async (tx) => {
-  //     const deletedAssignees =
-  //       await updateRecordByColumnValuewithtrx<TaskAssignees>(
-  //         task_assignees,
-  //         "task_id",
-  //         id,
-  //         { deleted_at: now },
-  //         tx,
-  //         {
-  //           column: "user_id",
-  //           operator: "IN",
-  //           value: user_ids,
-  //         }
-  //       );
-
-  //     if (!deletedAssignees || deletedAssignees.length === 0) {
-  //       return tx.rollback();
-  //     }
-
-  //     return { task_id: id, deleted_assignees: deletedAssignees };
-  //   });
-
-  //   if (!result) {
-  //     throw new BadRequestException(TASK_NOT_FOUND);
-  //   }
-
-  //   return sendSuccessResp(c, 200, TASK_ASSIGNEES_DELETED, result);
-  // };
-
+          await saveRecordswithtrx<TaskAssignees>(
+            task_assignees,
+            assigneeRecords,
+            trx
+          );
+        }
+      });
+      return sendSuccessResp(c, 200, TASK_CREATED, task);
+    } catch (err) {
+      if (err instanceof BadRequestException) {
+        throw err;
+      }
+      throw new BadRequestException(TRANSACTION_ROLLBACK);
+    }
+  };
   // Delete Task
   deleteTask = async (c: Context) => {
     const id = Number(c.req.param("id"));
@@ -165,12 +136,25 @@ export class TaskAssigneesController {
     }
 
     const now = new Date();
-    const deletedTask = await updateRecordById<Task>(Tasks, id, {
-      deleted_at: now,
-    });
+    let deletedTask;
+    await db.transaction(async (trx) => {
+      deletedTask = updateRecordById<Task>(
+        Tasks,
+        id,
+        {
+          deleted_at: now,
+        },
+        trx
+      );
 
-    await updateRecordById<TaskAssignees>(task_assignees, id, {
-      deleted_at: now,
+      updateRecordById<TaskAssignees>(
+        task_assignees,
+        id,
+        {
+          deleted_at: now,
+        },
+        trx
+      );
     });
 
     return sendSuccessResp(c, 200, TASK_USERS_DELETED, {
@@ -179,6 +163,67 @@ export class TaskAssigneesController {
       deleted_task: deletedTask,
     });
   };
+
+  // Remove Assignees by Task ID
+  removeAssigneesByTaskId = async (c: Context) => {
+    const taskId = +c.req.param("id");
+    const { user_ids } = await c.req.json();
+
+    if (!taskId) {
+      throw new BadRequestException(TASK_ID_REQUIRED);
+    }
+
+    if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
+      throw new BadRequestException(USER_IDS_REQUIRED);
+    }
+
+    const taskExist = await getSingleRecordByMultipleColumnValues<Task>(
+      Tasks,
+      ["id", "deleted_at"],
+      [taskId, null],
+      ["id"]
+    );
+
+    if (!taskExist) {
+      throw new NotFoundException(TASK_NOT_FOUND);
+    }
+
+    await updateRecordByMultipleColumnValues<TaskAssignees>(
+      task_assignees,
+      ["task_id", "user_id"],
+      [taskId, user_ids],
+      { deleted_at: new Date() }
+    );
+
+    return sendSuccessResp(c, 200, TASK_USERS_DELETED);
+  };
+
+  //get assignees list by taskid
+  getAssigneesByTaskId = async (c: Context) => {
+    try {
+      const taskId = +c.req.param("id");
+
+      if (!taskId) {
+        throw new BadRequestException(TASK_ID_REQUIRED);
+      }
+
+      const assignees = await getRecordsConditionally<TaskAssignees>(
+        task_assignees,
+        {
+          columns: ["task_id", "deleted_at"],
+          values: [taskId, null],
+        },
+        ["task_id", "user_id"],
+        { columns: ["user_id"], values: ["asc"] }
+      );
+
+      return sendSuccessResp(c, 200, TASK_ASSIGNEES_FETCHED, assignees);
+    } catch (err) {
+      throw new BadRequestException(FAILED_TO_FETCH_USERS);
+    }
+  };
+
+  
 }
 
 export const TaskAssigneesControllerInstance = new TaskAssigneesController();

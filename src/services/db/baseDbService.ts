@@ -417,6 +417,17 @@ async function saveRecords<R extends DBTableRow>(
   const recordsSaved = await db.insert(table).values(records).returning();
   return recordsSaved as R[];
 }
+//with trx
+async function saveRecordswithtrx<R extends DBTableRow>(
+  table: DBTable,
+  records: DBNewRecords,
+  trx?: Transaction
+) {
+  const client = trx ?? db; // use trx if provided, else fallback to db
+
+  const recordsSaved = await client.insert(table).values(records).returning();
+  return recordsSaved as R[];
+}
 
 async function deleteRecordById<R extends DBTableRow>(
   table: DBTable,
@@ -533,7 +544,7 @@ async function updateRecordByColumnValuewithtrx<R extends DBTableRow>(
   record: UpdateRecordData<R>,
   trx?: Transaction,
   extraCondition?: { column: string; operator: "IN" | "="; value: any }
-): Promise<R[]> {
+): Promise<R> {
   const client = trx ?? db;
 
   const dataWithTimeStamps = {
@@ -541,10 +552,8 @@ async function updateRecordByColumnValuewithtrx<R extends DBTableRow>(
     updated_at: new Date(),
   };
 
-  // ✅ Build conditions array
   const conditions = [eq((table as any)[column], value)];
 
-  // ✅ add extra condition if provided
   if (extraCondition) {
     if (extraCondition.operator === "IN") {
       conditions.push(
@@ -557,15 +566,15 @@ async function updateRecordByColumnValuewithtrx<R extends DBTableRow>(
     }
   }
 
-  // ✅ Apply all conditions using and()
-  const query = client
+  const [updatedRecord] = await client
     .update(table)
     .set(dataWithTimeStamps)
-    .where(and(...conditions));
+    .where(and(...conditions))
+    .returning();
 
-  const updatedRecords = await query.returning();
-  return updatedRecords as R[];
+  return updatedRecord as R;
 }
+
 async function updateRecordById<R extends DBTableRow>(
   table: DBTable,
   id: number,
@@ -624,23 +633,26 @@ async function updateRecordByMultipleColumnValues<
 ) {
   const client = trx ?? db;
 
-  const whereQueryData: WhereQueryData<R> = {
-    columns,
-    values,
-  };
-
   const dataWithTimeStamps = { id, ...record, updated_at: new Date() };
-  const whereConditions = whereQueryData.columns.map((column, index) =>
-    eq(
-      sql.raw(`${getTableName(table)}.${String(column)}`),
-      whereQueryData.values[index],
-    ),
-  );
+
+  // ✅ Build conditions with IN support
+  const whereConditions = columns.map((column, index) => {
+    const value = values[index];
+
+    if (Array.isArray(value)) {
+      // If value is an array → use IN condition
+      return inArray((table as any)[column], value);
+    }
+
+    // Otherwise → normal equality
+    return eq((table as any)[column], value);
+  });
 
   return await client
     .update(table)
     .set(dataWithTimeStamps)
-    .where(and(...whereConditions));
+    .where(and(...whereConditions))
+    .returning(); // return updated rows
 }
 
 async function updateMultipleRecordsByIds<R extends DBTableRow>(
@@ -687,6 +699,7 @@ export {
   getSingleRecordByAColumnValue,
   getSingleRecordByMultipleColumnValues,
   saveRecords,
+  saveRecordswithtrx,
   saveSingleRecord,
   softDeleteRecordById,
   updateMultipleRecordsByIds,
