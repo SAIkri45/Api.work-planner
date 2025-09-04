@@ -463,27 +463,73 @@ async function saveSingleRecordWithTrx<R extends DBTableRow>(
     ...record,
     created_at: new Date(),
   };
-  const recordSaved = await db.insert(table).values(dataWithTimeStamps).returning();
+  const recordSaved = await client.insert(table).values(dataWithTimeStamps).returning();
   return recordSaved[0] as R;
 }
 
 async function saveRecordsWithTrx<R extends DBTableRow>(
   table: DBTable,
   records: DBNewRecords,
-  trx?: Transaction, // ← optional trx
+  trx?: Transaction,
 ) {
-  const client = trx ?? db; // ← fallback to db if trx not passed
+  const client = trx ?? db;
 
-  const dataWithTimeStamps = {
-    ...records,
+  // Always handle as array - convert single record to array if needed
+  const recordsArray = Array.isArray(records) ? records : [records];
+
+  const recordsWithTimeStamps = recordsArray.map(record => ({
+    ...record,
     created_at: new Date(),
-  };
-  const recordsSaved = await db.insert(table).values(dataWithTimeStamps).returning();
+  }));
+
+  const recordsSaved = await client.insert(table).values(recordsWithTimeStamps).returning();
   return recordsSaved as R[];
 }
+
+async function softDeleteRecordByIdWithTrx<R extends DBTableRow>(
+  table: DBTable,
+  id: number,
+  record: UpdateRecordData<R>,
+  trx?: Transaction,
+) {
+  const client = trx ?? db;
+  return await client.update(table).set(record).where(eq(table.id, id)).returning();
+}
+
+async function updateRecordByMultipleColumnValuesWithTrx<
+  R extends DBTableRow,
+  C extends keyof R = keyof R,
+>(
+  table: DBTable,
+  columns: C[],
+  values: any[],
+  record: UpdateRecordData<R>,
+  trx?: Transaction,
+  id?: number,
+
+) {
+  const client = trx ?? db;
+
+  const whereQueryData: WhereQueryData<R> = {
+    columns,
+    values,
+  };
+
+  const dataWithTimeStamps = { id, ...record, updated_at: new Date() };
+  const whereConditions = whereQueryData.columns.map((column, index) =>
+    eq(
+      sql.raw(`${getTableName(table)}.${String(column)}`),
+      whereQueryData.values[index],
+    ),
+  );
+
+  return await client
+    .update(table)
+    .set(dataWithTimeStamps)
+    .where(and(...whereConditions));
+}
+
 export {
-  saveSingleRecordWithTrx,
-  saveRecordsWithTrx,
   deleteRecordById,
   deleteRecordsByColumn,
   exportData,
@@ -497,10 +543,14 @@ export {
   getSingleRecordByAColumnValue,
   getSingleRecordByMultipleColumnValues,
   saveRecords,
+  saveRecordsWithTrx,
   saveSingleRecord,
+  saveSingleRecordWithTrx,
   softDeleteRecordById,
+  softDeleteRecordByIdWithTrx,
   updateMultipleRecordsByIds,
   updateRecordByColumnValue,
   updateRecordById,
   updateRecordByMultipleColumnValues,
+  updateRecordByMultipleColumnValuesWithTrx,
 };

@@ -1,17 +1,17 @@
 import { and, desc, eq, exists, ilike, inArray, isNull, not, sql } from "drizzle-orm";
 
 import type { UserProjects } from "../../db/schema/userProjects.js";
-import type { ProjectUser, ProjectWithUsersResponse } from "../../types/appTypes.js";
+import type { ProjectWithUsersResponse } from "../../types/appTypes.js";
 
-import { allowedProjectStatus, allowedTaskStatus } from "../../constants/appMessages.js";
+import { allowedTaskStatus } from "../../constants/appMessages.js";
 import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
 import { Tasks } from "../../db/schema/tasks.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import ConflictException from "../../exceptions/conflictException.js";
-import { saveRecords } from "./baseDbService.js";
 import { buildOrderByClause, buildProjectFilters, mapProjectsWithUsers } from "../../helpers/projectHelper.js";
+import { saveRecords } from "./baseDbService.js";
 
 export async function getProjectUsersById(id: number, search?: string) {
   const searchString = search?.trim();
@@ -351,7 +351,6 @@ export async function getAllUsersInProjectWithPagination(
   orderBy?: string,
   projectStatus?: any,
 ): Promise<{ result: ProjectWithUsersResponse[]; total_records: number }> {
-
   const filters = buildProjectFilters(search, projectStatus);
   const orderByClause = buildOrderByClause(orderBy);
 
@@ -401,4 +400,16 @@ export async function getAllUsersInProjectWithPagination(
     result: mappedResult,
     total_records,
   };
+}
+
+export async function checkTaskExist(projectId: number) {
+  const incompleteTasks = await db.query.Tasks.findMany({
+    where: and(
+      eq(Tasks.project_id, projectId),
+      isNull(Tasks.deleted_at),
+      not(eq(Tasks.task_status, "COMPLETED")),
+    ),
+  });
+
+  return incompleteTasks;
 }
