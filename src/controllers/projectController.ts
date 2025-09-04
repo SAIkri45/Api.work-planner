@@ -17,47 +17,47 @@ import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecord, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
 import { assignUsersToProject, checkTaskExist, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 
 class ProjectController {
   createProject = async (c: Context) => {
-    const requestBody = await c.req.json();
-    // const userDetails = c.get("userDetails");
+    try {
+      const requestBody = await c.req.json();
+      // const userDetails = c.get("userDetails");
 
-    const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
+      const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
 
-    const { user_ids, ...projectData } = validatedReq;
+      const { user_ids, ...projectData } = validatedReq;
 
-    const columnsToSelect = ["id", "title", "deleted_at", "created_by"] as const;
+      const columnsToSelect = ["id", "title", "deleted_at", "created_by"] as const;
 
-    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["title", "deleted_at"], [validatedReq.title, null], columnsToSelect);
+      const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["title", "deleted_at"], [validatedReq.title, null], columnsToSelect);
 
-    if (projectExists) {
-      throw new ConflictException(PROJECT_ALREADY_EXISTS);
-    }
+      if (projectExists) {
+        throw new ConflictException(PROJECT_ALREADY_EXISTS);
+      }
 
-    if (user_ids?.length) {
-      const result = await db.transaction(async (trx) => {
-        const insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
+      let insertedData: any;
+      await db.transaction(async (trx) => {
+        insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
+        if (user_ids?.length) {
+          const userProjectRecords = user_ids.map(user_id => ({
+            user_id,
+            project_id: insertedData.id,
+          }));
 
-        const userProjectRecords = user_ids.map(user_id => ({
-          user_id,
-          project_id: insertedData.id,
-        }));
-
-        await saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
-
-        return insertedData;
+          await saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
+        }
       });
-
-      return sendSuccessResp(c, 201, PROJECT_CREATED, result);
+      return sendSuccessResp(c, 201, PROJECT_CREATED, insertedData);
     }
-
-    const insertedData = await saveSingleRecord<Project>(projects, projectData);
-    return sendSuccessResp(c, 201, PROJECT_CREATED, insertedData);
+    catch (error: any) {
+      console.error("Error at create Project", error.message);
+      throw error;
+    }
   };
 
   getAllProjectsPaginated = async (c: Context) => {
@@ -134,7 +134,7 @@ class ProjectController {
       throw new ConflictException(PROJECT_TASKS_IN_COMPLETED);
     }
 
-    const projectStatus = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at", "project_status"], [projectId, null, "COMPLETED"], ["id", "project_status"]);
+    const projectStatus = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at", "project_status"], [projectId, null, "COMPLETED"], ["id"]);
 
     if (!projectStatus) {
       throw new ConflictException(PROJECT_STATUS);

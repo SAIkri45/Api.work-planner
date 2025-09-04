@@ -33,5 +33,4 @@ export const taskAssigneeRelations = relations(task_assignees, ({ one, many }) =
     fields: [task_assignees.task_id],
     references: [Tasks.id],
   }),
-  task_assignees: many(task_assignees),
 }));

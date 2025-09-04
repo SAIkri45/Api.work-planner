@@ -88,3 +88,19 @@ export interface ProjectUsersResponse {
   pagination_info: PaginationInfo;
   records: ProjectWithUsersResponse[];
 }
+
+export interface UserTaskInfo {
+  id: number;
+  display_name: string;
+  total_tasks: number;
+  new_tasks: number;
+  in_progress_tasks: number;
+  completed_tasks: number;
+  review_tasks: number;
+  pending_tasks: number;
+}
+
+export interface UserTaskStatisticsResponse {
+  pagination_info: PaginationInfo;
+  records: UserTaskInfo[];
+}
