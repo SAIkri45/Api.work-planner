@@ -26,7 +26,7 @@ class ProjectController {
   createProject = async (c: Context) => {
     try {
       const requestBody = await c.req.json();
-      // const userDetails = c.get("userDetails");
+      const userDetails = c.get("userDetails");
 
       const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
 
@@ -42,7 +42,7 @@ class ProjectController {
 
       let insertedData: any;
       await db.transaction(async (trx) => {
-        insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
+        insertedData = await saveSingleRecordWithTrx<Project>(projects, { ...projectData, created_by: userDetails.id }, trx);
         if (user_ids?.length) {
           const userProjectRecords = user_ids.map(user_id => ({
             user_id,
