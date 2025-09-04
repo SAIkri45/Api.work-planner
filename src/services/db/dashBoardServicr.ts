@@ -67,30 +67,22 @@ export async function getUserTaskStatisticsWithPagination(
   const total_records = totalCountResult[0].count;
 
   const processedResult: UserTaskInfo[] = result.map((user: any) => {
+    const validTasks = user.task_assignees
+      .filter((assignee: any) => assignee.task && assignee.task.task_status)
+      .map((assignee: any) => assignee.task.task_status);
+
     const statusCounts = {
-      NEW: 0,
-      IN_PROGRESS: 0,
-      COMPLETED: 0,
-      REVIEW: 0,
-      PENDING: 0,
+      NEW: validTasks.filter((status: string) => status === "NEW").length,
+      IN_PROGRESS: validTasks.filter((status: string) => status === "IN_PROGRESS").length,
+      COMPLETED: validTasks.filter((status: string) => status === "COMPLETED").length,
+      REVIEW: validTasks.filter((status: string) => status === "REVIEW").length,
+      PENDING: validTasks.filter((status: string) => status === "PENDING").length,
     };
-
-    let totalTasks = 0;
-
-    user.task_assignees.forEach((assignee: any) => {
-      if (assignee.task && assignee.task.task_status) {
-        const status = assignee.task.task_status;
-        if (statusCounts.hasOwnProperty(status)) {
-          statusCounts[status as keyof typeof statusCounts]++;
-        }
-        totalTasks++;
-      }
-    });
 
     return {
       id: user.id,
       display_name: user.display_name,
-      total_tasks: totalTasks,
+      total_tasks: validTasks.length,
       new_tasks: statusCounts.NEW,
       in_progress_tasks: statusCounts.IN_PROGRESS,
       completed_tasks: statusCounts.COMPLETED,
@@ -98,6 +90,10 @@ export async function getUserTaskStatisticsWithPagination(
       pending_tasks: statusCounts.PENDING,
     };
   });
+
+  console.log("result", JSON.stringify(result, null, 2));
+
+  console.log("processedResult", processedResult);
 
   return {
     result: processedResult,

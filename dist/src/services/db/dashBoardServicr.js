@@ -52,27 +52,20 @@ export async function getUserTaskStatisticsWithPagination(offset, pageSize, sear
         .where(and(...filters));
     const total_records = totalCountResult[0].count;
     const processedResult = result.map((user) => {
+        const validTasks = user.task_assignees
+            .filter((assignee) => assignee.task && assignee.task.task_status)
+            .map((assignee) => assignee.task.task_status);
         const statusCounts = {
-            NEW: 0,
-            IN_PROGRESS: 0,
-            COMPLETED: 0,
-            REVIEW: 0,
-            PENDING: 0,
+            NEW: validTasks.filter((status) => status === "NEW").length,
+            IN_PROGRESS: validTasks.filter((status) => status === "IN_PROGRESS").length,
+            COMPLETED: validTasks.filter((status) => status === "COMPLETED").length,
+            REVIEW: validTasks.filter((status) => status === "REVIEW").length,
+            PENDING: validTasks.filter((status) => status === "PENDING").length,
         };
-        let totalTasks = 0;
-        user.task_assignees.forEach((assignee) => {
-            if (assignee.task && assignee.task.task_status) {
-                const status = assignee.task.task_status;
-                if (statusCounts.hasOwnProperty(status)) {
-                    statusCounts[status]++;
-                }
-                totalTasks++;
-            }
-        });
         return {
             id: user.id,
             display_name: user.display_name,
-            total_tasks: totalTasks,
+            total_tasks: validTasks.length,
             new_tasks: statusCounts.NEW,
             in_progress_tasks: statusCounts.IN_PROGRESS,
             completed_tasks: statusCounts.COMPLETED,
@@ -80,6 +73,8 @@ export async function getUserTaskStatisticsWithPagination(offset, pageSize, sear
             pending_tasks: statusCounts.PENDING,
         };
     });
+    console.log("result", JSON.stringify(result, null, 2));
+    console.log("processedResult", processedResult);
     return {
         result: processedResult,
         total_records,
