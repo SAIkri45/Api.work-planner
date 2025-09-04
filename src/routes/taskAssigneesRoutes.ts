@@ -11,7 +11,7 @@ taskAssigneesRoutes.delete("/:id/assignees", taskAssigneesController.removeAssig
 taskAssigneesRoutes.delete("/:id", taskAssigneesController.deleteTask);
 //taskAssigneesRoutes.get("/:id", taskAssigneesController.getTasksByProjectId);
 taskAssigneesRoutes.get("/:id/users", taskAssigneesController.getAssigneesByTaskId);
-//taskAssigneesRoutes.post("/:id/assignees", taskAssigneesController.addUsersToTask);
+taskAssigneesRoutes.post("/:id/assignees", taskAssigneesController.addUsersToTask);
 taskAssigneesRoutes.post("/", isEmployeAuthorized, taskAssigneesController.createTask);
 
 

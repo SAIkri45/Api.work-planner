@@ -223,7 +223,103 @@ export class TaskAssigneesController {
     }
   };
 
-  
+  //assign users to already exist task
+  addUsersToTask = async (c: Context) => {
+    try {
+      const taskId = +c.req.param("id");
+
+      const requestBody = await c.req.json();
+      const { user_ids } = requestBody;
+
+      if (!taskId || !user_ids?.length) {
+        throw new BadRequestException(TASKID_USERID_REQUIRED);
+      }
+
+      const task = await getSingleRecordByMultipleColumnValues<Task>(
+        Tasks,
+        ["id", "deleted_at"],
+        [taskId, null]
+      );
+
+      if (!task) {
+        throw new NotFoundException(TASK_NOT_FOUND);
+      }
+
+      const existingAssignees =
+        await getMultipleRecordsByAColumnValue<TaskAssignees>(
+          task_assignees,
+          "task_id",
+          taskId
+        );
+
+      const existingUserIds = new Set(
+        existingAssignees.map((a: TaskAssignees) => a.user_id)
+      );
+
+      const newUserIds = user_ids.filter(
+        (id: number) => !existingUserIds.has(id) 
+      );
+
+      if (!newUserIds.length) {
+        return sendSuccessResp(c, 200, NO_NEW_ASSIGNEES, {
+          task_id: taskId,
+          user_ids,
+        });
+      }
+
+      const assigneeRecords = newUserIds.map((user_id: number) => ({
+        task_id: taskId,
+        user_id,
+      }));
+
+      await db.transaction(async (trx) => {
+        await saveRecordswithtrx<TaskAssignees>(
+          task_assignees,
+          assigneeRecords,
+          trx
+        );
+      });
+
+      return sendSuccessResp(c, 200, USER_ADDED, {
+        task_id: taskId,
+        added_user_ids: newUserIds,
+      });
+    } catch (err) {
+      throw new BadRequestException(USER_NOT_ADDED);
+    }
+  };
+
+  //gettasks by project id
+
+  getTasksByProjectId = async (c: Context) => {
+    try {
+      const projectId = +c.req.param("id");
+
+      if (!projectId) {
+        throw new BadRequestException(PROJECT_ID_REQUIRED);
+      }
+
+      const tasks = await getMultipleRecordsByAColumnValue<Task>(
+        Tasks,
+        "project_id",
+        projectId
+      );
+
+      if (!tasks.length) {
+        return sendSuccessResp(c, 200, TASK_NOT_FOUND, {
+          project_id: projectId,
+          tasks: [],
+        });
+      }
+
+      return sendSuccessResp(c, 200, TASKS_FETCHED, {
+        project_id: projectId,
+        tasks,
+      });
+    } catch (err) {
+      throw new BadRequestException(TASK_FAILED_TO_FETCH);
+    }
+  };
 }
 
 export const TaskAssigneesControllerInstance = new TaskAssigneesController();
