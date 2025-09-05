@@ -1,4 +1,4 @@
-import { array, isoDate, minLength, nonEmpty, nullish, number, optional, picklist, pipe, regex, string, transform } from "valibot";
+import { array, isoDate, minLength, nonEmpty, number, optional, picklist, pipe, regex, string, transform } from "valibot";
 
 import { allowedProjectStatus, DATE_REQUIRED, DUE_DATE_REQUIRED, PROJECT_DESCRIPTION_MIN_LENGTH, PROJECT_DESCRIPTION_REQUIRED, PROJECT_LINKS_REQUIRED, PROJECT_LINKS_TOO_SHORT, PROJECT_STATUS_REQUIRED, PROJECT_TITLE_MIN_LENGTH, PROJECT_TITLE_REQUIRED, VALID_TITLE } from "../../constants/appMessages.js";
 
@@ -45,7 +45,7 @@ export const projectDueDate = pipe(
   transform(str => new Date(str)),
 );
 
-export const projectUserIds = nullish(array(number()));
+export const projectUserIds = optional(array(number()));
 
 export const projectUserIdsRequired = pipe(
   array(number()),
