@@ -20,6 +20,7 @@ class ProjectController {
             console.log("userDetails: ", userDetails);
             const validatedReq = await validateRequest("create-project", requestBody, PROJECT_VALIDATION_ERROR);
             const { user_ids, ...projectData } = validatedReq;
+            console.log("validatedReq: ", validatedReq);
             const columnsToSelect = ["id", "title", "deleted_at", "created_by"];
             const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["title", "deleted_at"], [validatedReq.title, null], ["id"]);
             if (projectExists) {
@@ -36,6 +37,7 @@ class ProjectController {
                         project_id: insertedData.id,
                     }));
                     insertedDataUsers = await saveRecordsWithTrx(user_projects, userProjectRecords, trx);
+                    console.log("insertedDataUsers: ", insertedDataUsers);
                 }
             });
             return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });

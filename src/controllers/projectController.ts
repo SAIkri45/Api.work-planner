@@ -33,6 +33,7 @@ class ProjectController {
       const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
 
       const { user_ids, ...projectData } = validatedReq;
+      console.log("validatedReq: ", validatedReq);
 
       const columnsToSelect = ["id", "title", "deleted_at", "created_by"] as const;
 
@@ -55,6 +56,7 @@ class ProjectController {
           }));
 
           insertedDataUsers = await saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
+          console.log("insertedDataUsers: ", insertedDataUsers);
         }
       });
       return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
