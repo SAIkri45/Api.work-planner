@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 
 import ProjectController from "../controllers/projectController.js";
-import { isEmployeAuthorized } from "../middlewares/slackMiddlewares.js";
 import { isAuthorized } from "../middlewares/isAuthorized.js";
 
 const projectRouter = new Hono();

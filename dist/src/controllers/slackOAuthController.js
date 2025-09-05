@@ -7,6 +7,7 @@ import { getOAuthCode, refreshSlackToken } from "../helpers/oAuthHelper.js";
 import { getSlackId } from "../middlewares/slackMiddlewares.js";
 import { saveSingleRecord } from "../services/db/baseDbService.js";
 import { checkSlackUserExists, getByUserId, getSlackTokenByUserId, updateSlackToken } from "../services/db/slackOAuthService.js";
+import { genJWTTokensForUser } from "../utils/jwtUtils.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 class SlackOAuthController {
@@ -42,17 +43,22 @@ class SlackOAuthController {
                 // Save slack tokens to db
                 await saveSingleRecord(slack_tokens, tokenData);
                 getSlackId(tokenData.user_id);
-                return sendSuccessResp(c, 200, "Authorization successful", { user: result, token: tokenData });
+                // Generate JWT tokens
+                const jwtTokens = await genJWTTokensForUser(result.id);
+                // Return both Slack tokens and JWT tokens
+                return sendSuccessResp(c, 200, "Authorization successful", { user: result, slack_token: tokenData, jwt_token: jwtTokens });
             }
             else {
                 // User exists, check for existing token
                 const existingToken = await getSlackTokenByUserId(userData.slack_id);
                 const now = Math.floor(Date.now() / 1000);
                 const userDetails = await getByUserId(userData.slack_id);
+                // Generate JWT tokens for existing user
+                const jwtTokens = await genJWTTokensForUser(userDetails.id);
                 if (existingToken && existingToken.expires_at > now) {
                     // Token still valid
                     getSlackId(tokenData.user_id);
-                    return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
+                    return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, slack_token: tokenData, jwt_token: jwtTokens });
                 }
                 else if (existingToken && existingToken.refresh_token) {
                     // Token exists but expired, try to refresh
@@ -60,20 +66,20 @@ class SlackOAuthController {
                         const refreshed = await refreshSlackToken(existingToken.refresh_token);
                         await updateSlackToken(existingToken.user_id, refreshed);
                         getSlackId(tokenData.user_id);
-                        return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: refreshed });
+                        return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, slack_token: refreshed, jwt_token: jwtTokens });
                     }
                     catch (refreshError) {
                         // If refresh fails, save the new token
                         await saveSingleRecord(slack_tokens, tokenData);
                         getSlackId(tokenData.user_id);
-                        return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
+                        return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, slack_token: tokenData, jwt_token: jwtTokens });
                     }
                 }
                 else {
                     // No existing token or no refresh token available, save new one
                     await saveSingleRecord(slack_tokens, tokenData);
                     getSlackId(tokenData.user_id);
-                    return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, token: tokenData });
+                    return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, slack_token: tokenData, jwt_token: jwtTokens });
                 }
             }
         }
