@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import ProjectController from "../controllers/projectController.js";
-import { isAuthorized, isManagerOrAdmin } from "../middlewares/isAuthorized.js";
+import { isAuthorized } from "../middlewares/isAuthorized.js";
 const projectRouter = new Hono();
 const projectControllers = new ProjectController();
 projectRouter.get("/drop-down", projectControllers.getAllProjectsDropDown);
@@ -17,5 +17,5 @@ projectRouter.patch("/:id", isAuthorized, projectControllers.updateProject);
 projectRouter.get("/:id", projectControllers.getProjectById);
 projectRouter.delete("/:id", projectControllers.softDeleteProjectById);
 projectRouter.get("/", projectControllers.getAllProjectsPaginated);
-projectRouter.post("/", isManagerOrAdmin, projectControllers.createProject);
+projectRouter.post("/", isAuthorized, projectControllers.createProject);
 export default projectRouter;
