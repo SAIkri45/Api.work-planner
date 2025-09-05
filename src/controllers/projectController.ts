@@ -34,6 +34,8 @@ class ProjectController {
 
       const { user_ids, ...projectData } = validatedReq;
 
+      const columnsToSelect = ["id", "title", "deleted_at", "created_by"] as const;
+
       const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["title", "deleted_at"], [validatedReq.title, null], ["id"]);
 
       if (projectExists) {

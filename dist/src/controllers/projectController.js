@@ -20,6 +20,7 @@ class ProjectController {
             console.log("userDetails: ", userDetails);
             const validatedReq = await validateRequest("create-project", requestBody, PROJECT_VALIDATION_ERROR);
             const { user_ids, ...projectData } = validatedReq;
+            const columnsToSelect = ["id", "title", "deleted_at", "created_by"];
             const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["title", "deleted_at"], [validatedReq.title, null], ["id"]);
             if (projectExists) {
                 throw new ConflictException(PROJECT_ALREADY_EXISTS);

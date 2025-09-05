@@ -1,4 +1,3 @@
-import { isNull } from "drizzle-orm";
 import { sign, verify } from "hono/jwt";
 import { JwtTokenExpired, JwtTokenInvalid, JwtTokenSignatureMismatched } from "hono/utils/jwt/types";
 import { jwtConfig } from "../config/jwtConfig.js";
@@ -58,7 +57,7 @@ async function getUserDetailsFromToken(c) {
     }
     const decodedPayload = await verifyJWTToken(token);
     // Check if the user is existing in the system - in case the user is removed from the system the jwt token can still be valid
-    const user = await getRecordById(users, decodedPayload.sub, isNull(users.deleted_at));
+    const user = await getRecordById(users, decodedPayload.sub);
     if (!user) {
         throw new UnauthorizedException(USER_NOT_FOUND || DEF_401);
     }
