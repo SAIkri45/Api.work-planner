@@ -16,7 +16,8 @@ class ProjectController {
     createProject = async (c) => {
         try {
             const requestBody = await c.req.json();
-            const userDetails = c.get("userDetails");
+            const userDetails = c.get("user_payload");
+            console.log("userDetails: ", userDetails);
             const validatedReq = await validateRequest("create-project", requestBody, PROJECT_VALIDATION_ERROR);
             const { user_ids, ...projectData } = validatedReq;
             const columnsToSelect = ["id", "title", "deleted_at", "created_by"];
@@ -143,7 +144,7 @@ class ProjectController {
     };
     updateProject = async (c) => {
         const reqData = await c.req.json();
-        const userDetails = c.get("userDetails");
+        const userDetails = c.get("user_payload");
         const projectId = +(c.req.param("id"));
         if (!projectId) {
             throw new BadRequestException(INVALID_INPUT);

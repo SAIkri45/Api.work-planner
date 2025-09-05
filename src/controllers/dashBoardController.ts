@@ -8,7 +8,7 @@ import { DASHBOARD_FETCHED } from "../constants/appMessages.js";
 import { Tasks } from "../db/schema/tasks.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { getRecordsCount } from "../services/db/baseDbService.js";
-import { getUserTaskStatisticsWithPagination } from "../services/db/dashBoardServicr.js";
+import { getUserTaskStatisticsWithPagination } from "../services/db/dashBoardService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 
 class DashBoardController {

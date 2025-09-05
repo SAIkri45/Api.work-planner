@@ -26,7 +26,8 @@ class ProjectController {
   createProject = async (c: Context) => {
     try {
       const requestBody = await c.req.json();
-      const userDetails = c.get("userDetails");
+      const userDetails = c.get("user_payload");
+      console.log("userDetails: ", userDetails);
 
       const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
 
@@ -195,7 +196,7 @@ class ProjectController {
 
   updateProject = async (c: Context) => {
     const reqData = await c.req.json();
-    const userDetails = c.get("userDetails");
+    const userDetails = c.get("user_payload");
 
     const projectId = +(c.req.param("id"));
 
