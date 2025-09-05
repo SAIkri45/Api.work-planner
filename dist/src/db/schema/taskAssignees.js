@@ -17,7 +17,7 @@ export const task_assignees = pgTable("task_assignees", {
     index("task_assignees_task_id_idx").on(t.task_id),
     index("task_assignees_user_id_idx").on(t.user_id),
 ]);
-export const taskAssigneeRelations = relations(task_assignees, ({ one }) => ({
+export const taskAssigneeRelations = relations(task_assignees, ({ one, many }) => ({
     user: one(users, {
         fields: [task_assignees.user_id],
         references: [users.id],

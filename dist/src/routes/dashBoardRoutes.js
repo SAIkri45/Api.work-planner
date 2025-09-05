@@ -3,4 +3,5 @@ import DashBoardController from "../controllers/dashBoardController.js";
 const dashBoardController = new DashBoardController();
 const dashBoardRoutes = new Hono();
 dashBoardRoutes.get("/status", dashBoardController.getDashboardStatus);
+dashBoardRoutes.get("/statistics", dashBoardController.overAllStatistics);
 export default dashBoardRoutes;

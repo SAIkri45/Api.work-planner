@@ -74,10 +74,12 @@ export interface ProjectUser {
 
 // Single project with users response
 export interface ProjectWithUsersResponse {
-  id: number;
-  project_name: string;
-  logo_url: string | null;
-  project_status: string;
+  projectId: number;
+  projectName: string;
+  projectLogoUrl: string | null;
+  projectStatus: string;
+  project_start_date: Date | null;
+  project_end_date: Date | null;
   users: ProjectUser[];
 }
 
@@ -85,4 +87,20 @@ export interface ProjectWithUsersResponse {
 export interface ProjectUsersResponse {
   pagination_info: PaginationInfo;
   records: ProjectWithUsersResponse[];
+}
+
+export interface UserTaskInfo {
+  id: number;
+  display_name: string;
+  total_tasks: number;
+  new_tasks: number;
+  in_progress_tasks: number;
+  completed_tasks: number;
+  review_tasks: number;
+  pending_tasks: number;
+}
+
+export interface UserTaskStatisticsResponse {
+  pagination_info: PaginationInfo;
+  records: UserTaskInfo[];
 }

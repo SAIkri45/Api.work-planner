@@ -3,13 +3,14 @@ import { and, desc, eq, exists, ilike, inArray, isNull, not, sql } from "drizzle
 import type { UserProjects } from "../../db/schema/userProjects.js";
 import type { ProjectUser, ProjectWithUsersResponse } from "../../types/appTypes.js";
 
-import { allowedProjectStatus, allowedTaskStatus } from "../../constants/appMessages.js";
+import { allowedTaskStatus } from "../../constants/appMessages.js";
 import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
 import { Tasks } from "../../db/schema/tasks.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import ConflictException from "../../exceptions/conflictException.js";
+import { buildOrderByClause, buildProjectFilters } from "../../helpers/projectHelper.js";
 import { saveRecords } from "./baseDbService.js";
 
 export async function getProjectUsersById(id: number, search?: string) {
@@ -350,29 +351,8 @@ export async function getAllUsersInProjectWithPagination(
   orderBy?: string,
   projectStatus?: any,
 ): Promise<{ result: ProjectWithUsersResponse[]; total_records: number }> {
-  const filters: any[] = [
-    isNull(projects.deleted_at),
-  ];
-
-  if (search?.trim()) {
-    filters.push(ilike(projects.title, `%${search.trim()}%`));
-  }
-
-  if (projectStatus && allowedProjectStatus.includes(projectStatus.toUpperCase())) {
-    filters.push(eq(projects.project_status, projectStatus.toUpperCase() as any));
-  }
-
-  let orderByClause;
-  if (orderBy) {
-    const [column, direction] = orderBy.split(":");
-    const dir = direction?.toLowerCase() === "desc" ? "desc" : "asc";
-    orderByClause = dir === "desc"
-      ? sql`${sql.identifier(column)} DESC`
-      : sql`${sql.identifier(column)} ASC`;
-  }
-  else {
-    orderByClause = desc(projects.created_at);
-  }
+  const filters = buildProjectFilters(search, projectStatus);
+  const orderByClause = buildOrderByClause(orderBy);
 
   const result: any = await db.query.projects.findMany({
     where: and(...filters),
@@ -382,6 +362,8 @@ export async function getAllUsersInProjectWithPagination(
     columns: {
       id: true,
       title: true,
+      start_date: true,
+      due_date: true,
       logo_url: true,
       project_status: true,
     },
@@ -394,6 +376,7 @@ export async function getAllUsersInProjectWithPagination(
               isNull(users.deleted_at),
               eq(users.user_status, "ACTIVE"),
             ),
+            orderBy: desc(users.created_at),
             columns: {
               id: true,
               display_name: true,
@@ -428,4 +411,16 @@ export async function getAllUsersInProjectWithPagination(
     result: mappedResult,
     total_records,
   };
+}
+
+export async function checkTaskExist(projectId: number) {
+  const incompleteTasks = await db.query.Tasks.findMany({
+    where: and(
+      eq(Tasks.project_id, projectId),
+      isNull(Tasks.deleted_at),
+      not(eq(Tasks.task_status, "COMPLETED")),
+    ),
+  });
+
+  return incompleteTasks;
 }
