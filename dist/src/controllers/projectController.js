@@ -270,5 +270,19 @@ class ProjectController {
         };
         return sendSuccessResp(c, 200, "Project users fetched successfully", finalResponse);
     };
+    updateProjectStatus = async (c) => {
+        const projectId = +c.req.param("id");
+        const projectStatus = await c.req.json();
+        if (!projectId) {
+            throw new BadRequestException(INVALID_INPUT);
+        }
+        const validatedReq = await validateRequest("update-project-status", projectStatus, PROJECT_VALIDATION_ERROR);
+        const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
+        if (!projectExists) {
+            throw new NotFoundException(PROJECT_NOT_FOUND_ID);
+        }
+        const result = await updateRecordById(projects, projectId, validatedReq);
+        return sendSuccessResp(c, 200, "Project status updated successfully", result);
+    };
 }
 export default ProjectController;

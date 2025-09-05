@@ -2,14 +2,14 @@ import type { Project } from "../db/schema/projects.js";
 import type { SlackToken } from "../db/schema/slackTokens.js";
 import type { UserProjects } from "../db/schema/userProjects.js";
 import type { User } from "../db/schema/users.js";
-import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject } from "../validations/schemas/vProjectSchema.js";
+import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject, ValidatedUpdateProjectStatus } from "../validations/schemas/vProjectSchema.js";
 import type { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
 import type { PaginationInfo } from "./dbTypes.js";
 
-export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedAddUsersToProject | ValidatedRemoveUsersFromProject;
+export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedAddUsersToProject | ValidatedRemoveUsersFromProject | ValidatedUpdateProjectStatus;
 export type AppActivity = UserActivity | CreateProjectActivity;
 export type UserActivity = "create-user" | "update-user";
-export type CreateProjectActivity = "create-project" | "update-project" | "add-users-to-project" | "remove-users-from-project";
+export type CreateProjectActivity = "create-project" | "update-project" | "add-users-to-project" | "remove-users-from-project" | "update-project-status";
 
 export type AppRespData = | User
   | User[]

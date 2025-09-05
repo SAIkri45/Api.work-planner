@@ -10,6 +10,7 @@ projectRouter.get("/:id/users/available", projectControllers.getAllNonExistingUs
 projectRouter.post("/:id/users", projectControllers.assignUsersToProject);
 projectRouter.patch("/:id/users", projectControllers.removeUserFromProject);
 projectRouter.get("/users/:id", projectControllers.getProjectUsersById);
+projectRouter.patch("/:id/status", projectControllers.updateProjectStatus);
 projectRouter.get("/:id/tasks", projectControllers.getAllTasksByProjectId);
 projectRouter.get("/:id/tasks/status", projectControllers.getTasksStatusByProjectId);
 projectRouter.patch("/:id", isAuthorized, projectControllers.updateProject);

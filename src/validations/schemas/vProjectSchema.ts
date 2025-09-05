@@ -79,8 +79,14 @@ export const VRemoveUsersFromProjectSchema = pipeAsync(
   }),
 );
 
+export const VUpdateProjectStatusSchema = pipeAsync(
+  object({
+    project_status: projectStatus,
+  }),
+);
 // Types
 export type ValidatedCreateProject = InferOutput<typeof VCreateProjectSchema>;
 export type ValidatedUpdateProject = InferOutput<typeof VUpdateProjectSchema>;
 export type ValidatedAddUsersToProject = InferOutput<typeof VAddUsersToProjectSchema>;
 export type ValidatedRemoveUsersFromProject = InferOutput<typeof VRemoveUsersFromProjectSchema>;
+export type ValidatedUpdateProjectStatus = InferOutput<typeof VUpdateProjectStatusSchema>;

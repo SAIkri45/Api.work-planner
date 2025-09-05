@@ -5,7 +5,7 @@ import type { Task } from "../db/schema/tasks.js";
 import type { UserProjects } from "../db/schema/userProjects.js";
 import type { ProjectTasksResp, ProjectUsersResponse } from "../types/appTypes.js";
 import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes.js";
-import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject } from "../validations/schemas/vProjectSchema.js";
+import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject, ValidatedUpdateProjectStatus } from "../validations/schemas/vProjectSchema.js";
 
 import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
@@ -395,6 +395,26 @@ class ProjectController {
     };
 
     return sendSuccessResp(c, 200, "Project users fetched successfully", finalResponse);
+  };
+
+  updateProjectStatus = async (c: Context) => {
+    const projectId = +c.req.param("id");
+    const projectStatus = await c.req.json();
+
+    if (!projectId) {
+      throw new BadRequestException(INVALID_INPUT);
+    }
+    const validatedReq = await validateRequest<ValidatedUpdateProjectStatus>("update-project-status", projectStatus, PROJECT_VALIDATION_ERROR);
+
+    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
+
+    if (!projectExists) {
+      throw new NotFoundException(PROJECT_NOT_FOUND_ID);
+    }
+
+    const result = await updateRecordById<Project>(projects, projectId, validatedReq);
+
+    return sendSuccessResp(c, 200, "Project status updated successfully", result);
   };
 }
 

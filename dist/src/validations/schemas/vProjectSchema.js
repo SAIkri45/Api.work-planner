@@ -50,3 +50,6 @@ export const VAddUsersToProjectSchema = pipeAsync(object({
 export const VRemoveUsersFromProjectSchema = pipeAsync(object({
     user_ids: projectUserIdsRequired,
 }));
+export const VUpdateProjectStatusSchema = pipeAsync(object({
+    project_status: projectStatus,
+}));
