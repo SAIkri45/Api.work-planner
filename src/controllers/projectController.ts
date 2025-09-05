@@ -190,6 +190,7 @@ class ProjectController {
     }
 
     const result = await getProjectUsersById(projectId, searchString);
+    console.log("result", result);
 
     return sendSuccessResp(c, 200, USER_FETCHED, result);
   };
