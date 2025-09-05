@@ -25,7 +25,7 @@ export const VCreateProjectSchema = pipeAsync(
 
     due_date: projectDueDate,
 
-    user_ids: projectUserIds,
+    assigned_users: projectUserIds,
   }),
 
   transform((data) => {

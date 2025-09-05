@@ -32,10 +32,8 @@ class ProjectController {
 
       const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
 
-      const { user_ids, ...projectData } = validatedReq;
+      const { assigned_users, ...projectData } = validatedReq;
       console.log("validatedReq: ", validatedReq);
-
-      const columnsToSelect = ["id", "title", "deleted_at", "created_by"] as const;
 
       const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["title", "deleted_at"], [validatedReq.title, null], ["id"]);
 
@@ -44,13 +42,13 @@ class ProjectController {
       }
 
       let insertedData: any;
-      let insertedDataUsers: any = [];
+      let insertedDataUsers: any;
       await db.transaction(async (trx) => {
         insertedData = await saveSingleRecordWithTrx<Project>(projects, { ...projectData, created_by: userDetails.id }, trx);
         // insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
 
-        if (user_ids?.length) {
-          const userProjectRecords = user_ids.map(user_id => ({
+        if (assigned_users?.length) {
+          const userProjectRecords = assigned_users.map(user_id => ({
             user_id,
             project_id: insertedData.id,
           }));
