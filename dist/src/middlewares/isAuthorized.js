@@ -16,4 +16,11 @@ const isOptionalAuthorized = createMiddleware(async (c, next) => {
         await next();
     }
 });
-export { isAuthorized, isOptionalAuthorized };
+const isManagerOrAdmin = createMiddleware(async (c, next) => {
+    const userDetails = await getUserDetailsFromToken(c);
+    if (userDetails.user_type === "ADMIN" || userDetails.user_type === "MANAGER") {
+        c.set("user_payload", userDetails);
+        await next();
+    }
+});
+export { isAuthorized, isManagerOrAdmin, isOptionalAuthorized };
