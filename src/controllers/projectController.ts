@@ -26,6 +26,7 @@ class ProjectController {
   createProject = async (c: Context) => {
     try {
       const requestBody = await c.req.json();
+
       const userDetails = c.get("user_payload");
       console.log("userDetails: ", userDetails);
 
@@ -42,18 +43,21 @@ class ProjectController {
       }
 
       let insertedData: any;
+      let insertedDataUsers: any;
       await db.transaction(async (trx) => {
         insertedData = await saveSingleRecordWithTrx<Project>(projects, { ...projectData, created_by: userDetails.id }, trx);
+        // insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
+
         if (user_ids?.length) {
           const userProjectRecords = user_ids.map(user_id => ({
             user_id,
             project_id: insertedData.id,
           }));
 
-          await saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
+          insertedDataUsers = await saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
         }
       });
-      return sendSuccessResp(c, 201, PROJECT_CREATED, insertedData);
+      return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
     }
     catch (error: any) {
       console.error("Error at create Project", error.message);

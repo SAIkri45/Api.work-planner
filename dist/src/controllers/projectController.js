@@ -26,17 +26,19 @@ class ProjectController {
                 throw new ConflictException(PROJECT_ALREADY_EXISTS);
             }
             let insertedData;
+            let insertedDataUsers;
             await db.transaction(async (trx) => {
                 insertedData = await saveSingleRecordWithTrx(projects, { ...projectData, created_by: userDetails.id }, trx);
+                // insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
                 if (user_ids?.length) {
                     const userProjectRecords = user_ids.map(user_id => ({
                         user_id,
                         project_id: insertedData.id,
                     }));
-                    await saveRecordsWithTrx(user_projects, userProjectRecords, trx);
+                    insertedDataUsers = await saveRecordsWithTrx(user_projects, userProjectRecords, trx);
                 }
             });
-            return sendSuccessResp(c, 201, PROJECT_CREATED, insertedData);
+            return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
         }
         catch (error) {
             console.error("Error at create Project", error.message);
