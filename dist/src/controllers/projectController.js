@@ -26,7 +26,7 @@ class ProjectController {
                 throw new ConflictException(PROJECT_ALREADY_EXISTS);
             }
             let insertedData;
-            let insertedDataUsers;
+            let insertedDataUsers = [];
             await db.transaction(async (trx) => {
                 insertedData = await saveSingleRecordWithTrx(projects, { ...projectData, created_by: userDetails.id }, trx);
                 // insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);

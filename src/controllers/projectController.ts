@@ -43,7 +43,7 @@ class ProjectController {
       }
 
       let insertedData: any;
-      let insertedDataUsers: any;
+      let insertedDataUsers: any = [];
       await db.transaction(async (trx) => {
         insertedData = await saveSingleRecordWithTrx<Project>(projects, { ...projectData, created_by: userDetails.id }, trx);
         // insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
