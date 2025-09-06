@@ -1,4 +1,4 @@
-import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
+import { AVILABLE_USERS_FETCHED, INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_STATUS_UPDATED, PROJECT_TASKS_FETCHED, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, PROJECTS_USERS_FETCHED_SUCCESS, TASKS_STATUS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
 import { projects } from "../db/schema/projects.js";
 import { Tasks } from "../db/schema/tasks.js";
@@ -205,7 +205,7 @@ class ProjectController {
             throw new NotFoundException(PROJECT_NOT_FOUND);
         }
         const result = await getNonExistingUsers(projectId, searchString);
-        return sendSuccessResp(c, 200, "Non-existing users fetched successfully", result);
+        return sendSuccessResp(c, 200, AVILABLE_USERS_FETCHED, result);
     };
     getAllTasksByProjectId = async (c) => {
         const projectId = +c.req.param("id");
@@ -229,7 +229,7 @@ class ProjectController {
             pagination_info: paginationInfo,
             records: result,
         };
-        return sendSuccessResp(c, 200, "Project tasks fetched successfully", finalResponse);
+        return sendSuccessResp(c, 200, PROJECT_TASKS_FETCHED, finalResponse);
     };
     getTasksStatusByProjectId = async (c) => {
         const projectId = +c.req.param("id");
@@ -241,7 +241,7 @@ class ProjectController {
             throw new NotFoundException(PROJECT_NOT_FOUND_ID);
         }
         const result = await getProjectTaskStatusCounts(projectId);
-        return sendSuccessResp(c, 200, "Task status fetched successfully", result);
+        return sendSuccessResp(c, 200, TASKS_STATUS_FETCHED, result);
     };
     getProjectById = async (c) => {
         const projectId = +c.req.param("id");
@@ -253,7 +253,7 @@ class ProjectController {
             throw new NotFoundException(PROJECT_NOT_FOUND_ID);
         }
         const result = await userCreatedProjectById(projectId);
-        return sendSuccessResp(c, 200, "Project fetched successfully", result);
+        return sendSuccessResp(c, 200, PROJECTS_FETCHED_SUCCESS, result);
     };
     getAllProjectUsersList = async (c) => {
         const query = c.req.query();
@@ -269,7 +269,7 @@ class ProjectController {
             pagination_info: paginationInfo,
             records: result,
         };
-        return sendSuccessResp(c, 200, "Project users fetched successfully", finalResponse);
+        return sendSuccessResp(c, 200, PROJECTS_USERS_FETCHED_SUCCESS, finalResponse);
     };
     updateProjectStatus = async (c) => {
         const projectId = +c.req.param("id");
@@ -283,7 +283,7 @@ class ProjectController {
             throw new NotFoundException(PROJECT_NOT_FOUND_ID);
         }
         const result = await updateRecordById(projects, projectId, validatedReq);
-        return sendSuccessResp(c, 200, "Project status updated successfully", result);
+        return sendSuccessResp(c, 200, PROJECT_STATUS_UPDATED, result);
     };
 }
 export default ProjectController;
