@@ -17,10 +17,8 @@ class ProjectController {
         try {
             const requestBody = await c.req.json();
             const userDetails = c.get("user_payload");
-            console.log("userDetails: ", userDetails);
             const validatedReq = await validateRequest("create-project", requestBody, PROJECT_VALIDATION_ERROR);
             const { assigned_users, ...projectData } = validatedReq;
-            console.log("validatedReq: ", validatedReq);
             const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["title", "deleted_at"], [validatedReq.title, null], ["id"]);
             if (projectExists) {
                 throw new ConflictException(PROJECT_ALREADY_EXISTS);
@@ -36,7 +34,6 @@ class ProjectController {
                         project_id: insertedData.id,
                     }));
                     insertedDataUsers = await saveRecordsWithTrx(user_projects, userProjectRecords, trx);
-                    console.log("insertedDataUsers: ", insertedDataUsers);
                 }
             });
             return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
