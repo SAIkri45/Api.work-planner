@@ -73,8 +73,6 @@ export async function getUserTaskStatisticsWithPagination(offset, pageSize, sear
             pending_tasks: statusCounts.PENDING,
         };
     });
-    console.log("result", JSON.stringify(result, null, 2));
-    console.log("processedResult", processedResult);
     return {
         result: processedResult,
         total_records,

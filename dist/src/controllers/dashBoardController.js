@@ -1,8 +1,9 @@
 import { eq, isNull } from "drizzle-orm";
-import { DASHBOARD_FETCHED } from "../constants/appMessages.js";
+import { DASHBOARD_FETCHED, TODAY_TASKS_FETCHED } from "../constants/appMessages.js";
 import { Tasks } from "../db/schema/tasks.js";
+import { getTodayDateRange } from "../helpers/dashBoardhelper.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
-import { getRecordsCount } from "../services/db/baseDbService.js";
+import { getRecordsConditionally, getRecordsCount } from "../services/db/baseDbService.js";
 import { getUserTaskStatisticsWithPagination } from "../services/db/dashBoardService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 class DashBoardController {
@@ -37,6 +38,41 @@ class DashBoardController {
             records: result,
         };
         return sendSuccessResp(c, 200, DASHBOARD_FETCHED, finalResponse);
+    };
+    todayTasks = async (c) => {
+        const taskStatus = c.req.query("task_status")?.toLocaleUpperCase();
+        const startDate = c.req.query("from_date");
+        const endDate = c.req.query("to_date");
+        const orderByQueryData = {
+            columns: ["created_at"],
+            values: ["desc"],
+        };
+        const whereQueryData = {
+            columns: ["deleted_at"],
+            values: [null],
+        };
+        // Add today's date filter for created_at
+        const { todayStart, todayEnd } = getTodayDateRange();
+        whereQueryData.columns.push("created_at");
+        whereQueryData.values.push({
+            gte: todayStart,
+            lte: todayEnd,
+        });
+        if (taskStatus) {
+            whereQueryData.columns.push("task_status");
+            whereQueryData.values.push(taskStatus);
+        }
+        if (startDate || endDate) {
+            whereQueryData.columns.push("end_date");
+            const dateFilter = {};
+            if (startDate)
+                dateFilter.gte = new Date(`${startDate}T00:00:00`);
+            if (endDate)
+                dateFilter.lte = new Date(`${endDate}T23:59:59`);
+            whereQueryData.values.push(dateFilter);
+        }
+        const result = await getRecordsConditionally(Tasks, whereQueryData, ["id", "task_title", "task_status", "start_date", "end_date"], orderByQueryData);
+        return sendSuccessResp(c, 200, TODAY_TASKS_FETCHED, result);
     };
 }
 export default DashBoardController;

@@ -349,3 +349,5 @@ export const TASK_CREATED = "Task created successfully";
 
 // dash board
 export const DASHBOARD_FETCHED = "Dashboard fetched successfully";
+export const TODAY_TASKS_FETCHED = "Today tasks fetched successfully";
+export const TODAY_TASKS_STATUS_COUNT_FETCHED = "Today tasks status count fetched successfully";

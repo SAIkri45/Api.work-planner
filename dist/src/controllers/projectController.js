@@ -49,7 +49,8 @@ class ProjectController {
         const searchString = c.req.query("search_string") || null;
         const orderBy = c.req.query("order_by");
         const projectStatus = c.req.query("project_status")?.toLocaleUpperCase() || null;
-        const dueDate = c.req.query("due_date");
+        const startDate = c.req.query("from_date") || null;
+        const endDate = c.req.query("to_date") || null;
         let orderByQueryData = {
             columns: ["created_at"],
             values: ["desc"],
@@ -81,9 +82,14 @@ class ProjectController {
             WhereQueryData.columns.push("project_status");
             WhereQueryData.values.push(projectStatus);
         }
-        if (dueDate) {
+        if (startDate || endDate) {
             WhereQueryData.columns.push("due_date");
-            WhereQueryData.values.push(dueDate);
+            const dateFilter = {};
+            if (startDate)
+                dateFilter.gte = new Date(`${startDate}T00:00:00`);
+            if (endDate)
+                dateFilter.lte = new Date(`${endDate}T23:59:59`);
+            WhereQueryData.values.push(dateFilter);
         }
         const columnsToSelect = ["id", "title", "description", "logo_url", "project_status", "start_date", "due_date"];
         const result = await getPaginatedRecordsConditionally(projects, page, pageSize, orderByQueryData, WhereQueryData, columnsToSelect);
