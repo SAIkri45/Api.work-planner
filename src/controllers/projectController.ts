@@ -5,9 +5,9 @@ import type { Task } from "../db/schema/tasks.js";
 import type { UserProjects } from "../db/schema/userProjects.js";
 import type { ProjectTasksResp, ProjectUsersResponse } from "../types/appTypes.js";
 import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes.js";
-import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject } from "../validations/schemas/vProjectSchema.js";
+import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject, ValidatedUpdateProjectStatus } from "../validations/schemas/vProjectSchema.js";
 
-import { INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
+import { AVILABLE_USERS_FETCHED, INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_STATUS_UPDATED, PROJECT_TASKS_FETCHED, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, PROJECTS_USERS_FETCHED_SUCCESS, TASKS_STATUS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
 import { projects } from "../db/schema/projects.js";
 import { Tasks } from "../db/schema/tasks.js";
@@ -26,33 +26,35 @@ class ProjectController {
   createProject = async (c: Context) => {
     try {
       const requestBody = await c.req.json();
-      const userDetails = c.get("userDetails");
+
+      const userDetails = c.get("user_payload");
 
       const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
 
-      const { user_ids, ...projectData } = validatedReq;
+      const { assigned_users, ...projectData } = validatedReq;
 
-      const columnsToSelect = ["id", "title", "deleted_at", "created_by"] as const;
-
-      const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["title", "deleted_at"], [validatedReq.title, null], columnsToSelect);
+      const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["title", "deleted_at"], [validatedReq.title, null], ["id"]);
 
       if (projectExists) {
         throw new ConflictException(PROJECT_ALREADY_EXISTS);
       }
 
       let insertedData: any;
+      let insertedDataUsers: any;
       await db.transaction(async (trx) => {
         insertedData = await saveSingleRecordWithTrx<Project>(projects, { ...projectData, created_by: userDetails.id }, trx);
-        if (user_ids?.length) {
-          const userProjectRecords = user_ids.map(user_id => ({
+        // insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
+
+        if (assigned_users?.length) {
+          const userProjectRecords = assigned_users.map(user_id => ({
             user_id,
             project_id: insertedData.id,
           }));
 
-          await saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
+          insertedDataUsers = await saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
         }
       });
-      return sendSuccessResp(c, 201, PROJECT_CREATED, insertedData);
+      return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
     }
     catch (error: any) {
       console.error("Error at create Project", error.message);
@@ -66,7 +68,8 @@ class ProjectController {
     const searchString = c.req.query("search_string") || null;
     const orderBy = c.req.query("order_by");
     const projectStatus = c.req.query("project_status")?.toLocaleUpperCase() || null;
-    const dueDate = c.req.query("due_date");
+    const startDate = c.req.query("from_date") || null;
+    const endDate = c.req.query("to_date") || null;
     let orderByQueryData: OrderByQueryData<Project> = {
       columns: ["created_at"],
       values: ["desc"],
@@ -103,9 +106,14 @@ class ProjectController {
       WhereQueryData.values.push(projectStatus);
     }
 
-    if (dueDate) {
+    if (startDate || endDate) {
       WhereQueryData.columns.push("due_date");
-      WhereQueryData.values.push(dueDate);
+      const dateFilter: { gte?: Date; lte?: Date } = {};
+      if (startDate)
+        dateFilter.gte = new Date(`${startDate}T00:00:00`);
+      if (endDate)
+        dateFilter.lte = new Date(`${endDate}T23:59:59`);
+      WhereQueryData.values.push(dateFilter);
     }
 
     const columnsToSelect = ["id", "title", "description", "logo_url", "project_status", "start_date", "due_date"] as const;
@@ -189,13 +197,14 @@ class ProjectController {
     }
 
     const result = await getProjectUsersById(projectId, searchString);
+    console.log("result", result);
 
     return sendSuccessResp(c, 200, USER_FETCHED, result);
   };
 
   updateProject = async (c: Context) => {
     const reqData = await c.req.json();
-    const userDetails = c.get("userDetails");
+    const userDetails = c.get("user_payload");
 
     const projectId = +(c.req.param("id"));
 
@@ -285,7 +294,7 @@ class ProjectController {
     }
 
     const result = await getNonExistingUsers(projectId, searchString);
-    return sendSuccessResp(c, 200, "Non-existing users fetched successfully", result);
+    return sendSuccessResp(c, 200, AVILABLE_USERS_FETCHED, result);
   };
 
   getAllTasksByProjectId = async (c: Context) => {
@@ -330,7 +339,7 @@ class ProjectController {
       records: result,
     };
 
-    return sendSuccessResp(c, 200, "Project tasks fetched successfully", finalResponse);
+    return sendSuccessResp(c, 200, PROJECT_TASKS_FETCHED, finalResponse);
   };
 
   getTasksStatusByProjectId = async (c: Context) => {
@@ -348,7 +357,7 @@ class ProjectController {
 
     const result = await getProjectTaskStatusCounts(projectId);
 
-    return sendSuccessResp(c, 200, "Task status fetched successfully", result);
+    return sendSuccessResp(c, 200, TASKS_STATUS_FETCHED, result);
   };
 
   getProjectById = async (c: Context) => {
@@ -366,7 +375,7 @@ class ProjectController {
 
     const result = await userCreatedProjectById(projectId);
 
-    return sendSuccessResp(c, 200, "Project fetched successfully", result);
+    return sendSuccessResp(c, 200, PROJECTS_FETCHED_SUCCESS, result);
   };
 
   getAllProjectUsersList = async (c: Context) => {
@@ -393,7 +402,27 @@ class ProjectController {
       records: result,
     };
 
-    return sendSuccessResp(c, 200, "Project users fetched successfully", finalResponse);
+    return sendSuccessResp(c, 200, PROJECTS_USERS_FETCHED_SUCCESS, finalResponse);
+  };
+
+  updateProjectStatus = async (c: Context) => {
+    const projectId = +c.req.param("id");
+    const projectStatus = await c.req.json();
+
+    if (!projectId) {
+      throw new BadRequestException(INVALID_INPUT);
+    }
+    const validatedReq = await validateRequest<ValidatedUpdateProjectStatus>("update-project-status", projectStatus, PROJECT_VALIDATION_ERROR);
+
+    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
+
+    if (!projectExists) {
+      throw new NotFoundException(PROJECT_NOT_FOUND_ID);
+    }
+
+    const result = await updateRecordById<Project>(projects, projectId, validatedReq);
+
+    return sendSuccessResp(c, 200, PROJECT_STATUS_UPDATED, result);
   };
 }
 

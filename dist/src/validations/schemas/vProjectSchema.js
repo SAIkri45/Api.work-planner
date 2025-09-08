@@ -12,7 +12,7 @@ export const VCreateProjectSchema = pipeAsync(object({
     project_status: projectStatus,
     start_date: projectStartDate,
     due_date: projectDueDate,
-    user_ids: projectUserIds,
+    assigned_users: projectUserIds,
 }), transform((data) => {
     // Cross-field validation
     if (data.due_date && data.start_date) {
@@ -49,4 +49,7 @@ export const VAddUsersToProjectSchema = pipeAsync(object({
 }));
 export const VRemoveUsersFromProjectSchema = pipeAsync(object({
     user_ids: projectUserIdsRequired,
+}));
+export const VUpdateProjectStatusSchema = pipeAsync(object({
+    project_status: projectStatus,
 }));

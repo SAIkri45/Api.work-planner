@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 
 import ProjectController from "../controllers/projectController.js";
-import { isEmployeAuthorized } from "../middlewares/slackMiddlewares.js";
 import { isAuthorized } from "../middlewares/isAuthorized.js";
 
 const projectRouter = new Hono();
@@ -12,8 +11,9 @@ projectRouter.get("/users", projectControllers.getAllProjectUsersList);
 projectRouter.get("/:id/users/assigned", projectControllers.getProjectBasedAssignedUsers);
 projectRouter.get("/:id/users/available", projectControllers.getAllNonExistingUsers);
 projectRouter.post("/:id/users", projectControllers.assignUsersToProject);
-projectRouter.patch("/:id/users", projectControllers.removeUserFromProject);
+projectRouter.delete("/:id/users", projectControllers.removeUserFromProject);
 projectRouter.get("/users/:id", projectControllers.getProjectUsersById);
+projectRouter.patch("/:id/status", projectControllers.updateProjectStatus);
 projectRouter.get("/:id/tasks", projectControllers.getAllTasksByProjectId);
 projectRouter.get("/:id/tasks/status", projectControllers.getTasksStatusByProjectId);
 projectRouter.patch("/:id", isAuthorized, projectControllers.updateProject);

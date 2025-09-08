@@ -1,13 +1,16 @@
+import type { Context } from "node:vm";
 
 import { sign, verify } from "hono/jwt";
-import { Context } from "vm";
-import { jwtConfig } from "../config/jwtConfig";
-import { TOKEN_INVALID, TOKEN_EXPIRED, TOKEN_SIG_MISMATCH, TOKEN_MISSING, USER_NOT_FOUND, DEF_401 } from "../constants/appMessages";
-import { User, users } from "../db/schema/users";
-import UnauthorizedException from "../exceptions/unauthorizedException";
-import { getRecordById } from "../services/db/baseDbService";
-import { JWTUserPayload } from "../types/appTypes";
 import { JwtTokenExpired, JwtTokenInvalid, JwtTokenSignatureMismatched } from "hono/utils/jwt/types";
+
+import type { User } from "../db/schema/users.js";
+import type { JWTUserPayload } from "../types/appTypes.js";
+
+import { jwtConfig } from "../config/jwtConfig.js";
+import { DEF_401, TOKEN_EXPIRED, TOKEN_INVALID, TOKEN_MISSING, TOKEN_SIG_MISMATCH, USER_NOT_FOUND } from "../constants/appMessages.js";
+import { users } from "../db/schema/users.js";
+import UnauthorizedException from "../exceptions/unauthorizedException.js";
+import { getRecordById } from "../services/db/baseDbService.js";
 
 async function genJWTTokens(payload: JWTUserPayload) {
   const access_token_expiry = Math.floor(Date.now() / 1000) + jwtConfig.expires_in; // 30 days

@@ -1,4 +1,4 @@
-import envData from "../env";
+import envData from "../env.js";
 
 export const jwtConfig = {
   secret: envData.JWT_SECRET!,

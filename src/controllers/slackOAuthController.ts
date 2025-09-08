@@ -13,9 +13,9 @@ import { getOAuthCode, refreshSlackToken } from "../helpers/oAuthHelper.js";
 import { getSlackId } from "../middlewares/slackMiddlewares.js";
 import { saveSingleRecord } from "../services/db/baseDbService.js";
 import { checkSlackUserExists, getByUserId, getSlackTokenByUserId, updateSlackToken } from "../services/db/slackOAuthService.js";
+import { genJWTTokensForUser } from "../utils/jwtUtils.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
-import { genJWTTokensForUser } from "../utils/jwtUtils.js";
 
 class SlackOAuthController {
   slackOAuth = async (c: Context) => {

@@ -309,12 +309,16 @@ export const PROJECT_CREATED = "Project created successfully";
 export const PROJECT_UPDATED = "Project updated successfully";
 export const PROJECT_DELETED = "Project deleted successfully";
 export const PROJECT_NOT_FOUND = "Project not found";
+export const AVILABLE_USERS_FETCHED = "Available users fetched successfully";
+export const PROJECT_TASKS_FETCHED = "Project tasks fetched successfully";
+export const TASKS_STATUS_FETCHED = "Tasks status fetched successfully";
 export const PROJECTS_FETCHED = "Projects fetched successfully";
 export const PROJECTS_FETCHED_SUCCESS = "Projects fetched successfully";
 export const PROJECTS_USERS_FETCHED_SUCCESS = "Project users fetched successfully";
+export const PROJECT_STATUS_UPDATED = "Project status updated successfully";
 export const PROJECT_NOT_FOUND_ID = "Project not found with id";
 export const PROJECT_STATUS = "Project cannot be deleted status is Incompleted";
-export const PROJECT_TASKS_IN_COMPLETED = "Cannot delete project Some tasks are not completed yet";
+export const PROJECT_TASKS_IN_COMPLETED = "Cannot delete project,Some tasks are not completed yet";
 export const PROJECT_VALIDATION_ERROR = "Project details provided do not meet the required validation criteria";
 export const PROJECT_USERS_VALIDATION_ERROR = "Details provided do not meet the required validation criteria";
 export const PROJECT_STATUS_REQUIRED = "Project status is required";
@@ -345,3 +349,5 @@ export const TASK_CREATED = "Task created successfully";
 
 // dash board
 export const DASHBOARD_FETCHED = "Dashboard fetched successfully";
+export const TODAY_TASKS_FETCHED = "Today tasks fetched successfully";
+export const TODAY_TASKS_STATUS_COUNT_FETCHED = "Today tasks status count fetched successfully";

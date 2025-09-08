@@ -91,10 +91,6 @@ export async function getUserTaskStatisticsWithPagination(
     };
   });
 
-  console.log("result", JSON.stringify(result, null, 2));
-
-  console.log("processedResult", processedResult);
-
   return {
     result: processedResult,
     total_records,
