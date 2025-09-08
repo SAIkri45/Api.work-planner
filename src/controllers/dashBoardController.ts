@@ -1,12 +1,12 @@
 import type { Context } from "hono";
 
-import { eq, isNull } from "drizzle-orm";
+import { eq, gte, isNull, lte } from "drizzle-orm";
 
 import type { Task } from "../db/schema/tasks.js";
 import type { UserTaskStatisticsResponse } from "../types/appTypes.js";
 import type { OrderByQueryData, WhereQueryData } from "../types/dbTypes.js";
 
-import { DASHBOARD_FETCHED, TODAY_TASKS_FETCHED } from "../constants/appMessages.js";
+import { DASHBOARD_FETCHED, TODAY_TASKS_FETCHED, TODAY_TASKS_STATUS_COUNT_FETCHED } from "../constants/appMessages.js";
 import { Tasks } from "../db/schema/tasks.js";
 import { getTodayDateRange } from "../helpers/dashBoardhelper.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
@@ -106,6 +106,29 @@ class DashBoardController {
     );
 
     return sendSuccessResp(c, 200, TODAY_TASKS_FETCHED, result);
+  };
+
+  todaysTasksStatusCount = async (c: Context) => {
+    const { todayStart, todayEnd } = getTodayDateRange();
+
+    const [completedTasksCount, inProgressTasksCount, reviewTasksCount, overDueTasksCount, newTasksCount, totalTasksCount]:
+    [number, number, number, number, number, number] = await Promise.all([
+      getRecordsCount(Tasks, [eq(Tasks.task_status, "COMPLETED"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
+      getRecordsCount(Tasks, [eq(Tasks.task_status, "IN_PROGRESS"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
+      getRecordsCount(Tasks, [eq(Tasks.task_status, "REVIEW"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
+      getRecordsCount(Tasks, [eq(Tasks.task_status, "OVERDUE"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
+      getRecordsCount(Tasks, [eq(Tasks.task_status, "NEW"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
+      getRecordsCount(Tasks, [gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
+    ]);
+
+    return sendSuccessResp(c, 200, TODAY_TASKS_STATUS_COUNT_FETCHED, {
+      total_tasks_count: totalTasksCount,
+      completed_tasks: completedTasksCount,
+      in_progress_tasks: inProgressTasksCount,
+      review_tasks_Count: reviewTasksCount,
+      overdue_TasksCount: overDueTasksCount,
+      new_tasks_Count: newTasksCount,
+    });
   };
 }
 
