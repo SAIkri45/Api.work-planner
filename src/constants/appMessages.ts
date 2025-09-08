@@ -340,3 +340,4 @@ export const TRANSACTION_ROLLBACK = "Task Title is required";
 export const TASK_ASSIGNEES_DELETED = "Task assignees deleted successfully";
 export const TASK_ASSIGNEES_FETCHED = "Task assignees fetched successfully";
 export const TASK_FAILED_TO_FETCH = " Tasks failed to fetch ";
+export const TASK_STATUS_FETCHED = " Task status fetched successfully ";
