@@ -2,8 +2,8 @@ import type { Context } from "hono";
 
 import { createMiddleware } from "hono/factory";
 
-import UnauthorizedException from "../exceptions/unauthorizedException.js";
 import { getUserDetailsFromToken } from "../utils/jwtUtils.js";
+import { sendErrorResp } from "../utils/respUtils.js";
 
 const isAuthorized = createMiddleware(async (c: Context, next) => {
   const userDetails = await getUserDetailsFromToken(c);
@@ -43,8 +43,7 @@ const isManagerOrAdmin = createMiddleware(async (c: Context, next) => {
       await next();
     }
     else {
-      // return sendErrorResp(c, 403, "Access denied");
-      throw new UnauthorizedException("Access denied");
+      return sendErrorResp(c, 403, "Access denied");
     }
   }
   catch (error) {
