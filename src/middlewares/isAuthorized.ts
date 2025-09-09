@@ -3,6 +3,7 @@ import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 
 import { getUserDetailsFromToken } from "../utils/jwtUtils.js";
+import { sendSuccessResp } from "../utils/respUtils.js";
 
 const isAuthorized = createMiddleware(async (c: Context, next) => {
   const userDetails = await getUserDetailsFromToken(c);
@@ -43,22 +44,12 @@ const isManagerOrAdmin = createMiddleware(async (c: Context, next) => {
     }
     else {
       // Return proper error response
-      return c.json({
-        success: false,
-        message: "Access denied",
-        error: "INSUFFICIENT_PERMISSIONS",
-        statusCode: 403,
-      }, 403);
+      return sendSuccessResp(c, 403, "Access denied");
     }
   }
   catch (error) {
     // Handle token validation errors
-    return c.json({
-      success: false,
-      message: "Authentication failed. Please login again.",
-      error: "AUTHENTICATION_FAILED",
-      statusCode: 401,
-    }, 401);
+    throw error;
   }
 });
 
