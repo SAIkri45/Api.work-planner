@@ -1,4 +1,5 @@
 import { createMiddleware } from "hono/factory";
+import UnauthorizedException from "../exceptions/unauthorizedException.js";
 import { getUserDetailsFromToken } from "../utils/jwtUtils.js";
 const isAuthorized = createMiddleware(async (c, next) => {
     const userDetails = await getUserDetailsFromToken(c);
@@ -21,6 +22,9 @@ const isManagerOrAdmin = createMiddleware(async (c, next) => {
     if (userDetails.user_type === "ADMIN" || userDetails.user_type === "MANAGER") {
         c.set("user_payload", userDetails);
         await next();
+    }
+    else {
+        throw new UnauthorizedException("Access denied. Only managers and admins allowed.");
     }
 });
 export { isAuthorized, isManagerOrAdmin, isOptionalAuthorized };
