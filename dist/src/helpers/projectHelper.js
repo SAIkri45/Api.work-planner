@@ -68,7 +68,7 @@ export function buildProjectsWhereQueryData(startDate, endDate, projectStatus, s
         whereQueryData.values.push(dateFilter);
     }
     // User-based filtering based on role
-    if (user.user_type === "EMPLOYEE" || user.user_type === "TL" || user.user_type === "MANAGER") {
+    if (user.user_type === "EMPLOYEE" || user.user_type === "TL") {
         // Employees and Team Leaders can only see projects they're assigned to
         // This assumes you have a user_projects junction table or similar
         whereQueryData.columns.push("created_by");
