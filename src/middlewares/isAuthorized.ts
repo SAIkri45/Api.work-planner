@@ -45,7 +45,7 @@ const isManagerOrAdmin = createMiddleware(async (c: Context, next) => {
       // Return proper error response
       return c.json({
         success: false,
-        message: "Access denied. Only managers and admins are allowed to perform this action.",
+        message: "Access denied",
         error: "INSUFFICIENT_PERMISSIONS",
         statusCode: 403,
       }, 403);
