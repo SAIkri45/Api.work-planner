@@ -39,6 +39,12 @@ export interface SuccessResp {
   data?: AppRespData;
 }
 
+export interface ErrorResp {
+  status: number;
+  success: false;
+  message: string;
+  data?: AppRespData;
+}
 export interface FileData {
   target_url: string;
   file_key: string;
