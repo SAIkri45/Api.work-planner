@@ -2,6 +2,9 @@ import { flatten, safeParseAsync } from "valibot";
 import UnprocessableContentException from "../exceptions/unprocessableContentException.js";
 import { VCreateProjectSchema, VUpdateProjectSchema } from "./schemas/vProjectSchema.js";
 import { VCreateUserSchema } from "./schemas/vUserSchema.js";
+import { VCreateTaskSchema } from "./schemas/vTaskSchema.js";
+import { VSignInVerifySchema } from "./schemas/signinValidations.js";
+import { VSignInSchema, VSignUpOrSignInSchema, VSignUpOrSignInVerifySchema } from "./schemas/signInSignUpValidationSchema.js";
 export async function validateRequest(actionType, reqData, errorMessage) {
     let schema;
     switch (actionType) {
@@ -13,6 +16,21 @@ export async function validateRequest(actionType, reqData, errorMessage) {
             break;
         case "update-project":
             schema = VUpdateProjectSchema;
+            break;
+        case "create-task":
+            schema = VCreateTaskSchema;
+            break;
+        case "signup-or-signin":
+            schema = VSignUpOrSignInSchema;
+            break;
+        case "signup-or-signin-verify":
+            schema = VSignUpOrSignInVerifySchema;
+            break;
+        case "signin-verify":
+            schema = VSignInVerifySchema;
+            break;
+        case "signin":
+            schema = VSignInSchema;
             break;
         default:
             break;

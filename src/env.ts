@@ -22,6 +22,7 @@ const VEnvSchema = object({
   SLACK_CLIENT_SECRET: string(),
   SLACK_REDIRECT_URI: string(),
   SESSION_SECRET: string(),
+  COOKIE_DOMAIN: string(),
 });
 
 export type Env = InferOutput<typeof VEnvSchema>;

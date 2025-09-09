@@ -1,4 +1,5 @@
 import type { InferOutput } from "valibot";
+import { partial } from "valibot";
 
 import { email as emailValidator, minLength, nonEmpty, object, optional, picklist, pipe, pipeAsync, rawTransformAsync, regex, string, transform } from "valibot";
 
@@ -76,3 +77,5 @@ export const VCreateUserSchema = pipeAsync(
 
 // Types
 export type ValidatedCreateUserOrAdmin = InferOutput<typeof VCreateUserSchema>;
+
+

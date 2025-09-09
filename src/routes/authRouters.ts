@@ -1,0 +1,18 @@
+import { Hono } from "hono";
+
+import AuthController from "../controllers/authController.js";
+
+const authRouter = new Hono();
+const authController = new AuthController();
+
+authRouter.post("/signup-or-signin", authController.signUpOrSignIn);
+
+authRouter.post("/signup-or-signin/verify", authController.signUpOrSignInVerify);
+
+authRouter.post("/refresh-token", authController.getTokensFromRefreshToken);
+
+authRouter.post("/signin", authController.signInWithEmail);
+
+authRouter.post("/signin/verify", authController.signInVerifyWithEmail);
+
+export default authRouter;

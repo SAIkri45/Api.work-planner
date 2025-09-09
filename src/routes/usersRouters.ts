@@ -6,6 +6,8 @@ const userController = new UsersController();
 const userRoutes = new Hono();
 
 userRoutes.get("/", userController.getPaginatedUsers);
+userRoutes.get("/:id", userController.getUserById);
+userRoutes.patch("/:id", userController.editUser);
 
 userRoutes.get("/dropdown", userController.getUsersDropdown);
 

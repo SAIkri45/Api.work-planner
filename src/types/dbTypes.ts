@@ -5,12 +5,15 @@ import type { NewTask, Task, TasksTable } from "../db/schema/tasks.js";
 import type { NewUserProjects, UserProjects, UserProjectsTable } from "../db/schema/userProjects.js";
 import type { NewUser, User, UsersTable } from "../db/schema/users.js";
 import type { NewTaskAssignees,TaskAssignees,TaskAssigneesTable,} from "../db/schema/taskAssignees.js";
+import { DeviceToken, DeviceTokensTable, NewDeviceToken } from "../db/schema/deviceToken.js";
+import { NewOTP, OTP, OTPsTable } from "../db/schema/otp.js";
+import { RefreshToken, RefreshTokensTable } from "../db/schema/refreshToken.js";
 
 
-export type DBTable = UsersTable | SlackTokensTable | TasksTable | ProjectsTable | UserProjectsTable |TaskAssigneesTable ;
-export type DBTableRow = User | SlackToken | Task | Project | UserProjects | TaskAssignees;
-export type DBNewRecord = NewUser | NewSlackToken | NewTask | NewProject | NewUserProjects | NewTaskAssignees;
-export type DBNewRecords = NewUser[] | NewSlackToken[] | NewTask[] | NewProject[] | NewUserProjects[] | NewTaskAssignees[];
+export type DBTable = UsersTable | SlackTokensTable | TasksTable | ProjectsTable | UserProjectsTable |TaskAssigneesTable | DeviceTokensTable | OTPsTable | RefreshTokensTable
+export type DBTableRow = User | SlackToken | Task | Project | UserProjects | TaskAssignees | DeviceToken | OTP | RefreshToken
+export type DBNewRecord = NewUser | NewSlackToken | NewTask | NewProject | NewUserProjects | NewTaskAssignees | NewDeviceToken | NewOTP | NewDeviceToken
+export type DBNewRecords = NewUser[] | NewSlackToken[] | NewTask[] | NewProject[] | NewUserProjects[] | NewTaskAssignees[] | NewDeviceToken[] |  NewOTP[] | NewDeviceToken[]
 
 export type DBTableColumns<T extends DBTableRow> = keyof T;
 export type SortDirection = "asc" | "desc";

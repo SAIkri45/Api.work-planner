@@ -8,12 +8,29 @@ import type { ValidatedCreateProject, ValidatedUpdateProject } from "../validati
 import { ValidatedCreateTaskAssignee } from "../validations/schemas/vTaskAssigneesSchema.js";
 import { ValidatedCreateTask } from "../validations/schemas/vTaskSchema.js";
 import type { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
+import { ValidatedSignIn, ValidatedSignUpOrSignIn, ValidatedSignUpOrSignInVerification } from "../validations/schemas/signInSignUpValidationSchema.js";
 
-export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask | ValidatedCreateTaskAssignee;
-export type AppActivity = UserActivity | CreateProjectActivity | CreateTaskAssigneeActivity;
+export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask | ValidatedCreateTaskAssignee
+| ValidatedSignUpOrSignIn | ValidatedSignUpOrSignInVerification | ValidatedSignIn 
+export type AppActivity = UserActivity | CreateProjectActivity | CreateTaskAssigneeActivity  | AuthActivity
+export type AuthActivity = "signup-or-signin" | "signup-or-signin-verify" | "signin" | "signin-verify"
 export type UserActivity = "create-user" | "update-user";
 export type CreateProjectActivity = "create-project" | "update-project";
 export type CreateTaskAssigneeActivity = "create-task" | "create-task-assignee" | "update-task-assignee";
+
+export interface EmailOtpData {
+  action: string;
+  otp: string;
+  expires_at: Date;
+  email: string | null;
+}
+export interface PhoneOtpData {
+  action: string;
+  otp: string;
+  expires_at: Date;
+  phone: string | null;
+}
+export type OTPData = EmailOtpData | PhoneOtpData;
 
 export type AppRespData = | User
   | User[]

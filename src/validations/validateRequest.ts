@@ -4,6 +4,8 @@ import UnprocessableContentException from "../exceptions/unprocessableContentExc
 import { VCreateProjectSchema, VUpdateProjectSchema } from "./schemas/vProjectSchema.js";
 import { VCreateUserSchema } from "./schemas/vUserSchema.js";
 import { VCreateTaskSchema } from "./schemas/vTaskSchema.js";
+import { VSignInVerifySchema } from "./schemas/signinValidations.js";
+import { VSignInSchema, VSignUpOrSignInSchema, VSignUpOrSignInVerifySchema } from "./schemas/signInSignUpValidationSchema.js";
 
 export async function validateRequest<R extends ValidatedRequest>(
   actionType: AppActivity,
@@ -24,6 +26,18 @@ export async function validateRequest<R extends ValidatedRequest>(
       break;
     case "create-task":
       schema = VCreateTaskSchema;
+      break;
+    case "signup-or-signin":
+      schema = VSignUpOrSignInSchema
+      break;
+    case "signup-or-signin-verify":
+      schema = VSignUpOrSignInVerifySchema
+      break;
+    case "signin-verify":
+      schema = VSignInVerifySchema
+      break;
+    case "signin":
+      schema = VSignInSchema
       break;
     default:
       break;

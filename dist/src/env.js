@@ -13,6 +13,7 @@ const VEnvSchema = object({
     SLACK_CLIENT_SECRET: string(),
     SLACK_REDIRECT_URI: string(),
     SESSION_SECRET: string(),
+    COOKIE_DOMAIN: string(),
 });
 // eslint-disable-next-line import/no-mutable-exports
 let envData;

@@ -75,6 +75,11 @@ export const USER_ALREADY_DELETE = "Assignee not found or already removed";
 export const USER_NOT_ADDED = " User not assigned ";
 export const TASKID_USERID_REQUIRED = " Task id and User id required ";
 export const NO_NEW_ASSIGNEES = "No new assignees to add";
+export const USER_ALREADY_EXISTS = "User with this email or phone number already exists";
+export const DEVICE_TYPE_INVALID = "Device type is invalid";
+export const DEVICE_TYPE_MISSING = "Device type is missing";
+export const FAILED_TO_UPDATE_USER = "Failed to update user";
+
 
 
 
