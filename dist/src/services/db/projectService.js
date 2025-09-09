@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, ilike, inArray, isNull, not, sql } from "drizzle-orm";
+import { and, desc, eq, exists, gte, ilike, inArray, isNull, lte, not, sql } from "drizzle-orm";
 import { allowedTaskStatus } from "../../constants/appMessages.js";
 import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
@@ -6,6 +6,7 @@ import { Tasks } from "../../db/schema/tasks.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import ConflictException from "../../exceptions/conflictException.js";
+import NotFoundException from "../../exceptions/notFoundException.js";
 import { buildOrderByClause, buildProjectFilters } from "../../helpers/projectHelper.js";
 import { saveRecords } from "./baseDbService.js";
 export async function getProjectUsersById(id, search) {
@@ -308,4 +309,45 @@ export async function checkTaskExist(projectId) {
         where: and(eq(Tasks.project_id, projectId), isNull(Tasks.deleted_at), not(eq(Tasks.task_status, "COMPLETED"))),
     });
     return incompleteTasks;
+}
+export async function updateProjectStatus() {
+    try {
+        // Get previous date in UTC (not local timezone)
+        const today = new Date();
+        const previousDate = new Date(today.getTime() - 24 * 60 * 60 * 1000); // Go back 24 hours
+        // Set to start of day in UTC
+        const previousDateStart = new Date(`${previousDate.toISOString().split("T")[0]}T00:00:00.000Z`);
+        // Set to end of day in UTC
+        const previousDateEnd = new Date(`${previousDate.toISOString().split("T")[0]}T23:59:59.999Z`);
+        const overdueProjectIds = await db
+            .select({
+            id: projects.id,
+        })
+            .from(projects)
+            .where(and(eq(projects.project_status, "IN_PROGRESS"), gte(projects.due_date, previousDateStart), // due_date >= start of previous day UTC
+        lte(projects.due_date, previousDateEnd), // due_date <= end of previous day UTC
+        isNull(projects.deleted_at)));
+        if (overdueProjectIds.length === 0) {
+            throw new NotFoundException("No overdue projects found");
+        }
+        const projectIdsArray = overdueProjectIds.map(pIds => pIds.id);
+        const updatedProjects = await db.update(projects)
+            .set({
+            project_status: "OVERDUE",
+            updated_at: new Date(),
+        })
+            .where(and(inArray(projects.id, projectIdsArray), eq(projects.project_status, "IN_PROGRESS"), isNull(projects.deleted_at)))
+            .returning({
+            id: projects.id,
+            project_name: projects.title,
+            project_status: projects.project_status,
+            due_date: projects.due_date,
+        });
+        return {
+            updatedProjects,
+        };
+    }
+    catch (error) {
+        throw error;
+    }
 }

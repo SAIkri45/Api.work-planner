@@ -426,8 +426,6 @@ export async function checkTaskExist(projectId: number) {
   return incompleteTasks;
 }
 
-
-
 export async function updateProjectStatus() {
   try {
     // Get previous date in UTC (not local timezone)
@@ -435,21 +433,21 @@ export async function updateProjectStatus() {
     const previousDate = new Date(today.getTime() - 24 * 60 * 60 * 1000); // Go back 24 hours
 
     // Set to start of day in UTC
-    const previousDateStart = new Date(previousDate.toISOString().split('T')[0] + 'T00:00:00.000Z');
+    const previousDateStart = new Date(`${previousDate.toISOString().split("T")[0]}T00:00:00.000Z`);
 
     // Set to end of day in UTC
-    const previousDateEnd = new Date(previousDate.toISOString().split('T')[0] + 'T23:59:59.999Z');
+    const previousDateEnd = new Date(`${previousDate.toISOString().split("T")[0]}T23:59:59.999Z`);
 
     const overdueProjectIds = await db
       .select({
-        id: projects.id
+        id: projects.id,
       })
       .from(projects)
       .where(and(
         eq(projects.project_status, "IN_PROGRESS"),
         gte(projects.due_date, previousDateStart), // due_date >= start of previous day UTC
         lte(projects.due_date, previousDateEnd), // due_date <= end of previous day UTC
-        isNull(projects.deleted_at)
+        isNull(projects.deleted_at),
       ));
 
     if (overdueProjectIds.length === 0) {
@@ -461,24 +459,25 @@ export async function updateProjectStatus() {
     const updatedProjects = await db.update(projects)
       .set({
         project_status: "OVERDUE",
-        updated_at: new Date()
+        updated_at: new Date(),
       })
       .where(and(
         inArray(projects.id, projectIdsArray),
         eq(projects.project_status, "IN_PROGRESS"),
-        isNull(projects.deleted_at)
+        isNull(projects.deleted_at),
       ))
       .returning({
         id: projects.id,
         project_name: projects.title,
         project_status: projects.project_status,
-        due_date: projects.due_date
+        due_date: projects.due_date,
       });
 
     return {
-      updatedProjects
+      updatedProjects,
     };
-  } catch (error) {
+  }
+  catch (error) {
     throw error;
   }
 }

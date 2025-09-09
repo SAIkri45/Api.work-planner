@@ -426,11 +426,10 @@ class ProjectController {
   };
 
   updateProjectStatusByCron = async (c: Context) => {
-
     const result = await updateProjectStatus();
 
     return sendSuccessResp(c, 200, PROJECT_STATUS_UPDATED, result);
-  }
+  };
 }
 
 export default ProjectController;
