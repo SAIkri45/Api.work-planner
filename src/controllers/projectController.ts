@@ -385,7 +385,7 @@ class ProjectController {
     const offset = (page - 1) * pageSize;
     const search = c.req.query("search_string");
     const orderBy = c.req.query("order_by");
-    const projectStatus = c.req.query("status");
+    const projectStatus = c.req.query("project_status");
 
     const { result, total_records } = await getAllUsersInProjectWithPagination(
       offset,
