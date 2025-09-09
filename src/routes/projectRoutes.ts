@@ -20,7 +20,7 @@ projectRouter.get("/:id/tasks/status", projectControllers.getTasksStatusByProjec
 projectRouter.patch("/:id", isManagerOrAdmin, projectControllers.updateProject);
 projectRouter.get("/:id", projectControllers.getProjectById);
 projectRouter.delete("/:id", projectControllers.softDeleteProjectById);
-projectRouter.get("/", projectControllers.getAllProjectsPaginated);
+projectRouter.get("/", isManagerOrAdmin, projectControllers.getAllProjectsPaginated);
 projectRouter.post("/", isManagerOrAdmin, projectControllers.createProject);
 
 export default projectRouter;
