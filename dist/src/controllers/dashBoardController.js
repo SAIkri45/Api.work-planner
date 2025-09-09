@@ -41,8 +41,6 @@ class DashBoardController {
     };
     todayTasks = async (c) => {
         const taskStatus = c.req.query("task_status")?.toLocaleUpperCase();
-        const startDate = c.req.query("from_date");
-        const endDate = c.req.query("to_date");
         const orderByQueryData = {
             columns: ["created_at"],
             values: ["desc"],
@@ -51,9 +49,8 @@ class DashBoardController {
             columns: ["deleted_at"],
             values: [null],
         };
-        // Add today's date filter for created_at
-        const { todayStart, todayEnd } = getTodayDateRange();
-        whereQueryData.columns.push("created_at");
+        const { todayStart, todayEnd } = await getTodayDateRange();
+        whereQueryData.columns.push("end_date");
         whereQueryData.values.push({
             gte: todayStart,
             lte: todayEnd,
@@ -62,20 +59,11 @@ class DashBoardController {
             whereQueryData.columns.push("task_status");
             whereQueryData.values.push(taskStatus);
         }
-        if (startDate || endDate) {
-            whereQueryData.columns.push("end_date");
-            const dateFilter = {};
-            if (startDate)
-                dateFilter.gte = new Date(`${startDate}T00:00:00`);
-            if (endDate)
-                dateFilter.lte = new Date(`${endDate}T23:59:59`);
-            whereQueryData.values.push(dateFilter);
-        }
-        const result = await getRecordsConditionally(Tasks, whereQueryData, ["id", "task_title", "task_status", "start_date", "end_date"], orderByQueryData);
+        const result = await getRecordsConditionally(Tasks, whereQueryData, ["id", "task_title", "task_status", "start_date", "end_date", "created_at"], orderByQueryData);
         return sendSuccessResp(c, 200, TODAY_TASKS_FETCHED, result);
     };
     todaysTasksStatusCount = async (c) => {
-        const { todayStart, todayEnd } = getTodayDateRange();
+        const { todayStart, todayEnd } = await getTodayDateRange();
         const [completedTasksCount, inProgressTasksCount, reviewTasksCount, overDueTasksCount, newTasksCount, totalTasksCount] = await Promise.all([
             getRecordsCount(Tasks, [eq(Tasks.task_status, "COMPLETED"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
             getRecordsCount(Tasks, [eq(Tasks.task_status, "IN_PROGRESS"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),

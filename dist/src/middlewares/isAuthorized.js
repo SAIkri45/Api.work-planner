@@ -1,5 +1,4 @@
 import { createMiddleware } from "hono/factory";
-import UnauthorizedException from "../exceptions/unauthorizedException.js";
 import { getUserDetailsFromToken } from "../utils/jwtUtils.js";
 const isAuthorized = createMiddleware(async (c, next) => {
     const userDetails = await getUserDetailsFromToken(c);
@@ -17,14 +16,41 @@ const isOptionalAuthorized = createMiddleware(async (c, next) => {
         await next();
     }
 });
+// const isManagerOrAdmin = createMiddleware(async (c: Context, next) => {
+//   const userDetails = await getUserDetailsFromToken(c);
+//   if (userDetails.user_type === "ADMIN" || userDetails.user_type === "MANAGER") {
+//     c.set("user_payload", userDetails);
+//     await next();
+//   }
+//   else {
+//     return sendSuccessResp(c, 401, "Access denied to create project");
+//   }
+// });
 const isManagerOrAdmin = createMiddleware(async (c, next) => {
-    const userDetails = await getUserDetailsFromToken(c);
-    if (userDetails.user_type === "ADMIN" || userDetails.user_type === "MANAGER") {
-        c.set("user_payload", userDetails);
-        await next();
+    try {
+        const userDetails = await getUserDetailsFromToken(c);
+        if (userDetails.user_type === "ADMIN" || userDetails.user_type === "MANAGER") {
+            c.set("user_payload", userDetails);
+            await next();
+        }
+        else {
+            // Return proper error response
+            return c.json({
+                success: false,
+                message: "Access denied. Only managers and admins are allowed to perform this action.",
+                error: "INSUFFICIENT_PERMISSIONS",
+                statusCode: 403,
+            }, 403);
+        }
     }
-    else {
-        throw new UnauthorizedException("Access denied. Only managers and admins allowed.");
+    catch (error) {
+        // Handle token validation errors
+        return c.json({
+            success: false,
+            message: "Authentication failed. Please login again.",
+            error: "AUTHENTICATION_FAILED",
+            statusCode: 401,
+        }, 401);
     }
 });
 export { isAuthorized, isManagerOrAdmin, isOptionalAuthorized };

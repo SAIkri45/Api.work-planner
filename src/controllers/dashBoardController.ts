@@ -61,8 +61,6 @@ class DashBoardController {
 
   todayTasks = async (c: Context) => {
     const taskStatus = c.req.query("task_status")?.toLocaleUpperCase();
-    const startDate = c.req.query("from_date");
-    const endDate = c.req.query("to_date");
 
     const orderByQueryData: OrderByQueryData<Task> = {
       columns: ["created_at"],
@@ -74,10 +72,9 @@ class DashBoardController {
       values: [null],
     };
 
-    // Add today's date filter for created_at
-    const { todayStart, todayEnd } = getTodayDateRange();
+    const { todayStart, todayEnd } = await getTodayDateRange();
 
-    whereQueryData.columns.push("created_at");
+    whereQueryData.columns.push("end_date");
     whereQueryData.values.push({
       gte: todayStart,
       lte: todayEnd,
@@ -88,20 +85,10 @@ class DashBoardController {
       whereQueryData.values.push(taskStatus);
     }
 
-    if (startDate || endDate) {
-      whereQueryData.columns.push("end_date");
-      const dateFilter: { gte?: Date; lte?: Date } = {};
-      if (startDate)
-        dateFilter.gte = new Date(`${startDate}T00:00:00`);
-      if (endDate)
-        dateFilter.lte = new Date(`${endDate}T23:59:59`);
-      whereQueryData.values.push(dateFilter);
-    }
-
     const result = await getRecordsConditionally<Task>(
       Tasks,
       whereQueryData,
-      ["id", "task_title", "task_status", "start_date", "end_date"],
+      ["id", "task_title", "task_status", "start_date", "end_date", "created_at"],
       orderByQueryData,
     );
 
@@ -109,7 +96,7 @@ class DashBoardController {
   };
 
   todaysTasksStatusCount = async (c: Context) => {
-    const { todayStart, todayEnd } = getTodayDateRange();
+    const { todayStart, todayEnd } = await getTodayDateRange();
 
     const [completedTasksCount, inProgressTasksCount, reviewTasksCount, overDueTasksCount, newTasksCount, totalTasksCount]:
     [number, number, number, number, number, number] = await Promise.all([
