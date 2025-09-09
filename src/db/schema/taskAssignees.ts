@@ -24,7 +24,7 @@ export type TaskAssignees = typeof task_assignees.$inferSelect;
 export type NewTaskAssignees = typeof task_assignees.$inferInsert;
 export type TaskAssigneesTable = typeof task_assignees;
 
-export const taskAssigneeRelations = relations(task_assignees, ({ one, many }) => ({
+export const taskAssigneeRelations = relations(task_assignees, ({ one }) => ({
   user: one(users, {
     fields: [task_assignees.user_id],
     references: [users.id],
