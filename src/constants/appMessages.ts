@@ -83,6 +83,7 @@ export const FAILED_TO_UPDATE_USER = "Failed to update user";
 
 
 
+
 export const PROFILE_PIC_MISSING = "Profile pic is missing";
 export const PROFILE_PIC_TOO_SHORT
     = "Minimum length of the profile pic is 5 characters";

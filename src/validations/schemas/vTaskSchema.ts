@@ -8,7 +8,7 @@ import {TASK_DESCRIPTION_INVALID,TASK_STATUS_INVALID,TASK_TITLE_INVALID,TASK_TIT
 export const allowedTaskStatuses = ["NEW","IN_PROGRESS","COMPLETED","REVIEW","OVERDUE","DONE"] as const;
 
 // Create Task Schema
-export const VCreateTaskSchema = object({
+export const  VCreateTaskSchema = object({
   task_title: pipe(
     string(TASK_TITLE_INVALID),
     nonEmpty(TASK_TITLE_MISSING),

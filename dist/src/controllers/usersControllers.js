@@ -1,12 +1,9 @@
-import { USERS_FETCHED, FAILED_TO_FETCH_USERS, EMPLOYEES_FETCHED, USER_VALIDATION_ERROR, USER_NOT_FOUND, USER_FETCHED, FAILED_TO_UPDATE_USER, } from "../constants/appMessages.js";
+import { USERS_FETCHED, FAILED_TO_FETCH_USERS, EMPLOYEES_FETCHED, USER_VALIDATION_ERROR, USER_NOT_FOUND, USER_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_UPDATED, } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
-import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, updateRecordById, } from "../services/db/baseDbService.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, updateRecordById, getRecordById } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import { validateRequest } from "../validations/validateRequest.js";
-import conflictException from "../exceptions/conflictException.js";
-import { USER_ALREADY_EXISTS, USER_CREATED, USER_UPDATED, } from "../constants/appMessages.js";
-import { saveSingleRecord } from "../services/db/baseDbService.js";
 import { VCreateUserSchema } from "../validations/schemas/vUserSchema.js";
 import { parseAsync } from "valibot";
 import NotFoundException from "./../exceptions/notFoundException";
@@ -87,27 +84,19 @@ export class UsersController {
         return sendSuccessResp(c, 200, EMPLOYEES_FETCHED, result);
     };
     //Add user
-    addUser = async (c) => {
-        const requestBody = await c.req.json();
-        const validatedReq = await validateRequest("create-user", requestBody, USER_VALIDATION_ERROR);
-        const columnsToSelect = [
-            "id",
-            "name",
-            "email",
-            "phone",
-            "deleted_at",
-        ];
-        const existingUser = await getSingleRecordByMultipleColumnValues(users, ["email", "phone"], [validatedReq.email, validatedReq.phone], columnsToSelect);
-        if (existingUser) {
-            throw new conflictException(USER_ALREADY_EXISTS);
+    updateInternalUser = async (c) => {
+        const id = +c.req.param("id");
+        const req = await c.req.json();
+        if (!id) {
+            throw new BadRequestException(INVALID_INPUT);
         }
-        const now = new Date();
-        const savedUser = await saveSingleRecord(users, {
-            ...validatedReq,
-            created_at: now,
-            updated_at: now,
-        });
-        return sendSuccessResp(c, 200, USER_CREATED, savedUser);
+        const user = await getRecordById(users, id);
+        if (!user || user.deleted_at !== null || user?.user_status !== "ACTIVE" || !user) {
+            throw new NotFoundException(USER_NOT_FOUND);
+        }
+        const validatedUser = await validateRequest("update-user", req, USER_VALIDATION_ERROR);
+        const updatedUser = await updateRecordById(users, id, validatedUser);
+        return sendSuccessResp(c, 200, USER_UPDATED, updatedUser);
     };
     // get single user by id
     getUserById = async (c) => {

@@ -14,6 +14,8 @@ import {
   USER_NOT_FOUND,
   USER_FETCHED,
   FAILED_TO_UPDATE_USER,
+  INVALID_INPUT,
+  USER_UPDATED,
 } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import {
@@ -21,17 +23,14 @@ import {
   getRecordsConditionally,
   getSingleRecordByMultipleColumnValues,
   updateRecordById,
+  getRecordById
 } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { PgTableWithColumns, PgColumn } from "drizzle-orm/pg-core";
 import BadRequestException from "../exceptions/badRequestException.js";
 import { validateRequest } from "../validations/validateRequest.js";
 import conflictException from "../exceptions/conflictException.js";
-import {
-  USER_ALREADY_EXISTS,
-  USER_CREATED,
-  USER_UPDATED,
-} from "../constants/appMessages.js";
+
 import { saveSingleRecord } from "../services/db/baseDbService.js";
 import type { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
 import { VCreateUserSchema } from "../validations/schemas/vUserSchema.js";
@@ -40,6 +39,7 @@ import { parseAsync } from "valibot";
 import NotFoundException from "./../exceptions/notFoundException";
 
 type User = InferSelectModel<typeof users>;
+
 
 export class UsersController {
   // 1. Get paginated users
@@ -149,43 +149,25 @@ export class UsersController {
     return sendSuccessResp(c, 200, EMPLOYEES_FETCHED, result);
   };
   //Add user
-  addUser = async (c: Context) => {
-    const requestBody = await c.req.json();
+  updateInternalUser = async (c: Context) => {
+    const id = +c.req.param("id");
+    const req = await c.req.json();
 
-    const validatedReq = await validateRequest<ValidatedCreateUserOrAdmin>(
-      "create-user",
-      requestBody,
-      USER_VALIDATION_ERROR
-    );
-
-    const columnsToSelect = [
-      "id",
-      "name",
-      "email",
-      "phone",
-      "deleted_at",
-    ] as const;
-
-    const existingUser = await getSingleRecordByMultipleColumnValues(
-      users,
-      ["email", "phone"],
-      [validatedReq.email, validatedReq.phone],
-      columnsToSelect
-    );
-
-    if (existingUser) {
-      throw new conflictException(USER_ALREADY_EXISTS);
+    if (!id) {
+      throw new BadRequestException(INVALID_INPUT);
     }
 
-    const now = new Date();
+    const user = await getRecordById<User>(users, id);
 
-    const savedUser = await saveSingleRecord(users, {
-      ...validatedReq,
-      created_at: now,
-      updated_at: now,
-    });
+    if (!user || user.deleted_at !== null || user?.user_status !== "ACTIVE" || !user) {
+      throw new NotFoundException(USER_NOT_FOUND);
+    }
 
-    return sendSuccessResp(c, 200, USER_CREATED, savedUser);
+    const validatedUser = await validateRequest<ValidatedCreateUserOrAdmin>("update-user", req, USER_VALIDATION_ERROR);
+
+    const updatedUser = await updateRecordById<User>(users, id, validatedUser);
+
+    return sendSuccessResp(c, 200, USER_UPDATED, updatedUser);
   };
 
   // get single user by id

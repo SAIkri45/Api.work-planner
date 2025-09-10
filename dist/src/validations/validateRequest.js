@@ -3,7 +3,6 @@ import UnprocessableContentException from "../exceptions/unprocessableContentExc
 import { VCreateProjectSchema, VUpdateProjectSchema } from "./schemas/vProjectSchema.js";
 import { VCreateUserSchema } from "./schemas/vUserSchema.js";
 import { VCreateTaskSchema } from "./schemas/vTaskSchema.js";
-import { VSignInVerifySchema } from "./schemas/signinValidations.js";
 import { VSignInSchema, VSignUpOrSignInSchema, VSignUpOrSignInVerifySchema } from "./schemas/signInSignUpValidationSchema.js";
 export async function validateRequest(actionType, reqData, errorMessage) {
     let schema;
@@ -27,10 +26,13 @@ export async function validateRequest(actionType, reqData, errorMessage) {
             schema = VSignUpOrSignInVerifySchema;
             break;
         case "signin-verify":
-            schema = VSignInVerifySchema;
+            schema = VSignInSchema;
             break;
         case "signin":
             schema = VSignInSchema;
+            break;
+        case "update-user":
+            schema = VCreateUserSchema;
             break;
         default:
             break;
