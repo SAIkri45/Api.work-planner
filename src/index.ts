@@ -7,28 +7,33 @@ import { cors } from "hono/cors";
 import { appConfig } from "./config/appConfig.js";
 import { DEF_ERROR_RESP } from "./constants/appMessages.js";
 import envData from "./env.js";
-import oAuthRouter from "./routes/slackOAuthRouters";
-import usersRouter from "./routes/usersRouters";
-import taskRouter from "./routes/taskRoutes";
-
+import dashBoardRoutes from "./routes/dashBoardRoutes.js";
 import projectRouter from "./routes/projectRoutes.js";
 
 import userRoutes from "./routes/usersRouters.js";
 
 const apiVer = appConfig.version;
-const app = new Hono().basePath(`/v${apiVer}`);
+const app = new Hono().basePath(`/${apiVer}`);
 const port = envData.PORT || 3000;
 
 app.use("*", cors());
+// app.use(
+//   "*",
+//   cors({
+//     origin: [
+//       "http://localhost:3000",
+//     ],
+//     credentials: true,
+//   }),
+// );
 
 app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
 
-app.route("/", oAuthRouter);
-app.route("/users", usersRouter);
-app.route("/tasks", taskRouter);
 app.route("/projects", projectRouter);
+app.route("/dash-board", dashBoardRoutes);
+app.route("/", oAuthRouter);
 app.route("/users", userRoutes);
 
 // handling errors globally

@@ -3,7 +3,7 @@ import { flatten, safeParseAsync } from "valibot";
 import type { AppActivity, ValidatedRequest } from "../types/appTypes.js";
 
 import UnprocessableContentException from "../exceptions/unprocessableContentException.js";
-import { VCreateProjectSchema, VUpdateProjectSchema } from "./schemas/vProjectSchema.js";
+import { VAddUsersToProjectSchema, VCreateProjectSchema, VRemoveUsersFromProjectSchema, VUpdateProjectSchema, VUpdateProjectStatusSchema } from "./schemas/vProjectSchema.js";
 import { VCreateUserSchema } from "./schemas/vUserSchema.js";
 
 export async function validateRequest<R extends ValidatedRequest>(
@@ -22,6 +22,15 @@ export async function validateRequest<R extends ValidatedRequest>(
       break;
     case "update-project":
       schema = VUpdateProjectSchema;
+      break;
+    case "add-users-to-project":
+      schema = VAddUsersToProjectSchema;
+      break;
+    case "remove-users-from-project":
+      schema = VRemoveUsersFromProjectSchema;
+      break;
+    case "update-project-status":
+      schema = VUpdateProjectStatusSchema;
       break;
     default:
       break;

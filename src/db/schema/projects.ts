@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import { index, integer, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
+import { Tasks } from "./tasks.js";
 import { user_projects } from "./userProjects.js";
 import { users } from "./users.js";
 
@@ -30,6 +31,16 @@ export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
 export type ProjectsTable = typeof projects;
 
-export const projectRelations = relations(projects, ({ many }) => ({
+export const projectRelations = relations(projects, ({ many, one }) => ({
   userProjects: many(user_projects),
+  tasks: many(Tasks),
+
+  createdByUser: one(users, {
+    fields: [projects.created_by],
+    references: [users.id],
+  }),
+  updatedByUser: one(users, {
+    fields: [projects.updated_by],
+    references: [users.id],
+  }),
 }));

@@ -1,4 +1,4 @@
-export function parseOrderByQuery(orderBy, defaultColumn = "created_at", defaultDirection = "desc") {
+export function parseOrderByQuery(defaultColumn = "created_at", defaultDirection = "desc", orderBy) {
     // Default orderBy configuration
     let orderByQueryData = {
         columns: [defaultColumn],

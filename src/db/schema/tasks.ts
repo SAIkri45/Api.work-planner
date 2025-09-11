@@ -1,6 +1,8 @@
+import { relations } from "drizzle-orm";
 import { index, integer, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 import { projects } from "./projects.js";
+import { task_assignees } from "./taskAssignees.js";
 import { users } from "./users.js";
 
 // Task status enum
@@ -30,3 +32,11 @@ export const Tasks = pgTable("tasks",{
 export type Task = typeof Tasks.$inferSelect;
 export type NewTask = typeof Tasks.$inferInsert;
 export type TasksTable = typeof Tasks;
+
+export const taskRelations = relations(Tasks, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [Tasks.project_id],
+    references: [projects.id],
+  }),
+  assignees: many(task_assignees),
+}));

@@ -56,7 +56,7 @@ export const DATE_INVALID = "Date is invalid";
 export const PHONE_EXISTS = "Phone number already exists";
 export const DATE_MISSING = "Date is missing";
 export const USER_CREATED = "User created successfully";
-export const USER_FETCHED = "User details fetched successfully";
+export const USER_FETCHED = "Users details fetched successfully";
 export const USER_UPDATED = "User updated successfully";
 export const USER_ACTIVE_STATUS_REQUIRED = "Active status is required";
 export const USER_ACTIVE_STATUS_UPDATED = "User status updated successfully";
@@ -163,6 +163,14 @@ export const allowedProjectStatus = [
     "OVERDUE",
     "DONE",
 ];
+export const allowedTaskStatus = [
+    "NEW",
+    "IN_PROGRESS",
+    "COMPLETED",
+    "REVIEW",
+    "OVERDUE",
+    "DONE",
+];
 export const COMPONENT_TYPE_MISSING = "Component type is required.";
 export const COMPONENT_TEXT_MISSING = "Component text is required.";
 export const COMPONENT_FORMAT_INVALID = "Component format is invalid.";
@@ -209,6 +217,8 @@ export const TITLE_MISSING = "Title is missing";
 export const TITLE_TOO_SHORT = "Minimum length of the title is 3 characters";
 export const DATE_IS_MISSING = "Date is missing";
 export const DATE_IS_INVALID = "Date is invalid";
+export const DATE_REQUIRED = "Start Date is required";
+export const DUE_DATE_REQUIRED = "Due Date is required";
 export const TOTAL_CONTACTS_MISSING = "Total Contacts is missing";
 export const DELIEVERY_PERCENTAGE_MISSING = "Delivery percentage is missing";
 export const COUPON_TOO_SHORT = "Minimum length of the COUPON is 3 characters";
@@ -240,25 +250,35 @@ export const SLACK_ID_INVALID = "slack_id is invalid";
 export const SLACK_ID_MISSING = "slack_id is missing";
 export const USER_STATUS_INVALID = "User status is invalid";
 // projects
-export const PROJECT_REQUIRED = "Project Name is required";
-export const PROJECT_NAME_MISSING = "Project name is missing";
-export const PROJECT_NAME_TOO_SHORT = "Minimum length of the project name is 3 characters";
-export const PROJECT_DESCRIPTION_TOO_SHORT = "Minimum length of the project description is 10 characters";
-export const PROJECT_DESCRIPTION_REQUIRED = "Project description is required";
+export const PROJECT_TITLE_REQUIRED = "Project Title is required";
+export const PROJECT_TITLE_MIN_LENGTH = "Project Title min 3 letters";
+export const VALID_TITLE = "Project Title should contain letters only";
+export const PROJECT_DESCRIPTION_REQUIRED = "Project Description is required";
+export const PROJECT_DESCRIPTION_MIN_LENGTH = "Project Description min 8 letters";
+export const VALID_DESCRIPTION = "Title should contain letters only";
+export const PROJECT_LINKS_REQUIRED = "Project links are required";
+export const PROJECT_DESCRIPTION_TOO_SHORT = "Minimum  10 characters";
+export const PROJECT_LINKS_TOO_SHORT = "Project links min 8 letters";
 export const PROJECT_ALREADY_EXISTS = "Project with this name already exists";
 export const PROJECT_LOGO_URL_INVALID = "Project logo URL is invalid";
 export const PROJECT_LOGO_URL_MISSING = "Project logo URL is missing";
-export const PROJECT_LINKS_INVALID = "Project links are invalid";
 export const PROJECT_LINKS_MISSING = "Project links are missing";
-export const PROJECT_LINKS_TOO_SHORT = "Minimum length of the project links is 10 characters";
 export const PROJECT_CREATED = "Project created successfully";
 export const PROJECT_UPDATED = "Project updated successfully";
 export const PROJECT_DELETED = "Project deleted successfully";
 export const PROJECT_NOT_FOUND = "Project not found";
+export const AVILABLE_USERS_FETCHED = "Available users fetched successfully";
+export const PROJECT_TASKS_FETCHED = "Project tasks fetched successfully";
+export const TASKS_STATUS_FETCHED = "Tasks status fetched successfully";
 export const PROJECTS_FETCHED = "Projects fetched successfully";
 export const PROJECTS_FETCHED_SUCCESS = "Projects fetched successfully";
+export const PROJECTS_USERS_FETCHED_SUCCESS = "Project users fetched successfully";
+export const PROJECT_STATUS_UPDATED = "Project status updated successfully";
 export const PROJECT_NOT_FOUND_ID = "Project not found with id";
+export const PROJECT_STATUS = "Project cannot be deleted status is Incompleted";
+export const PROJECT_TASKS_IN_COMPLETED = "Cannot delete project,Some tasks are not completed yet";
 export const PROJECT_VALIDATION_ERROR = "Project details provided do not meet the required validation criteria";
+export const PROJECT_USERS_VALIDATION_ERROR = "Details provided do not meet the required validation criteria";
 export const PROJECT_STATUS_REQUIRED = "Project status is required";
 export const PROJECT_STATUS_MISSING = "Project status is missing";
 export const PROJECT_CREATED_BY_MISSING = "Project created by is missing";
@@ -267,6 +287,9 @@ export const PROJECT_TITLE_INVALID = "Project title is invalid";
 export const PROJECT_TITLE_MISSING = "Project title is missing";
 export const PROJECT_TITLE_TOO_SHORT = "Minimum length of the project title is 3 characters";
 export const PROJECT_DESCRIPTION_INVALID = "Project description is invalid";
+export const PROJECT_USERS_ASSIGNED = "Users assigned to project successfully";
+export const USERS_ALREADY_ASSIGNED = "All users already assigned to project";
+export const PROJECT_USERS_REMOVED = "Users removed from project successfully";
 // Tasks
 export const TASK_TITLE_INVALID = "Task title is invalid";
 export const TASK_TITLE_MISSING = "Task title is missing";
@@ -280,3 +303,7 @@ export const TASK_CREATED_BY_MISSING = "Task created by is missing";
 export const TASK_CREATED_BY_INVALID = "Task created by is invalid";
 export const TASKS_FETCHED = "Tasks fetched successfully";
 export const TASK_CREATED = "Task created successfully";
+// dash board
+export const DASHBOARD_FETCHED = "Dashboard fetched successfully";
+export const TODAY_TASKS_FETCHED = "Today tasks fetched successfully";
+export const TODAY_TASKS_STATUS_COUNT_FETCHED = "Today tasks status count fetched successfully";

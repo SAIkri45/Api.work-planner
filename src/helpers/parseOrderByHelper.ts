@@ -1,9 +1,10 @@
 import type { DBTableColumns, DBTableRow, OrderByQueryData, SortDirection } from "../types/dbTypes.js";
 
 export function parseOrderByQuery<T extends DBTableRow>(
-  orderBy: string | undefined,
   defaultColumn: DBTableColumns<T> = "created_at" as DBTableColumns<T>,
   defaultDirection: SortDirection = "desc",
+  orderBy?: string | undefined,
+
 ): OrderByQueryData<T> {
   // Default orderBy configuration
   let orderByQueryData: OrderByQueryData<T> = {
