@@ -154,6 +154,10 @@ export const CONTACTS_IMPORT_VALIDATION_FAILED = "Contacts import validation fai
 export const RECORDS_NOT_FOUND = "NO records found tO import";
 
 
+
+
+
+
 // template messages
 export const TEMPLATE_NAME_MISSING = "Template name is required";
 export const TEMPLATE_CATEGORY_MISSING = "Template category is required";
@@ -375,3 +379,25 @@ export const TASK_ASSIGNEES_DELETED = "Task assignees deleted successfully";
 export const TASK_ASSIGNEES_FETCHED = "Task assignees fetched successfully";
 export const TASK_FAILED_TO_FETCH = " Tasks failed to fetch ";
 export const TASK_STATUS_FETCHED = " Task status fetched successfully ";
+export const DASHBOARD_FETCHED = "Dashboard fetched successfully";
+export const TASKS_COUNT_FETCHED = "Tasks count fetched successfully";
+export const TODAY_TASKS_FETCHED = "Today's tasks fetched successfully";
+export const OVERDUE_TASKS_FETCHED = "Overdue tasks fetched successfully";
+export const USER_TASKS_FETCHED = "User tasks fetched successfully";
+export const TODAY_TASKS_STATUS_COUNT_FETCHED = "Today's tasks status count fetched successfully";
+export const USER_TASKS_STATUS_COUNT_FETCHED = "User tasks status count fetched successfully";
+export const TASK_ASSIGNEE_ADDED = "Task assignee added successfully";
+export const TASK_ASSIGNEE_EXISTS = "Task assignee already exists"; 
+export const PROJECT_USERS_ASSIGNED = "Project users assigned successfully";
+export const TASK_ASSIGNEE_NOT_FOUND = "Task assignee not found";
+export const TASK_ASSIGNEE_VALIDATION_ERROR = "Task assignee details provided do not meet the required validation criteria";
+export const TASK_ASSIGNEE_USER_ID_INVALID = "Task assignee user ID is invalid";    
+export const TASK_ASSIGNEE_USER_ID_MISSING = "Task assignee user ID is missing";
+export const TASK_ASSIGNEE_TASK_ID_INVALID = "Task assignee task ID is invalid";
+export const TASK_ASSIGNEE_TASK_ID_MISSING = "Task assignee task ID is missing";
+export const TASK_ASSIGNEE_CREATED_BY_INVALID = "Task assignee created by is invalid";
+export const TASK_ASSIGNEE_CREATED_BY_MISSING = "Task assignee created by is missing";
+export const TASK_ASSIGNEE_ALREADY_EXISTS = "Task assignee already exists";
+export const FILE_UPLOAD_LIMIT = "File size must be less than 5 MB";
+export const FILE_UPLOAD_SUCCESS = "File uploaded successfully";
+export const PROJECT_USERS_REMOVED = "Project users removed successfully";

@@ -14,6 +14,8 @@ import userRoutes from "./routes/usersRouters.js";
 
 import taskAssigneesRoutes from "./routes/taskAssigneesRoutes.js";
 import authRoutes  from "./routes/authRouters.js";
+import taskRouter from "./routes/taskRoutes.js";
+import oAuthRouter from "./routes/slackOAuthRouters.js";
 
 
 const apiVer = appConfig.version;

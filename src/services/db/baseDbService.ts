@@ -778,6 +778,7 @@ export {
   getSingleRecordByMultipleColumnValues,
   saveRecords,
   saveRecordswithtrx,
+  saveRecordsWithTrx,
   saveSingleRecord,
   saveSingleRecordWithTrx,
   softDeleteRecordById,
