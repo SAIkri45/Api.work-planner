@@ -5,7 +5,27 @@ meta {
 }
 
 post {
-  url: http
-  body: none
+  url: http://localhost:3000/v1.0/tasks
+  body: json
   auth: inherit
+}
+
+body:json {
+  {
+    "task_title": "API Integration",
+    "description": "Integrate payment gateway API with backend",
+    "created_by": 5,
+    "project_id": 2,
+    "task_status": "IN_PROGRESS",
+    "start_date": "2025-09-12",
+    "end_date": "2025-09-20",
+    "user_ids": [6, 7, 8]
+  }
+  
+  
+  
+  
+  
+  
+  
 }

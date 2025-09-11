@@ -10,7 +10,7 @@ export const taskStatuses = pgEnum("task_status", ["NEW","IN_PROGRESS","COMPLETE
 export const Tasks = pgTable("tasks",{
     id: serial().primaryKey(),
     task_title: varchar().notNull(), 
-    project_id: integer().notNull().references(() => projects.id), 
+    project_id: integer().references(() => projects.id), 
     description: text(),
     task_status: taskStatuses("task_status").default("NEW"),
     created_by: integer().references(() => users.id),

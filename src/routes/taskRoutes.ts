@@ -1,12 +1,13 @@
 import { Hono } from "hono";
-import taskControllers, {TasksController} from "../controllers/taskControllers";
-const tasksController = new TasksController();
+import TasksController  from "../controllers/taskControllers.js";
+import { isEmployeAuthorized } from "../middlewares/slackMiddlewares.js";
+
 const taskRoutes = new Hono();
+const tasksController = new TasksController();
 
-
-taskRoutes.post("/", tasksController.createTask);
-taskRoutes.get("/tasklist", tasksController.getPaginatedTasks);
+taskRoutes.get("/", tasksController.getPaginatedTasks);
 taskRoutes.get("/:id", tasksController.getTaskById);
 taskRoutes.patch("/:id", tasksController.editTask);
+taskRoutes.get("/status/counts", tasksController.getTaskStatusCounts);
 
 export default taskRoutes;

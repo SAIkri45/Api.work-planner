@@ -18,6 +18,8 @@
     "@dotenvx/dotenvx": "^1.48.4",
     "@hono/node-server": "^1.19.0",
     "axios": "^1.11.0",
+    "dayjs": "^1.11.18",
+    "dayjs-plugin-utc": "^0.1.2",
     "dotenv": "^17.2.1",
     "drizzle-orm": "^0.44.4",
     "eslint-plugin-format": "^1.0.1",

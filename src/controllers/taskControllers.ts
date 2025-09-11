@@ -1,111 +1,156 @@
 import type { Context } from "hono";
-import type {
-  DBTableColumns,
-  OrderByQueryData,
-  SortDirection,
-  WhereQueryData,
-} from "../types/dbTypes";
+import {
+  TASKS_FETCHED,
+  TASK_UPDATED,
+  TASK_NOT_FOUND,
+  TASK_ID_REQUIRED,
+  TASK_STATUS_FETCHED,
+} from "../constants/appMessages";
 
-import { NewTask, Task, Tasks } from "../db/schema/tasks";
+import { Task, Tasks } from "../db/schema/tasks";
 import {
   getPaginatedRecordsConditionally,
   getRecordById,
-  saveSingleRecord,
-  getPaginatedRecords,
   updateRecordById,
+  getRecordsConditionally,
 } from "../services/db/baseDbService";
+
 import { sendSuccessResp } from "../utils/respUtils";
 
-import {
-  TASKS_FETCHED,
-  TASK_CREATED,
-  TASK_NOT_FOUND,
-} from "../constants/appMessages";
-import { PgTableWithColumns, PgColumn } from "drizzle-orm/pg-core";
+
+import BadRequestException from "../exceptions/badRequestException.js";
+import NotFoundException from "../exceptions/notFoundException.js";
+import { error } from "node:console";
+import { buildTaskQueryData } from "../helpers/queryHelper.js";
+import { count, isNull } from "drizzle-orm";
+import { db } from "../db/configuration.js";
+import { and, gte, lte } from "drizzle-orm";
 
 export class TasksController {
-  // 1. Create Task (POST)
-  createTask = async (c: Context) => {
-    const body = await c.req.json<NewTask>();
-
-    const insertedTask = await saveSingleRecord<Task>(Tasks, body);
-
-    return sendSuccessResp(c, 201, TASK_CREATED, insertedTask);
-  };
-
-  // 2. Get Paginated Tasks (GET)
+  // Get Paginated Tasks (GET)
   getPaginatedTasks = async (c: Context) => {
-    const page = +c.req.query("page")! || 1;
-    const pageSize = +c.req.query("page_size")! || 10;
-    const searchString = c.req.query("search_string")?.trim() || null;
-    const orderBy = c.req.query("order_by");
-    const task_status = c.req.query("task_status");
+    try {
+      const page = +c.req.query("page")! || 1;
+      const pageSize = +c.req.query("page_size")! || 10;
+      const searchString = c.req.query("search_string")?.trim() || null;
+      const orderBy = c.req.query("order_by") || null;
+      const task_status = c.req.query("task_status") || null;
+      const { orderByQueryData, whereQueryData } = buildTaskQueryData(
+        searchString,
+        orderBy,
+        task_status
+      );
 
-    let orderByQueryData: OrderByQueryData<Task> = {
-      columns: ["created_at"],
-      values: ["desc"],
-    };
+      const result = await getPaginatedRecordsConditionally<Task>(
+        Tasks,
+        page,
+        pageSize,
+        orderByQueryData,
+        whereQueryData
+      );
 
-    const whereQueryData: WhereQueryData<Task> = {
-      columns: [],
-      values: [],
-    };
-    if (task_status) {
-      whereQueryData.columns.push("task_status");
-      whereQueryData.values.push(task_status);
+      return sendSuccessResp(c, 200, TASKS_FETCHED, result);
+    } catch {
+      throw error;
     }
-
-    if (searchString) {
-      whereQueryData.columns.push("task_title");
-      whereQueryData.values.push(`%${searchString}%`);
-    }
-
-    if (orderBy) {
-      const orderByColumns: DBTableColumns<Task>[] = [];
-      const orderByValues: SortDirection[] = [];
-      const queryStrings = orderBy.split(",");
-      for (const queryString of queryStrings) {
-        const [column, value] = queryString.split(":");
-        orderByColumns.push(column as DBTableColumns<Task>);
-        orderByValues.push(value as SortDirection);
-      }
-      orderByQueryData = {
-        columns: orderByColumns,
-        values: orderByValues,
-      };
-    }
-
-    const result = await getPaginatedRecordsConditionally<Task>(
-      Tasks,
-      page,
-      pageSize,
-      orderByQueryData,
-      whereQueryData,
-    );
-
-    return sendSuccessResp(c, 200, TASKS_FETCHED, result);
   };
 
-  // 3. getbyid
+  // Get Task By Id
   getTaskById = async (c: Context) => {
-    const id = Number(c.req.param("id"));
+    try {
+      const id = c.req.param("id");
 
-    const task = await getRecordById<Task>(Tasks, id);
+      if (!id || Number.isNaN(id)) {
+        throw new BadRequestException(TASK_ID_REQUIRED);
+      }
 
-    return sendSuccessResp(c, 200, TASKS_FETCHED, task);
+      const task = await getRecordById<Task>(Tasks, +id, ["id", "deleted_at"]);
+
+      if (!task || task.deleted_at !== null) {
+        throw new NotFoundException(TASK_NOT_FOUND);
+      }
+
+      return sendSuccessResp(c, 200, TASKS_FETCHED, task);  
+    } catch {
+      throw error;
+    }
   };
-  // 4. Edit Task (PATCH)
 
+  // Edit Task (PATCH)
   editTask = async (c: Context) => {
-    const id = Number(c.req.param("id"));
-    const body = await c.req.json();
+    try {
+      const id = Number(c.req.param("id"));
 
-    const updatedTask = await updateRecordById<Task>(Tasks, id, {
-      ...body,
-      updated_at: new Date(),
-    });
+      const body = await c.req.json();
 
-    return sendSuccessResp(c, 200, "Task updated successfully", updatedTask);
+      const existingTask = await getRecordById<Task>(Tasks, id, [
+        "id",
+        "deleted_at",
+      ]);
+
+      if (!existingTask || existingTask.deleted_at !== null) {
+        throw new NotFoundException(TASK_NOT_FOUND);
+      }
+
+      const updatedTask = await updateRecordById<Task>(Tasks, id, {
+        ...body,
+      });
+
+      return sendSuccessResp(c, 200, TASK_UPDATED, updatedTask);
+    } catch {
+      throw error;
+    }
+  };
+
+  // Get Task Status Counts (GET)
+  getTaskStatusCounts = async (c: Context) => {
+    try {
+      const { startDate, endDate } = c.req.query();
+
+      const conditions = [isNull(Tasks.deleted_at)];
+
+      if (startDate) {
+        conditions.push(gte(Tasks.start_date, startDate));
+      }
+      if (endDate) {
+        conditions.push(lte(Tasks.end_date, endDate));
+      }
+
+      const statusCounts = await db
+        .select({
+          task_status: Tasks.task_status,
+          count: count(Tasks.id).as("count"),
+        })
+        .from(Tasks)
+        .where(and(...conditions))
+        .groupBy(Tasks.task_status);
+
+      const overallCount = await db
+        .select({ total: count(Tasks.id) })
+        .from(Tasks)
+        .where(and(...conditions));
+
+      const counts: Record<string, number> = {
+        NEW: 0,
+        IN_PROGRESS: 0,
+        COMPLETED: 0,
+        REVIEW: 0,
+        OVERDUE: 0,
+        DONE: 0,
+      };
+
+      statusCounts.forEach((row) => {
+        counts[row.task_status as keyof typeof counts] = Number(row.count);
+      });
+
+      return sendSuccessResp(c, 200, "Task counts fetched successfully", {
+        ...counts,
+        overall: Number(overallCount[0]?.total ?? 0),
+        
+      });
+    } catch (error) {
+      throw error;
+    }
   };
 
   //tasksdropdown
@@ -115,7 +160,7 @@ export class TasksController {
   //   const search_string = c.req.query("search_string")?.trim() || null;
 
   //   const whereQueryData: WhereQueryData<Task> = {
-  //     columns: [], 
+  //     columns: [],
   //     values: [],
   //   };
 

@@ -151,7 +151,7 @@ function prepareInQueryCondition(table, inQueryData) {
     }
     return null;
 }
-async function executeQuery(table, whereQuery, columnsRequired, orderByConditions, inQueryCondition, paginationData) {
+async function executeQuery(table, whereQuery, columnsRequired, orderByConditions, inQueryCondition, paginationData, trx) {
     let dQuery = columnsRequired
         ? db.select(columnsRequired).from(table).$dynamic()
         : db.select().from(table).$dynamic();

@@ -12,6 +12,10 @@ import projectRouter from "./routes/projectRoutes.js";
 
 import userRoutes from "./routes/usersRouters.js";
 
+import taskAssigneesRoutes from "./routes/taskAssigneesRoutes.js";
+import authRoutes  from "./routes/authRouters.js";
+
+
 const apiVer = appConfig.version;
 const app = new Hono().basePath(`/${apiVer}`);
 const port = envData.PORT || 3000;
@@ -31,10 +35,14 @@ app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
 
+app.route("/tasks", taskRouter);
 app.route("/projects", projectRouter);
 app.route("/dash-board", dashBoardRoutes);
 app.route("/", oAuthRouter);
 app.route("/users", userRoutes);
+app.route("/task-assignees", taskAssigneesRoutes);
+
+app.route("/auth", authRoutes);
 
 // handling errors globally
 app.onError((err: any, c: Context) => {

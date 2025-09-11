@@ -12,6 +12,6 @@ export async function getSlackId(slackId: string) {
 
 export const isEmployeAuthorized = createMiddleware(async (c: Context, next) => {
   const userDetails = await getByUserId(slack_user_id);
-  c.set("userDetails", userDetails);
+  c.set("user_payload", userDetails);
   await next();
 });
