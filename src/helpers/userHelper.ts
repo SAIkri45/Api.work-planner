@@ -1,51 +1,52 @@
 import { DBTableColumns } from "../types/dbTypes";
 import { OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes";
-import { Task } from "../db/schema/tasks";
+import { User } from "../db/schema/users";
 
 /**
- * Build query data for pagination, search, filter, ordering (Tasks)
+ * Build query data for pagination, search, filter, ordering (Users)
  */
-export function buildTaskQueryData(
+export function buildUserQueryData(
   searchString: string | null,
   orderBy: string | null,
-  task_status: string | null
+  user_status: string | null
 ): {
-  orderByQueryData: OrderByQueryData<Task>;
-  whereQueryData: WhereQueryData<Task>;
+  orderByQueryData: OrderByQueryData<User>;
+  whereQueryData: WhereQueryData<User>;
 } {
   // Default ordering
-  let orderByQueryData: OrderByQueryData<Task> = {
+  let orderByQueryData: OrderByQueryData<User> = {
     columns: ["created_at"],
     values: ["desc"],
   };
 
   // Default filtering
-  const whereQueryData: WhereQueryData<Task> = {
+  const whereQueryData: WhereQueryData<User> = {
     columns: [],
     values: [],
   };
 
   // Filter by status
-  if (task_status) {
-    whereQueryData.columns.push("task_status");
-    whereQueryData.values.push(task_status);
+  if (user_status) {
+    whereQueryData.columns.push("user_status");
+    whereQueryData.values.push(user_status);
   }
 
-  // Search filter
+  // Search filter (searching by user_name or email)
   if (searchString) {
-    whereQueryData.columns.push("task_title");
+    // You can adjust this to search multiple columns if needed
+    whereQueryData.columns.push("user_name");
     whereQueryData.values.push(`%${searchString}%`);
   }
 
   // Order by columns
   if (orderBy) {
-    const orderByColumns: DBTableColumns<Task>[] = [];
+    const orderByColumns: DBTableColumns<User>[] = [];
     const orderByValues: SortDirection[] = [];
 
     const queryStrings = orderBy.split(",");
     for (const queryString of queryStrings) {
       const [column, value] = queryString.split(":");
-      orderByColumns.push(column as DBTableColumns<Task>);
+      orderByColumns.push(column as DBTableColumns<User>);
       orderByValues.push(value as SortDirection);
     }
 

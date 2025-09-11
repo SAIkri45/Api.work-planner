@@ -1,0 +1,21 @@
+meta {
+  name: signupwithmbl
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/v1.0/auth/signup-or-signin
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "phone" : "9845687564"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

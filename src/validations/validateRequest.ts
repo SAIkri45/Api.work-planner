@@ -4,6 +4,7 @@ import UnprocessableContentException from "../exceptions/unprocessableContentExc
 import { VCreateProjectSchema, VUpdateProjectSchema } from "./schemas/vProjectSchema.js";
 import { VCreateUserSchema } from "./schemas/vUserSchema.js";
 import { VCreateTaskSchema } from "./schemas/vTaskSchema.js";
+import {VUpdateUserSchema} from "./schemas/vUserSchema.js";
 import { ValidatedUserSignin } from "./schemas/signinValidations.js";
 import { VSignInSchema, VSignUpOrSignInSchema, VSignUpOrSignInVerifySchema } from "./schemas/signInSignUpValidationSchema.js";
 
@@ -41,6 +42,9 @@ export async function validateRequest<R extends ValidatedRequest>(
       break;
     case "update-user":
       schema = VCreateUserSchema
+      break;
+    case "update-user":
+      schema = VUpdateUserSchema
       break;
       
     default:

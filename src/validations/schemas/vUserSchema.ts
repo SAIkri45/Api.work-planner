@@ -16,66 +16,108 @@ export const VCreateUserSchema = pipeAsync(
     user_name: pipe(
       string(NAME_INVALID),
       nonEmpty(NAME_MISSING),
-      transform(value => value.trim()),
+      transform((value) => value.trim()),
       minLength(3, NAME_TOO_SHORT),
     ),
-    slack_id: pipe(
-      string(SLACK_ID_INVALID),
-      nonEmpty(SLACK_ID_MISSING),
-      transform(value => value.trim()),
+
+    // ✅ slack_id optional now
+    slack_id: optional(
+      pipe(
+        string(SLACK_ID_INVALID),
+        transform((value) => value.trim()),
+      )
     ),
+
     display_name: optional(string(NAME_INVALID)),
+
     phone: pipe(
       string(PHONE_INVALID),
       nonEmpty(PHONE_MISSING),
       regex(phoneRegex, PHONE_INVALID),
     ),
+
     email: pipe(
       string(EMAIL_INVALID),
       nonEmpty(EMAIL_MISSING),
       emailValidator(EMAIL_INVALID),
     ),
-    profile_pic: pipe(
-      string(PROFILE_PIC_INVALID),
-      nonEmpty(PROFILE_PIC_MISSING),
+
+    // ✅ profile_pic optional now
+    profile_pic: optional(string(PROFILE_PIC_INVALID)),
+
+    // ✅ designation optional now
+    designation: optional(
+      pipe(
+        string(DESIGNATION_INVALID),
+        transform((value) => value.trim()),
+        minLength(3, DESIGNATION_TOO_SHORT),
+      )
     ),
-    designation: pipe(
-      string(DESIGNATION_INVALID),
-      nonEmpty(DESIGNATION_MISSING),
-      transform(value => value.trim()),
-      minLength(3, DESIGNATION_TOO_SHORT),
+
+    // ✅ password still required
+    password: pipe(
+      string("Password is invalid"),
+      nonEmpty("Password is required"),
+      transform((value) => value.trim()),
+      minLength(6, "Password must be at least 6 characters"),
     ),
-    // active: optional(boolean()),
-    // User Type
+
+    // User Type (optional)
     user_type: optional(
       pipe(
         string(USER_TYPE_INVALID),
-        transform(value => value.trim().toUpperCase()),
+        transform((value) => value.trim().toUpperCase()),
         nonEmpty(USER_TYPE_INVALID),
         picklist(allowedUserTypes, USER_TYPE_INVALID),
       ),
     ),
 
+    // User Status (optional)
     user_status: optional(
       pipe(
         string(USER_STATUS_INVALID),
-        transform(value => value.trim().toUpperCase()),
+        transform((value) => value.trim().toUpperCase()),
         nonEmpty(USER_STATUS_INVALID),
         picklist(allowedUserStatuses, USER_STATUS_INVALID),
       ),
     ),
-
   }),
+
+
+  // async validation hook
   rawTransformAsync(async ({ dataset, addIssue }) => {
     const { email } = dataset.value;
-    if (email && await userEmailExists(email)) {
+    if (email && (await userEmailExists(email))) {
       prepareValibotIssue(dataset, addIssue, "email", email, EMAIL_EXISTS);
     }
     return dataset.value;
   }),
 );
 
+  export const VUpdateUserSchema = pipeAsync(
+  object({
+    user_name: pipe(
+      string(NAME_INVALID),
+      nonEmpty(NAME_MISSING),
+      transform(value => value.trim()),
+      minLength(3, NAME_TOO_SHORT),
+    ),
+    email: pipe(
+      string(EMAIL_INVALID),
+      nonEmpty(EMAIL_MISSING),
+      emailValidator(EMAIL_INVALID),
+    ),
+    phone: pipe(
+      string(PHONE_INVALID),
+      nonEmpty(PHONE_MISSING),
+      regex(phoneRegex, PHONE_INVALID),
+    ),
+  }),
+);
+
+
 // Types
 export type ValidatedCreateUserOrAdmin = InferOutput<typeof VCreateUserSchema>;
+export type ValidatedUpdateUser = InferOutput<typeof VUpdateUserSchema>;
 
 

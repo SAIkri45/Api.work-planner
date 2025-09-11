@@ -1,44 +1,32 @@
 
-import { object, string, pipe, nonEmpty, email as emailValidator, rawTransformAsync } from "valibot";
-import { EMAIL_INVALID, EMAIL_MISSING } from "../../constants/appMessages.js";
 import type { InferOutput } from "valibot";
-import { users } from "../../db/schema/users.js";
-import { pipeAsync } from "valibot";
+import { email, nonEmpty, object, pipe, pipeAsync, string } from "valibot";
+import { EMAIL_INVALID, EMAIL_MISSING } from "../../constants/appMessages.js";
 
 // custom password validator
-const validateDefaultPassword = rawTransformAsync(async ({ dataset, addIssue }: { dataset: { value: { email: string; password: string } }, addIssue: (issue: any) => void }) => {
-  const { password } = dataset.value;
-
-  if (password !== "123456") {
-    addIssue({
-      validation: "password",
-      message: "Invalid password",
-      input: password,
-      path: ["password"],
-    });
-  }
-
-  return dataset.value;
-});
-
-export const VUserSigninSchema = pipeAsync(
+export const VUserSigninSchema = 
   object({
     email: pipe(
       string(EMAIL_INVALID),
       nonEmpty(EMAIL_MISSING),
-      emailValidator(EMAIL_INVALID)
+      email(EMAIL_INVALID)
     ),
     password: pipe(
-      string("Invalid password"),
+      string("Password is required"),
       nonEmpty("Password is required")
     ),
-  }),
-  validateDefaultPassword // ✅ enforce 123456 here
-);
+  })
+
+  
+//   rawTransformAsync(async ({ dataset, addIssue }) => {
+//   const { password } = dataset.value;
+
+//   if (password !== "123456") {
+//     prepareValibotIssue(dataset, addIssue, "password", password, "password does not match");
+//     return dataset.value;
+//   }
 
 export type ValidatedUserSignin = InferOutput<typeof VUserSigninSchema>;
-
-
 
 
 // import type { InferOutput } from "valibot";

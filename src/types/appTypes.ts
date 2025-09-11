@@ -8,9 +8,10 @@ import type { ValidatedCreateProject, ValidatedUpdateProject } from "../validati
 import { ValidatedCreateTaskAssignee } from "../validations/schemas/vTaskAssigneesSchema.js";
 import { ValidatedCreateTask } from "../validations/schemas/vTaskSchema.js";
 import type { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
+import type { ValidatedUpdateUser } from "../validations/schemas/vUserSchema.js";
 import { ValidatedSignIn, ValidatedSignUpOrSignIn, ValidatedSignUpOrSignInVerification } from "../validations/schemas/signInSignUpValidationSchema.js";
 
-export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask | ValidatedCreateTaskAssignee
+export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask | ValidatedCreateTaskAssignee|ValidatedUpdateUser
 | ValidatedSignUpOrSignIn | ValidatedSignUpOrSignInVerification | ValidatedSignIn 
 export type AppActivity = UserActivity | CreateProjectActivity | CreateTaskAssigneeActivity  | AuthActivity
 export type AuthActivity = "signup-or-signin" | "signup-or-signin-verify" | "signin" | "signin-verify"

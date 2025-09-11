@@ -1,65 +1,35 @@
-// controllers/authController.ts
-// controllers/authController.ts
+
 import { Context } from "hono";
-import { validateRequest } from "../validations/validateRequest.js";
+import { User, users } from "../db/schema/users.js";
+import ConflictException from "../exceptions/conflictException.js";
 import {
-  VUserSigninSchema,
-  ValidatedUserSignin,
-} from "../validations/schemas/signinValidations.js";
-import { users, User } from "../db/schema/users.js";
-import {
-  getMultipleRecordsByAColumnValue,
-  saveSingleRecord,
-  updateRecordById,
+  getSingleRecordByAColumnValue,
+  saveSingleRecord
 } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
+import {
+  ValidatedUserSignin
+} from "../validations/schemas/signinValidations.js";
+import { validateRequest } from "../validations/validateRequest.js";
+import UnAuthorizedException from "../exceptions/unauthorizedException.js";
 
 export class AuthController {
+  // User sign in with email + password
   signInWithEmail = async (c: Context) => {
-    try {
-      //  Get request body
-      const body = await c.req.json();
+    const body = await c.req.json();
 
-      //  Validate input (password must be 123456)
-      const validated: ValidatedUserSignin = await validateRequest(
-        "signin",
-        body,
-        "VUserSigninSchema"
-      );
+    const validated = await validateRequest<ValidatedUserSignin>(
+      "signin",
+      body,
+      "VUserSigninSchema"
+    );
 
-      //  Lookup user by email using existing base DB function
-      let usersFound = await getMultipleRecordsByAColumnValue<User>(
-        users,
-        "email",
-        validated.email
-      );
-      let user = usersFound?.[0] ?? null;
-
-      //  If user does not exist → create default user using saveSingleRecord
-      if (!user) {
-        const newUserData: Partial<User> = {
-          email: validated.email,
-          password: "123456", // default password
-          user_name: null,
-        };
-        user = await saveSingleRecord<User>(users, newUserData);
-      } else {
-        //  If user exists → update last login / flag
-        user = await updateRecordById(users, user.id, {
-          updated_at: new Date(),
-        } as Partial<User>);
-      }
-
-      //  Return response
-      return sendSuccessResp(c, 200, "Signed in successfully", {
-        user,
-        // accessToken: "mock-access-token",
-        // refreshToken: "mock-refresh-token",
-      });
-    } catch (err: any) {
-      console.error(err);
-      return c.json({ message: err.message || "Something went wrong" }, 400);
+    const user = await getSingleRecordByAColumnValue<User>(users, "email", validated.email);
+    if (!user || user.password !== validated.password) {
+      throw new UnAuthorizedException("Invalid email or password");
     }
+
+    return sendSuccessResp(c, 200, "Signed in successfully", user);
   };
 }
 
@@ -245,4 +215,4 @@ export class AuthController {
 //     return { access_token, refresh_token, refresh_token_expires_at };
 //   };
 // }
-// export default AuthController;
+ export default AuthController;
