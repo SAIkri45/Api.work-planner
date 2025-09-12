@@ -74,7 +74,7 @@ export function buildProjectsWhereQueryData(
   }
 
   // Project status filter
-  if (projectStatus) {
+  if (projectStatus?.toUpperCase()) {
     whereQueryData.columns.push("project_status");
     whereQueryData.values.push(projectStatus);
   }
@@ -100,7 +100,6 @@ export function buildProjectsWhereQueryData(
     whereQueryData.columns.push("created_by");
     whereQueryData.values.push(user.id);
   }
-  // ADMIN, MANAGER, SUPER_ADMIN can see all projects (no additional filtering)
 
   return whereQueryData;
 }
