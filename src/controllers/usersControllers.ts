@@ -36,7 +36,7 @@ import {
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { VCreateUserSchema } from "../validations/schemas/vUserSchema.js";
 import { validateRequest } from "../validations/validateRequest.js";
-import NotFoundException from "./../exceptions/notFoundException";
+import NotFoundException from "./../exceptions/notFoundException.js";
 
 type User = InferSelectModel<typeof users>;
 

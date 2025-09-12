@@ -40,9 +40,9 @@ import {
   saveSingleRecord,
   updateRecordById,
   updateRecordByMultipleColumnValues,
-} from "../services/db/baseDbService";
-import { sendSuccessResp } from "../utils/respUtils";
-import { validateRequest } from "../validations/validateRequest";
+} from "../services/db/baseDbService.js";
+import { sendSuccessResp } from "../utils/respUtils.js";
+import { validateRequest } from "../validations/validateRequest.js";
 
 export class TaskAssigneesController {
   // Create Task (with transaction)

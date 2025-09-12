@@ -3,16 +3,16 @@ import type { Context } from "hono";
 import { and, count, gte, isNull, lte } from "drizzle-orm";
 import { error } from "node:console";
 
-import type { Task } from "../db/schema/tasks";
+import type { Task } from "../db/schema/tasks.js";
 
 import {
   TASK_ID_REQUIRED,
   TASK_NOT_FOUND,
   TASK_UPDATED,
   TASKS_FETCHED,
-} from "../constants/appMessages";
+} from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
-import { Tasks } from "../db/schema/tasks";
+import { Tasks } from "../db/schema/tasks.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { buildTaskQueryData } from "../helpers/queryHelper.js";
@@ -20,8 +20,8 @@ import {
   getPaginatedRecordsConditionally,
   getRecordById,
   updateRecordById,
-} from "../services/db/baseDbService";
-import { sendSuccessResp } from "../utils/respUtils";
+} from "../services/db/baseDbService.js";
+import { sendSuccessResp } from "../utils/respUtils.js";
 
 export class TasksController {
   // Get Paginated Tasks (GET)

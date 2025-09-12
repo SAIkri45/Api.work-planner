@@ -76,9 +76,9 @@ export class TasksController {
             }
             const statusCounts = await db
                 .select({
-                    task_status: Tasks.task_status,
-                    count: count(Tasks.id).as("count"),
-                })
+                task_status: Tasks.task_status,
+                count: count(Tasks.id).as("count"),
+            })
                 .from(Tasks)
                 .where(and(...conditions))
                 .groupBy(Tasks.task_status);
