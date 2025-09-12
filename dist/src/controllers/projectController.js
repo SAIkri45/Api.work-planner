@@ -182,7 +182,6 @@ class ProjectController {
             throw new NotFoundException(PROJECT_NOT_FOUND_ID);
         }
         const result = await getProjectUsersById(projectId, searchString);
-        console.log("result", result);
         return sendSuccessResp(c, 200, USER_FETCHED, result);
     };
     updateProject = async (c) => {

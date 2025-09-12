@@ -24,6 +24,7 @@ import {
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
+import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import {
   getPaginatedRecordsConditionally,
   getRecordById,
@@ -138,23 +139,23 @@ export class UsersController {
   // 2. Dropdown list (id + full_name only)
   getUsersDropdown = async (c: Context) => {
     try {
-      const searchString = c.req.query("search_string")?.trim() || null;
+      const searchString = c.req.query("search_string");
+
+      const orderByQueryData = parseOrderByQuery<User>("id", "asc");
 
       const whereQueryData: WhereQueryData<User> = {
-        columns: ["user_status"],
-        values: ["ACTIVE"],
+        columns: ["user_status", "deleted_at"],
+        values: ["ACTIVE", null],
       };
+
+      const columnsToSelect = ["id", "display_name"] as const;
+
       if (searchString) {
         whereQueryData.columns.push("display_name");
         whereQueryData.values.push(`%${searchString}%`);
       }
 
-      const result = await getRecordsConditionally<User>(
-        users,
-        whereQueryData,
-        ["id", "display_name"],
-        { columns: ["created_at"], values: ["asc"] },
-      );
+      const result = await getRecordsConditionally<User>(users, whereQueryData, columnsToSelect, orderByQueryData);
 
       return sendSuccessResp(c, 200, USERS_FETCHED, result);
     }

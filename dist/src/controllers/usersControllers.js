@@ -3,6 +3,7 @@ import { EMPLOYEES_FETCHED, FAILED_TO_FETCH_USERS, FAILED_TO_UPDATE_USER, INVALI
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
+import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getPaginatedRecordsConditionally, getRecordById, getRecordsConditionally, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById, } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { VCreateUserSchema } from "../validations/schemas/vUserSchema.js";
@@ -88,16 +89,18 @@ export class UsersController {
     // 2. Dropdown list (id + full_name only)
     getUsersDropdown = async (c) => {
         try {
-            const searchString = c.req.query("search_string")?.trim() || null;
+            const searchString = c.req.query("search_string");
+            const orderByQueryData = parseOrderByQuery("id", "asc");
             const whereQueryData = {
-                columns: ["user_status"],
-                values: ["ACTIVE"],
+                columns: ["user_status", "deleted_at"],
+                values: ["ACTIVE", null],
             };
+            const columnsToSelect = ["id", "display_name"];
             if (searchString) {
                 whereQueryData.columns.push("display_name");
                 whereQueryData.values.push(`%${searchString}%`);
             }
-            const result = await getRecordsConditionally(users, whereQueryData, ["id", "display_name"], { columns: ["created_at"], values: ["asc"] });
+            const result = await getRecordsConditionally(users, whereQueryData, columnsToSelect, orderByQueryData);
             return sendSuccessResp(c, 200, USERS_FETCHED, result);
         }
         catch (err) {

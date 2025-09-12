@@ -7,6 +7,7 @@ const userRoutes = new Hono();
 userRoutes.get("/:id", userController.getUserById);
 userRoutes.patch("/:id", userController.editUser);
 userRoutes.get("/dropdown", userController.getUsersDropdown);
+userRoutes.get("/list", userController.getPaginatedUsers);
 userRoutes.get("/employees", userController.getEmployeesList);
 userRoutes.put("/:id/userDetails", userController.updateInternalUser);
 userRoutes.post("/", isEmployeAuthorized, userController.addUser);
