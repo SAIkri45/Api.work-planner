@@ -53,7 +53,7 @@ export function buildProjectsWhereQueryData(startDate, endDate, projectStatus, s
     // Project status filter
     if (projectStatus?.toUpperCase()) {
         whereQueryData.columns.push("project_status");
-        whereQueryData.values.push(projectStatus);
+        whereQueryData.values.push(projectStatus.toUpperCase());
     }
     // Date range filter
     if (startDate || endDate) {

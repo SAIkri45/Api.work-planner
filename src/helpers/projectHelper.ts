@@ -76,7 +76,7 @@ export function buildProjectsWhereQueryData(
   // Project status filter
   if (projectStatus?.toUpperCase()) {
     whereQueryData.columns.push("project_status");
-    whereQueryData.values.push(projectStatus);
+    whereQueryData.values.push(projectStatus.toUpperCase());
   }
 
   // Date range filter
