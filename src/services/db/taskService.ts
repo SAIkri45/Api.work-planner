@@ -27,6 +27,7 @@ export async function gatAllTaskList(offset?: number, pageSize?: number, search?
       project: {
         where: isNull(projects.deleted_at),
         columns: {
+          id: true,
           title: true,
         },
       },
