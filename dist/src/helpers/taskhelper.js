@@ -1,11 +1,10 @@
-import { desc, eq, ilike, isNull, sql } from "drizzle-orm";
+import { desc, eq, isNull, sql } from "drizzle-orm";
 import { allowedTaskStatus } from "../constants/appMessages.js";
 import { Tasks } from "../db/schema/tasks.js";
 export function buildTaskFilters(search, taskStatus) {
     const filters = [isNull(Tasks.deleted_at)];
     if (search?.trim()) {
-        console.log("Adding search filter for:", search.trim()); // Add this too
-        filters.push(ilike(Tasks.task_title, `%${search.trim()}%`));
+        filters.push(sql `LOWER(${Tasks.task_title}) LIKE LOWER(${`%${search.trim()}%`})`);
     }
     if (taskStatus && allowedTaskStatus.includes(taskStatus.toUpperCase())) {
         filters.push(eq(Tasks.task_status, taskStatus.toUpperCase()));
