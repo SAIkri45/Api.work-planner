@@ -13,7 +13,6 @@ import type { ValidatedCreateUserOrAdmin, ValidatedUpdateUser } from "../validat
 
 import {
   EMPLOYEES_FETCHED,
-  FAILED_TO_FETCH_USERS,
   FAILED_TO_UPDATE_USER,
   INVALID_INPUT,
   USER_FETCHED,
@@ -99,6 +98,7 @@ export class UsersController {
       columns: ["user_status", "deleted_at"],
       values: ["ACTIVE", null],
     };
+
     // Parse order by query
     if (orderBy) {
       const orderByColumns: DBTableColumns<User>[] = [];
@@ -116,10 +116,12 @@ export class UsersController {
         values: orderByValues,
       };
     }
+
     if (userType) {
       whereQueryData.columns.push("user_type");
       whereQueryData.values.push(userType);
     }
+
     if (searchString) {
       whereQueryData.columns.push("display_name");
       whereQueryData.values.push(`%${searchString}%`);
@@ -138,30 +140,25 @@ export class UsersController {
 
   // 2. Dropdown list (id + full_name only)
   getUsersDropdown = async (c: Context) => {
-    try {
-      const searchString = c.req.query("search_string");
+    const searchString = c.req.query("search_string");
 
-      const orderByQueryData = parseOrderByQuery<User>("id", "asc");
+    const orderByQueryData = parseOrderByQuery<User>("id", "asc");
 
-      const whereQueryData: WhereQueryData<User> = {
-        columns: ["user_status", "deleted_at"],
-        values: ["ACTIVE", null],
-      };
+    const whereQueryData: WhereQueryData<User> = {
+      columns: ["user_status", "deleted_at"],
+      values: ["ACTIVE", null],
+    };
 
-      const columnsToSelect = ["id", "display_name"] as const;
+    const columnsToSelect = ["id", "display_name"] as const;
 
-      if (searchString) {
-        whereQueryData.columns.push("display_name");
-        whereQueryData.values.push(`%${searchString}%`);
-      }
-
-      const result = await getRecordsConditionally<User>(users, whereQueryData, columnsToSelect, orderByQueryData);
-
-      return sendSuccessResp(c, 200, USERS_FETCHED, result);
+    if (searchString) {
+      whereQueryData.columns.push("display_name");
+      whereQueryData.values.push(`%${searchString}%`);
     }
-    catch (err) {
-      throw new BadRequestException(FAILED_TO_FETCH_USERS);
-    }
+
+    const result = await getRecordsConditionally<User>(users, whereQueryData, columnsToSelect, orderByQueryData);
+
+    return sendSuccessResp(c, 200, USERS_FETCHED, result);
   };
 
   // 3. Employees list (exclude admins) with pagination

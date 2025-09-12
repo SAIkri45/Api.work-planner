@@ -1,5 +1,5 @@
 import { parseAsync } from "valibot";
-import { EMPLOYEES_FETCHED, FAILED_TO_FETCH_USERS, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USERS_FETCHED, } from "../constants/appMessages.js";
+import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USERS_FETCHED, } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
@@ -88,24 +88,19 @@ export class UsersController {
     };
     // 2. Dropdown list (id + full_name only)
     getUsersDropdown = async (c) => {
-        try {
-            const searchString = c.req.query("search_string");
-            const orderByQueryData = parseOrderByQuery("id", "asc");
-            const whereQueryData = {
-                columns: ["user_status", "deleted_at"],
-                values: ["ACTIVE", null],
-            };
-            const columnsToSelect = ["id", "display_name"];
-            if (searchString) {
-                whereQueryData.columns.push("display_name");
-                whereQueryData.values.push(`%${searchString}%`);
-            }
-            const result = await getRecordsConditionally(users, whereQueryData, columnsToSelect, orderByQueryData);
-            return sendSuccessResp(c, 200, USERS_FETCHED, result);
+        const searchString = c.req.query("search_string");
+        const orderByQueryData = parseOrderByQuery("id", "asc");
+        const whereQueryData = {
+            columns: ["user_status", "deleted_at"],
+            values: ["ACTIVE", null],
+        };
+        const columnsToSelect = ["id", "display_name"];
+        if (searchString) {
+            whereQueryData.columns.push("display_name");
+            whereQueryData.values.push(`%${searchString}%`);
         }
-        catch (err) {
-            throw new BadRequestException(FAILED_TO_FETCH_USERS);
-        }
+        const result = await getRecordsConditionally(users, whereQueryData, columnsToSelect, orderByQueryData);
+        return sendSuccessResp(c, 200, USERS_FETCHED, result);
     };
     // 3. Employees list (exclude admins) with pagination
     getEmployeesList = async (c) => {
