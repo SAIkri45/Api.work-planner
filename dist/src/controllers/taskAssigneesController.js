@@ -1,12 +1,11 @@
-import { eq, isNull } from "drizzle-orm";
-import { FAILED_TO_FETCH_USERS, NO_NEW_ASSIGNEES, PROJECT_ID_REQUIRED, TASK_ALREADY_EXISTS, TASK_ASSIGNEES_FETCHED, TASK_CANNOT_DELETED, TASK_CREATED, TASK_FAILED_TO_FETCH, TASK_ID_REQUIRED, TASK_NOT_FOUND, TASK_STATUS_NOT_COMPLETED, TASK_USERS_DELETED, TASK_VALIDATION_ERROR, TASKID_USERID_REQUIRED, TASKS_FETCHED, USER_ADDED, USER_NOT_ADDED, } from "../constants/appMessages.js";
+import { FAILED_TO_FETCH_USERS, INVALID_INPUT, NO_NEW_ASSIGNEES, TASK_ALREADY_EXISTS, TASK_ASSIGNEES_FETCHED, TASK_CREATED, TASK_DELETED, TASK_FAILED_TO_FETCH, TASK_ID_REQUIRED, TASK_NOT_FOUND, TASK_STATUS_NOT_COMPLETED, TASK_USERS_DELETED, TASK_VALIDATION_ERROR, TASKID_USERID_REQUIRED, TASKS_FETCHED, USER_ADDED, USER_NOT_ADDED, } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
 import { task_assignees } from "../db/schema/taskAssignees.js";
 import { Tasks } from "../db/schema/tasks.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
-import { getMultipleRecordsByAColumnValue, getRecordsConditionally, getRecordsCount, getSingleRecordByMultipleColumnValues, saveRecordswithtrx, saveSingleRecord, updateRecordById, updateRecordByMultipleColumnValues, } from "../services/db/baseDbService.js";
+import { getMultipleRecordsByAColumnValue, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordswithtrx, saveSingleRecord, updateRecordById, updateRecordByMultipleColumnValues, updateRecordByMultipleColumnValuesWithTrx, } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 export class TaskAssigneesController {
@@ -47,32 +46,29 @@ export class TaskAssigneesController {
     };
     // Delete Task
     deleteTask = async (c) => {
-        const id = Number(c.req.param("id"));
-        const task = (await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [id, null], ["id", "task_status"]));
+        const taskId = Number(c.req.param("id"));
+        const task = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null], ["id", "task_status"]);
+        console.log("task: ", task);
         if (!task) {
             throw new NotFoundException(TASK_NOT_FOUND);
         }
         if (task.task_status !== "COMPLETED") {
             throw new BadRequestException(TASK_STATUS_NOT_COMPLETED);
         }
-        const activeAssigneesCount = await getRecordsCount(task_assignees, [
-            eq(task_assignees.task_id, id),
-            isNull(task_assignees.deleted_at),
-        ]);
-        if (activeAssigneesCount !== 0) {
-            throw new BadRequestException(TASK_CANNOT_DELETED);
-        }
-        const now = new Date();
-        let deletedTask;
+        // const activeAssigneesCount = await getRecordsCount(task_assignees, [
+        //   eq(task_assignees.task_id, id),
+        //   isNull(task_assignees.deleted_at),
+        // ]);
+        // if (activeAssigneesCount !== 0) {
+        //   throw new BadRequestException(TASK_CANNOT_DELETED);
+        // }
         await db.transaction(async (trx) => {
-            deletedTask = updateRecordById(Tasks, id, { deleted_at: now }, trx);
-            updateRecordById(task_assignees, id, { deleted_at: now }, trx);
+            updateRecordById(Tasks, taskId, { deleted_at: new Date() }, trx);
+            console.log("task deleted ");
+            updateRecordByMultipleColumnValuesWithTrx(task_assignees, ["id"], [taskId], { deleted_at: new Date() }, trx);
+            console.log("task assigness deleted");
         });
-        return sendSuccessResp(c, 200, TASK_USERS_DELETED, {
-            task_id: id,
-            deleted_at: now,
-            deleted_task: deletedTask,
-        });
+        return sendSuccessResp(c, 200, TASK_DELETED);
     };
     // Remove Assignees by Task ID
     removeAssigneesByTaskId = async (c) => {
@@ -145,7 +141,7 @@ export class TaskAssigneesController {
         try {
             const projectId = +c.req.param("id");
             if (!projectId) {
-                throw new BadRequestException(PROJECT_ID_REQUIRED);
+                throw new BadRequestException(INVALID_INPUT);
             }
             const tasks = await getMultipleRecordsByAColumnValue(Tasks, "project_id", projectId);
             if (!tasks.length) {

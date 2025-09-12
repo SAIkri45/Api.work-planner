@@ -134,3 +134,15 @@ export interface UserTaskStatisticsResponse {
   pagination_info: PaginationInfo;
   records: UserTaskInfo[];
 }
+
+export interface TaskWithProject {
+  id: number;
+  task_title: string;
+  description: string;
+  task_status: string;
+  start_date: string;
+  end_date: string;
+  project?: {
+    title: string;
+  };
+}

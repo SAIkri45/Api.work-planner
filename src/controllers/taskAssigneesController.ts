@@ -1,19 +1,17 @@
 import type { Context } from "hono";
 
-import { eq, isNull } from "drizzle-orm";
-
 import type { TaskAssignees } from "../db/schema/taskAssignees";
 import type { Task } from "../db/schema/tasks.js";
 import type { ValidatedCreateTask } from "../validations/schemas/vTaskSchema";
 
 import {
   FAILED_TO_FETCH_USERS,
+  INVALID_INPUT,
   NO_NEW_ASSIGNEES,
-  PROJECT_ID_REQUIRED,
   TASK_ALREADY_EXISTS,
   TASK_ASSIGNEES_FETCHED,
-  TASK_CANNOT_DELETED,
   TASK_CREATED,
+  TASK_DELETED,
   TASK_FAILED_TO_FETCH,
   TASK_ID_REQUIRED,
   TASK_NOT_FOUND,
@@ -34,12 +32,12 @@ import NotFoundException from "../exceptions/notFoundException.js";
 import {
   getMultipleRecordsByAColumnValue,
   getRecordsConditionally,
-  getRecordsCount,
   getSingleRecordByMultipleColumnValues,
   saveRecordswithtrx,
   saveSingleRecord,
   updateRecordById,
   updateRecordByMultipleColumnValues,
+  updateRecordByMultipleColumnValuesWithTrx,
 } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
@@ -90,15 +88,10 @@ export class TaskAssigneesController {
 
   // Delete Task
   deleteTask = async (c: Context) => {
-    const id = Number(c.req.param("id"));
+    const taskId = Number(c.req.param("id"));
 
-    const task
-      = (await getSingleRecordByMultipleColumnValues<Task>(
-        Tasks,
-        ["id", "deleted_at"],
-        [id, null],
-        ["id", "task_status"],
-      ));
+    const task = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id", "task_status"]);
+    console.log("task: ", task);
 
     if (!task) {
       throw new NotFoundException(TASK_NOT_FOUND);
@@ -108,28 +101,23 @@ export class TaskAssigneesController {
       throw new BadRequestException(TASK_STATUS_NOT_COMPLETED);
     }
 
-    const activeAssigneesCount = await getRecordsCount(task_assignees, [
-      eq(task_assignees.task_id, id),
-      isNull(task_assignees.deleted_at),
-    ]);
+    // const activeAssigneesCount = await getRecordsCount(task_assignees, [
+    //   eq(task_assignees.task_id, id),
+    //   isNull(task_assignees.deleted_at),
+    // ]);
 
-    if (activeAssigneesCount !== 0) {
-      throw new BadRequestException(TASK_CANNOT_DELETED);
-    }
+    // if (activeAssigneesCount !== 0) {
+    //   throw new BadRequestException(TASK_CANNOT_DELETED);
+    // }
 
-    const now = new Date();
-    let deletedTask;
     await db.transaction(async (trx) => {
-      deletedTask = updateRecordById<Task>(Tasks, id, { deleted_at: now }, trx);
-
-      updateRecordById<TaskAssignees>(task_assignees, id, { deleted_at: now }, trx);
+      updateRecordById<Task>(Tasks, taskId, { deleted_at: new Date() }, trx);
+      console.log("task deleted ");
+      updateRecordByMultipleColumnValuesWithTrx<TaskAssignees>(task_assignees, ["id"], [taskId], { deleted_at: new Date() }, trx);
+      console.log("task assigness deleted");
     });
 
-    return sendSuccessResp(c, 200, TASK_USERS_DELETED, {
-      task_id: id,
-      deleted_at: now,
-      deleted_task: deletedTask,
-    });
+    return sendSuccessResp(c, 200, TASK_DELETED);
   };
 
   // Remove Assignees by Task ID
@@ -258,14 +246,10 @@ export class TaskAssigneesController {
       const projectId = +c.req.param("id");
 
       if (!projectId) {
-        throw new BadRequestException(PROJECT_ID_REQUIRED);
+        throw new BadRequestException(INVALID_INPUT);
       }
 
-      const tasks = await getMultipleRecordsByAColumnValue<Task>(
-        Tasks,
-        "project_id",
-        projectId,
-      );
+      const tasks = await getMultipleRecordsByAColumnValue<Task>(Tasks, "project_id", projectId);
 
       if (!tasks.length) {
         return sendSuccessResp(c, 200, TASK_NOT_FOUND, {

@@ -5,8 +5,9 @@ import { db } from "../db/configuration.js";
 import { Tasks } from "../db/schema/tasks.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
-import { buildTaskQueryData } from "../helpers/queryHelper.js";
-import { getPaginatedRecordsConditionally, getRecordById, updateRecordById, } from "../services/db/baseDbService.js";
+import { getPaginationData } from "../helpers/paginationHelper.js";
+import { getRecordById, updateRecordById, } from "../services/db/baseDbService.js";
+import { gatAllTaskList } from "../services/db/taskService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 export class TasksController {
     // Get Paginated Tasks (GET)
@@ -14,14 +15,19 @@ export class TasksController {
         try {
             const page = +c.req.query("page") || 1;
             const pageSize = +c.req.query("page_size") || 10;
-            const searchString = c.req.query("search_string")?.trim() || null;
-            const orderBy = c.req.query("order_by") || null;
-            const task_status = c.req.query("task_status") || null;
-            const { orderByQueryData, whereQueryData } = buildTaskQueryData(searchString, orderBy, task_status);
-            const result = await getPaginatedRecordsConditionally(Tasks, page, pageSize, orderByQueryData, whereQueryData);
-            return sendSuccessResp(c, 200, TASKS_FETCHED, result);
+            const offset = (page - 1) * pageSize;
+            const searchString = c.req.query("search_string");
+            const orderBy = c.req.query("order_by");
+            const taskStatus = c.req.query("task_status");
+            const { result, total_records } = await gatAllTaskList(offset, pageSize, searchString, orderBy, taskStatus);
+            const paginationInfo = getPaginationData(page, pageSize, total_records);
+            const finalResponse = {
+                pagination_info: paginationInfo,
+                records: result,
+            };
+            return sendSuccessResp(c, 200, TASKS_FETCHED, finalResponse);
         }
-        catch {
+        catch (error) {
             throw error;
         }
     };
