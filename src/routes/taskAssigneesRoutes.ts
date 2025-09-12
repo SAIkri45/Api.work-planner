@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import {TaskAssigneesController} from "../controllers/taskAssigneesController";
-import { isEmployeAuthorized } from "../middlewares/slackMiddlewares.js";
 
+import { TaskAssigneesController } from "../controllers/taskAssigneesController.js";
+import { isEmployeAuthorized } from "../middlewares/slackMiddlewares.js";
 
 const taskAssigneesRoutes = new Hono();
 const taskAssigneesController = new TaskAssigneesController();
@@ -14,6 +14,5 @@ taskAssigneesRoutes.get("/:id/users", taskAssigneesController.getAssigneesByTask
 // taskAssigneesRoutes.get("/:id/taskassignees",taskAssigneesController.getTaskAssignees);
 taskAssigneesRoutes.post("/:id/assignees", taskAssigneesController.addUsersToTask);
 taskAssigneesRoutes.post("/", isEmployeAuthorized, taskAssigneesController.createTask);
-
 
 export default taskAssigneesRoutes;

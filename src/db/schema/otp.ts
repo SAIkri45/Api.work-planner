@@ -1,4 +1,5 @@
 import { boolean, index, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+
 export const OTPs = pgTable("otps", {
   id: serial("id").primaryKey(),
   email: varchar("email"),

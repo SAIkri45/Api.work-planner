@@ -1,24 +1,22 @@
 import type { Project } from "../db/schema/projects.js";
 import type { SlackToken } from "../db/schema/slackTokens.js";
 import type { TaskAssignees } from "../db/schema/taskAssignees.js";
+import type { Task } from "../db/schema/tasks.js";
 import type { UserProjects } from "../db/schema/userProjects.js";
 import type { User } from "../db/schema/users.js";
-import type { Task } from "../db/schema/tasks.js";
-import type { ValidatedCreateProject, ValidatedUpdateProject } from "../validations/schemas/vProjectSchema.js";
-import { ValidatedCreateTaskAssignee } from "../validations/schemas/vTaskAssigneesSchema.js";
-import { ValidatedCreateTask } from "../validations/schemas/vTaskSchema.js";
-import type { ValidatedCreateUserOrAdmin } from "../validations/schemas/vUserSchema.js";
-import type { ValidatedUpdateUser } from "../validations/schemas/vUserSchema.js";
-import { ValidatedSignIn, ValidatedSignUpOrSignIn, ValidatedSignUpOrSignInVerification } from "../validations/schemas/signInSignUpValidationSchema.js";
-import { PaginationInfo } from './dbTypes';
+import type { ValidatedSignIn, ValidatedSignUpOrSignIn, ValidatedSignUpOrSignInVerification } from "../validations/schemas/signInSignUpValidationSchema.js";
+import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject, ValidatedUpdateProjectStatus } from "../validations/schemas/vProjectSchema.js";
+import type { ValidatedCreateTaskAssignee } from "../validations/schemas/vTaskAssigneesSchema.js";
+import type { ValidatedCreateTask } from "../validations/schemas/vTaskSchema.js";
+import type { ValidatedCreateUserOrAdmin, ValidatedUpdateUser } from "../validations/schemas/vUserSchema.js";
+import type { PaginationInfo } from "./dbTypes";
 
-export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask | ValidatedCreateTaskAssignee|ValidatedUpdateUser
-| ValidatedSignUpOrSignIn | ValidatedSignUpOrSignInVerification | ValidatedSignIn 
-export type AppActivity = UserActivity | CreateProjectActivity | CreateTaskAssigneeActivity  | AuthActivity
-export type AuthActivity = "signup-or-signin" | "signup-or-signin-verify" | "signin" | "signin-verify"
+export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask | ValidatedCreateTaskAssignee | ValidatedUpdateUser | ValidatedUpdateProjectStatus | ValidatedAddUsersToProject | ValidatedSignUpOrSignIn | ValidatedSignUpOrSignInVerification | ValidatedSignIn | ValidatedRemoveUsersFromProject;
+export type AppActivity = UserActivity | CreateProjectActivity | CreateTaskAssigneeActivity | AuthActivity;
+export type AuthActivity = "signup-or-signin" | "signup-or-signin-verify" | "signin" | "signin-verify";
 export type UserActivity = "create-user" | "update-user";
 export type CreateProjectActivity = "create-project" | "update-project";
-export type CreateTaskAssigneeActivity = "create-task" | "create-task-assignee" | "update-task-assignee";
+export type CreateTaskAssigneeActivity = "create-task" | "create-task-assignee" | "update-task-assignee" | "add-users-to-project" | "remove-users-from-project" | "update-project-status";
 
 export interface EmailOtpData {
   action: string;
@@ -91,10 +89,9 @@ export interface TaskResponse {
   id: number;
   task_title: string;
   task_status: "NEW" | "IN_PROGRESS" | "COMPLETED" | "REVIEW" | "OVERDUE" | "DONE" | null;
-  start_date: Date | null;
-  end_date: Date | null;
+  start_date: string | null;
+  end_date: string | null;
 }
-
 export interface ProjectTasksResp {
   pagination_info: PaginationInfo;
   records: TaskResponse[];

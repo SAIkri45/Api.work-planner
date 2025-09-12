@@ -1,4 +1,6 @@
-import type { User } from "../db/schema/users.js";import { ActionType, OTPData } from "../types/appTypes.js";
+import type { User } from "../db/schema/users.js";
+import type { ActionType, OTPData } from "../types/appTypes.js";
+
 export function prepareOTPData(user: User, action: ActionType, expireInMin = 15, type?: boolean) {
   // const OTP = randomOTP();
   const OTP = "1234";

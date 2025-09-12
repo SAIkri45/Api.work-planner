@@ -164,8 +164,8 @@ export async function getTasksByProjectId(projectId, search, offset, pageSize, o
         filters.push(eq(Tasks.task_status, taskStatus.toUpperCase()));
     }
     if (dueDate) {
-        const dueDateObj = new Date(dueDate);
-        filters.push(eq(Tasks.end_date, dueDateObj));
+        // Assuming dueDate is already in the correct format
+        filters.push(eq(Tasks.end_date, dueDate));
     }
     let orderByClause;
     if (orderBy) {

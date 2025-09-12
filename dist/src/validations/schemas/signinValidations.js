@@ -1,24 +1,10 @@
-import { object, string, pipe, nonEmpty, email as emailValidator, rawTransformAsync } from "valibot";
+import { email, nonEmpty, object, pipe, string } from "valibot";
 import { EMAIL_INVALID, EMAIL_MISSING } from "../../constants/appMessages.js";
-import { pipeAsync } from "valibot";
 // custom password validator
-const validateDefaultPassword = rawTransformAsync(async ({ dataset, addIssue }) => {
-    const { password } = dataset.value;
-    if (password !== "123456") {
-        addIssue({
-            validation: "password",
-            message: "Invalid password",
-            input: password,
-            path: ["password"],
-        });
-    }
-    return dataset.value;
+export const VUserSigninSchema = object({
+    email: pipe(string(EMAIL_INVALID), nonEmpty(EMAIL_MISSING), email(EMAIL_INVALID)),
+    password: pipe(string("Password is required"), nonEmpty("Password is required")),
 });
-export const VUserSigninSchema = pipeAsync(object({
-    email: pipe(string(EMAIL_INVALID), nonEmpty(EMAIL_MISSING), emailValidator(EMAIL_INVALID)),
-    password: pipe(string("Invalid password"), nonEmpty("Password is required")),
-}), validateDefaultPassword // ✅ enforce 123456 here
-);
 // import type { InferOutput } from "valibot";
 // import dayjs from "dayjs";
 // import utc from "dayjs/plugin/utc.js";

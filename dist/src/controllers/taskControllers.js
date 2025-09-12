@@ -1,14 +1,13 @@
-import { TASKS_FETCHED, TASK_UPDATED, TASK_NOT_FOUND, TASK_ID_REQUIRED, } from "../constants/appMessages";
-import { Tasks } from "../db/schema/tasks";
-import { getPaginatedRecordsConditionally, getRecordById, updateRecordById, } from "../services/db/baseDbService";
-import { sendSuccessResp } from "../utils/respUtils";
+import { and, count, gte, isNull, lte } from "drizzle-orm";
+import { error } from "node:console";
+import { TASK_ID_REQUIRED, TASK_NOT_FOUND, TASK_UPDATED, TASKS_FETCHED, } from "../constants/appMessages.js";
+import { db } from "../db/configuration.js";
+import { Tasks } from "../db/schema/tasks.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
-import { error } from "node:console";
 import { buildTaskQueryData } from "../helpers/queryHelper.js";
-import { count, isNull } from "drizzle-orm";
-import { db } from "../db/configuration.js";
-import { and, gte, lte } from "drizzle-orm";
+import { getPaginatedRecordsConditionally, getRecordById, updateRecordById, } from "../services/db/baseDbService.js";
+import { sendSuccessResp } from "../utils/respUtils.js";
 export class TasksController {
     // Get Paginated Tasks (GET)
     getPaginatedTasks = async (c) => {
@@ -77,9 +76,9 @@ export class TasksController {
             }
             const statusCounts = await db
                 .select({
-                task_status: Tasks.task_status,
-                count: count(Tasks.id).as("count"),
-            })
+                    task_status: Tasks.task_status,
+                    count: count(Tasks.id).as("count"),
+                })
                 .from(Tasks)
                 .where(and(...conditions))
                 .groupBy(Tasks.task_status);

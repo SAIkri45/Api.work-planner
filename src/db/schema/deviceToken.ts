@@ -1,5 +1,7 @@
-import { boolean, index, integer, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+
 import { users } from "./users.js";
+
 export const device_tokens = pgTable("device_tokens", {
   id: serial("id").primaryKey(),
   user_id: integer("user_id").references(() => users.id).notNull(),
@@ -10,7 +12,7 @@ export const device_tokens = pgTable("device_tokens", {
 }, t =>
   [
     index("device_tokens_user_id_idx").on(t.user_id),
-    index("device_tokens_device_token_idx").on(t.device_token)
+    index("device_tokens_device_token_idx").on(t.device_token),
   ]);
 export type DeviceToken = typeof device_tokens.$inferSelect;
 export type NewDeviceToken = typeof device_tokens.$inferInsert;

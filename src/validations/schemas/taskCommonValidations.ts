@@ -1,4 +1,5 @@
-import { array, nonEmpty, nullish, number, optional, pipe, string, transform, picklist, minLength } from "valibot";
+import { array, minLength, nonEmpty, nullish, number, optional, picklist, pipe, string, transform } from "valibot";
+
 import ConflictException from "../../exceptions/conflictException.js";
 
 // Allowed task statuses (match your pgEnum)
@@ -21,8 +22,8 @@ export const taskTitle = pipe(
 export const taskDescription = optional(
   pipe(
     string("Description must be a string"),
-    transform(value => value.trim())
-  )
+    transform(value => value.trim()),
+  ),
 );
 
 export const taskStatus = optional(
@@ -31,7 +32,7 @@ export const taskStatus = optional(
     nonEmpty("Task status is required"),
     transform(value => value.trim().toUpperCase()),
     picklist(allowedTaskStatuses, "Invalid task status"),
-  )
+  ),
 );
 
 export const taskStartDate = optional(
@@ -51,7 +52,7 @@ export const taskStartDate = optional(
 
       return date;
     }),
-  )
+  ),
 );
 
 export const taskEndDate = optional(
@@ -70,24 +71,24 @@ export const taskEndDate = optional(
 
       return date;
     }),
-  )
+  ),
 );
 
 export const taskProjectId = pipe(
   number("Project ID is required"),
-  transform(val => Number(val))
+  transform(val => Number(val)),
 );
 
 export const taskCreatedBy = pipe(
   number("Created by is required"),
-  transform(val => Number(val))
+  transform(val => Number(val)),
 );
 
 export const taskUpdatedBy = optional(
   pipe(
     number("Updated by must be a number"),
-    transform(val => Number(val))
-  )
+    transform(val => Number(val)),
+  ),
 );
 
 export const taskUserIds = nullish(array(number()));

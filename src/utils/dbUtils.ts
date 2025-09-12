@@ -208,7 +208,13 @@ function prepareInQueryCondition<R extends DBTableRow>(
 }
 
 async function executeQuery<R extends DBTableRow, C extends keyof R = keyof R>(
-table: DBTable, whereQuery: SQL | undefined | null, columnsRequired: Record<string, SQL> | null, orderByConditions: SQL[], inQueryCondition: SQL | null, paginationData?: { page: number; pageSize: number; }, trx?: unknown,
+  table: DBTable,
+  whereQuery: SQL | undefined | null,
+  columnsRequired: Record<string, SQL> | null,
+  orderByConditions: SQL[],
+  inQueryCondition: SQL | null,
+  paginationData?: { page: number; pageSize: number },
+  trx?: unknown,
 ) {
   let dQuery = columnsRequired
     ? db.select(columnsRequired).from(table).$dynamic()

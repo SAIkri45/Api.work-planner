@@ -1,17 +1,17 @@
+import type { Context } from "hono";
 
-import { Context } from "hono";
-import { User, users } from "../db/schema/users.js";
-import ConflictException from "../exceptions/conflictException.js";
+import type { User } from "../db/schema/users.js";
+import type {
+  ValidatedUserSignin,
+} from "../validations/schemas/signinValidations.js";
+
+import { users } from "../db/schema/users.js";
+import UnAuthorizedException from "../exceptions/unauthorizedException.js";
 import {
   getSingleRecordByAColumnValue,
-  saveSingleRecord
 } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
-import {
-  ValidatedUserSignin
-} from "../validations/schemas/signinValidations.js";
 import { validateRequest } from "../validations/validateRequest.js";
-import UnAuthorizedException from "../exceptions/unauthorizedException.js";
 
 export class AuthController {
   // User sign in with email + password
@@ -21,7 +21,7 @@ export class AuthController {
     const validated = await validateRequest<ValidatedUserSignin>(
       "signin",
       body,
-      "VUserSigninSchema"
+      "VUserSigninSchema",
     );
 
     const user = await getSingleRecordByAColumnValue<User>(users, "email", validated.email);
@@ -215,4 +215,4 @@ export class AuthController {
 //     return { access_token, refresh_token, refresh_token_expires_at };
 //   };
 // }
- export default AuthController;
+export default AuthController;

@@ -1,30 +1,27 @@
 import type { Context } from "hono";
-import {
-  TASKS_FETCHED,
-  TASK_UPDATED,
-  TASK_NOT_FOUND,
-  TASK_ID_REQUIRED,
-  TASK_STATUS_FETCHED,
-} from "../constants/appMessages";
 
-import { Task, Tasks } from "../db/schema/tasks";
+import { and, count, gte, isNull, lte } from "drizzle-orm";
+import { error } from "node:console";
+
+import type { Task } from "../db/schema/tasks";
+
+import {
+  TASK_ID_REQUIRED,
+  TASK_NOT_FOUND,
+  TASK_UPDATED,
+  TASKS_FETCHED,
+} from "../constants/appMessages";
+import { db } from "../db/configuration.js";
+import { Tasks } from "../db/schema/tasks";
+import BadRequestException from "../exceptions/badRequestException.js";
+import NotFoundException from "../exceptions/notFoundException.js";
+import { buildTaskQueryData } from "../helpers/queryHelper.js";
 import {
   getPaginatedRecordsConditionally,
   getRecordById,
   updateRecordById,
-  getRecordsConditionally,
 } from "../services/db/baseDbService";
-
 import { sendSuccessResp } from "../utils/respUtils";
-
-
-import BadRequestException from "../exceptions/badRequestException.js";
-import NotFoundException from "../exceptions/notFoundException.js";
-import { error } from "node:console";
-import { buildTaskQueryData } from "../helpers/queryHelper.js";
-import { count, isNull } from "drizzle-orm";
-import { db } from "../db/configuration.js";
-import { and, gte, lte } from "drizzle-orm";
 
 export class TasksController {
   // Get Paginated Tasks (GET)
@@ -38,7 +35,7 @@ export class TasksController {
       const { orderByQueryData, whereQueryData } = buildTaskQueryData(
         searchString,
         orderBy,
-        task_status
+        task_status,
       );
 
       const result = await getPaginatedRecordsConditionally<Task>(
@@ -46,11 +43,12 @@ export class TasksController {
         page,
         pageSize,
         orderByQueryData,
-        whereQueryData
+        whereQueryData,
       );
 
       return sendSuccessResp(c, 200, TASKS_FETCHED, result);
-    } catch {
+    }
+    catch {
       throw error;
     }
   };
@@ -70,8 +68,9 @@ export class TasksController {
         throw new NotFoundException(TASK_NOT_FOUND);
       }
 
-      return sendSuccessResp(c, 200, TASKS_FETCHED, task);  
-    } catch {
+      return sendSuccessResp(c, 200, TASKS_FETCHED, task);
+    }
+    catch {
       throw error;
     }
   };
@@ -97,7 +96,8 @@ export class TasksController {
       });
 
       return sendSuccessResp(c, 200, TASK_UPDATED, updatedTask);
-    } catch {
+    }
+    catch {
       throw error;
     }
   };
@@ -146,14 +146,15 @@ export class TasksController {
       return sendSuccessResp(c, 200, "Task counts fetched successfully", {
         ...counts,
         overall: Number(overallCount[0]?.total ?? 0),
-        
+
       });
-    } catch (error) {
+    }
+    catch (error) {
       throw error;
     }
   };
 
-  //tasksdropdown
+  // tasksdropdown
   // getAllTasksDropdown = async (c: Context) => {
   //   const page = +c.req.query("page")! || 1;
   //   const pageSize = +c.req.query("page_size")! || 10;

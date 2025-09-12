@@ -1,37 +1,37 @@
 import type { InferOutput } from "valibot";
 
-import {array, minLength,nonEmpty,number,object,optional,picklist,pipe,string,transform,} from "valibot";
+import { array, minLength, nonEmpty, number, object, optional, picklist, pipe, string, transform } from "valibot";
 
-import {TASK_DESCRIPTION_INVALID,TASK_STATUS_INVALID,TASK_TITLE_INVALID,TASK_TITLE_MISSING,TASK_TITLE_TOO_SHORT,} from "../../constants/appMessages.js";
+import { TASK_DESCRIPTION_INVALID, TASK_STATUS_INVALID, TASK_TITLE_INVALID, TASK_TITLE_MISSING, TASK_TITLE_TOO_SHORT } from "../../constants/appMessages.js";
 
 // Allowed statuses
-export const allowedTaskStatuses = ["NEW","IN_PROGRESS","COMPLETED","REVIEW","OVERDUE","DONE"] as const;
+export const allowedTaskStatuses = ["NEW", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE", "DONE"] as const;
 
 // Create Task Schema
-export const  VCreateTaskSchema = object({
+export const VCreateTaskSchema = object({
   task_title: pipe(
     string(TASK_TITLE_INVALID),
     nonEmpty(TASK_TITLE_MISSING),
-    transform((value) => value.trim()),
-    minLength(3, TASK_TITLE_TOO_SHORT)
+    transform(value => value.trim()),
+    minLength(3, TASK_TITLE_TOO_SHORT),
   ),
 
   description: optional(
     pipe(
       string(TASK_DESCRIPTION_INVALID),
-      transform((value) => value.trim())
-    )
+      transform(value => value.trim()),
+    ),
   ),
   created_by: pipe(number()),
 
-project_id: pipe(
-  number("Project id is required")   
-),
+  project_id: pipe(
+    number("Project id is required"),
+  ),
 
   task_status: pipe(
     string(TASK_STATUS_INVALID),
-    transform((value) => value.trim()),
-    picklist(allowedTaskStatuses, TASK_STATUS_INVALID)
+    transform(value => value.trim()),
+    picklist(allowedTaskStatuses, TASK_STATUS_INVALID),
   ),
 
   start_date: pipe(string()),
@@ -39,8 +39,8 @@ project_id: pipe(
   end_date: pipe(string()),
 
   user_ids: optional(
-    array(number("User ID must be a number"))
-  )
+    array(number("User ID must be a number")),
+  ),
 });
 
 export type ValidatedCreateTask = InferOutput<typeof VCreateTaskSchema>;

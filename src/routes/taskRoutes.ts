@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import TasksController  from "../controllers/taskControllers.js";
-import { isEmployeAuthorized } from "../middlewares/slackMiddlewares.js";
+
+import TasksController from "../controllers/taskControllers.js";
 
 const taskRoutes = new Hono();
 const tasksController = new TasksController();

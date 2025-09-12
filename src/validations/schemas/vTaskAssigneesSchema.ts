@@ -1,45 +1,42 @@
 import type { InferOutput } from "valibot";
-import {object,string,number,transform,nonEmpty,pipe,optional,minLength,array} from "valibot";
-import { taskStatuses } from "../../db/schema/tasks";
-import { taskStatus,taskStartDate,taskEndDate,taskDescription} from "./taskCommonValidations.js";
+
+import { array, minLength, nonEmpty, number, object, optional, pipe, string, transform } from "valibot";
+
+import { taskDescription, taskEndDate, taskStartDate, taskStatus } from "./taskCommonValidations.js";
 
 export const VCreateTaskAssigneeSchema = object({
 
-
   user_ids: array(pipe(
     number("User ID must be a number"),
-    transform((val) => Number(val)),
+    transform(val => Number(val)),
   )),
 
   task_title: pipe(
     string("Task title must be a string"),
     nonEmpty("Task title is required"),
-    transform((value) => value.trim()),
+    transform(value => value.trim()),
     minLength(3, "Task title must be at least 3 characters"),
   ),
 
   created_by: optional(pipe(
     number("Created by must be a number"),
-    transform((val) => Number(val)),
+    transform(val => Number(val)),
   )),
 
   updated_by: optional(
     pipe(
       number("Updated by must be a number"),
-      transform((val) => Number(val)),
+      transform(val => Number(val)),
     ),
   ),
-      task_status: taskStatus,
+  task_status: taskStatus,
 
-      start_date: taskStartDate,
+  start_date: taskStartDate,
 
-      end_date: taskEndDate,
+  end_date: taskEndDate,
 
-      description: taskDescription,
-
-      
+  description: taskDescription,
 
 });
-
 
 export type ValidatedCreateTaskAssignee = InferOutput<typeof VCreateTaskAssigneeSchema>;

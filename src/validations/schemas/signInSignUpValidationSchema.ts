@@ -1,12 +1,16 @@
 import type { InferOutput } from "valibot";
-import { boolean, email, literal, nonEmpty, object, optional, pipe, pipeAsync, rawTransformAsync, regex, string, union } from "valibot";
-import { EMAIL_INVALID, EMAIL_MISSING, OTP_DOES_NOT_MATCH, OTP_EXPIRED, PHONE_INVALID, PHONE_MISSING,DEVICE_TYPE_MISSING, DEVICE_TYPE_INVALID } from "../../constants/appMessages.js";
-import { OTP, OTPs } from "../../db/schema/otp.js";
-import { getSingleRecordByMultipleColumnValues, deleteRecordById } from "../../services/db/baseDbService.js";
-import { prepareValibotIssue } from "../prepareValibotIssue.js";
-import { isOtpExpiresForPhone } from "../customValidations.js";
+
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
+import { boolean, email, literal, nonEmpty, object, optional, pipe, pipeAsync, rawTransformAsync, regex, string, union } from "valibot";
+
+import type { OTP } from "../../db/schema/otp.js";
+
+import { DEVICE_TYPE_INVALID, DEVICE_TYPE_MISSING, EMAIL_INVALID, EMAIL_MISSING, OTP_DOES_NOT_MATCH, OTP_EXPIRED, PHONE_INVALID, PHONE_MISSING } from "../../constants/appMessages.js";
+import { OTPs } from "../../db/schema/otp.js";
+import { deleteRecordById, getSingleRecordByMultipleColumnValues } from "../../services/db/baseDbService.js";
+import { isOtpExpiresForPhone } from "../customValidations.js";
+import { prepareValibotIssue } from "../prepareValibotIssue.js";
 
 dayjs.extend(utc);
 

@@ -1,15 +1,10 @@
 import { sign, verify } from "hono/jwt";
 import { JwtTokenExpired, JwtTokenInvalid, JwtTokenSignatureMismatched } from "hono/utils/jwt/types";
 import { jwtConfig } from "../config/jwtConfig.js";
-import { DEF_401, TOKEN_EXPIRED, TOKEN_INVALID, TOKEN_MISSING, TOKEN_SIG_MISMATCH, USER_NOT_FOUND } from "../constants/appMessages.js";
-import { users } from "../db/schema/users.js";
-import UnauthorizedException from "../exceptions/unauthorizedException.js";
-import { getSingleRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { DEF_400, TOKEN_EXPIRED, TOKEN_INVALID, TOKEN_MISSING, TOKEN_SIG_MISMATCH, USER_INACTIVE } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import UnauthorizedException from "../exceptions/unauthorizedException.js";
 import { getRecordById } from "../services/db/baseDbService.js";
-import { jwtConfig } from "../config/jwtConfig.js";
 async function genJWTTokens(payload) {
     const access_token_expiry = Math.floor(Date.now() / 1000) + jwtConfig.expires_in; // 30 days
     const access_token_payload = {
@@ -25,7 +20,6 @@ async function genJWTTokens(payload) {
     return {
         access_token,
         refresh_token,
-        refresh_token_expires_at: refresh_token_payload.exp,
     };
 }
 async function genJWTTokensForUser(userId) {
@@ -63,11 +57,6 @@ async function getUserDetailsFromToken(c) {
     }
     const decodedPayload = await verifyJWTToken(token);
     // Check if the user is existing in the system - in case the user is removed from the system the jwt token can still be valid
-    // const user = await getRecordById<User>(users, decodedPayload.sub as number);
-    // Alternative: If you want to select all user fields
-    const user = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at"], [decodedPayload.sub, null]);
-    if (!user) {
-        throw new UnauthorizedException(USER_NOT_FOUND || DEF_401);
     const user = await getRecordById(users, decodedPayload.sub);
     if (user?.user_status !== "ACTIVE" || !user) {
         throw new UnauthorizedException(USER_INACTIVE || DEF_400);

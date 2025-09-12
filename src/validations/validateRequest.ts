@@ -1,12 +1,12 @@
 import { flatten, safeParseAsync } from "valibot";
+
 import type { AppActivity, ValidatedRequest } from "../types/appTypes.js";
+
 import UnprocessableContentException from "../exceptions/unprocessableContentException.js";
-import { VAddUsersToProjectSchema, VCreateProjectSchema, VRemoveUsersFromProjectSchema, VUpdateProjectSchema, VUpdateProjectStatusSchema } from "./schemas/vProjectSchema.js";
-import { VCreateUserSchema } from "./schemas/vUserSchema.js";
-import { VCreateTaskSchema } from "./schemas/vTaskSchema.js";
-import {VUpdateUserSchema} from "./schemas/vUserSchema.js";
-import { ValidatedUserSignin } from "./schemas/signinValidations.js";
 import { VSignInSchema, VSignUpOrSignInSchema, VSignUpOrSignInVerifySchema } from "./schemas/signInSignUpValidationSchema.js";
+import { VAddUsersToProjectSchema, VCreateProjectSchema, VRemoveUsersFromProjectSchema, VUpdateProjectSchema, VUpdateProjectStatusSchema } from "./schemas/vProjectSchema.js";
+import { VCreateTaskSchema } from "./schemas/vTaskSchema.js";
+import { VCreateUserSchema, VUpdateUserSchema } from "./schemas/vUserSchema.js";
 
 export async function validateRequest<R extends ValidatedRequest>(
   actionType: AppActivity,
@@ -25,28 +25,33 @@ export async function validateRequest<R extends ValidatedRequest>(
     case "update-project":
       schema = VUpdateProjectSchema;
       break;
+    case "add-users-to-project":
+      schema = VAddUsersToProjectSchema;
+      break;
+    case "remove-users-from-project":
+      schema = VRemoveUsersFromProjectSchema;
+      break;
+    case "update-project-status":
+      schema = VUpdateProjectStatusSchema;
+      break;
     case "create-task":
       schema = VCreateTaskSchema;
       break;
     case "signup-or-signin":
-      schema = VSignUpOrSignInSchema
+      schema = VSignUpOrSignInSchema;
       break;
     case "signup-or-signin-verify":
-      schema = VSignUpOrSignInVerifySchema
+      schema = VSignUpOrSignInVerifySchema;
       break;
     case "signin-verify":
-      schema =VSignInSchema
+      schema = VSignInSchema;
       break;
     case "signin":
-      schema = VSignInSchema
+      schema = VSignInSchema;
       break;
     case "update-user":
-      schema = VCreateUserSchema
+      schema = VUpdateUserSchema;
       break;
-    case "update-user":
-      schema = VUpdateUserSchema
-      break;
-      
     default:
       break;
   }

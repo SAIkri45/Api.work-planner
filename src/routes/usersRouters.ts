@@ -6,7 +6,7 @@ import { isEmployeAuthorized } from "../middlewares/slackMiddlewares.js";
 const userController = new UsersController();
 const userRoutes = new Hono();
 
-//userRoutes.get("/", isEmployeAuthorized,  userController.getPaginatedUsers);
+// userRoutes.get("/", isEmployeAuthorized,  userController.getPaginatedUsers);
 userRoutes.get("/:id", userController.getUserById);
 userRoutes.patch("/:id", userController.editUser);
 

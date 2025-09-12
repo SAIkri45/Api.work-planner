@@ -1,7 +1,7 @@
 /**
- * Build query data for pagination, search, filter, ordering (Tasks)
+ * Build query data for pagination, search, filter, ordering (Users)
  */
-export function buildTaskQueryData(searchString, orderBy, task_status) {
+export function buildUserQueryData(searchString, orderBy, user_status) {
     // Default ordering
     let orderByQueryData = {
         columns: ["created_at"],
@@ -13,13 +13,14 @@ export function buildTaskQueryData(searchString, orderBy, task_status) {
         values: [],
     };
     // Filter by status
-    if (task_status) {
-        whereQueryData.columns.push("task_status");
-        whereQueryData.values.push(task_status);
+    if (user_status) {
+        whereQueryData.columns.push("user_status");
+        whereQueryData.values.push(user_status);
     }
-    // Search filter
+    // Search filter (searching by user_name or email)
     if (searchString) {
-        whereQueryData.columns.push("task_title");
+        // You can adjust this to search multiple columns if needed
+        whereQueryData.columns.push("user_name");
         whereQueryData.values.push(`%${searchString}%`);
     }
     // Order by columns

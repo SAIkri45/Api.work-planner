@@ -1,4 +1,4 @@
-import type { InferOutput, ValiError} from "valibot";
+import type { InferOutput, ValiError } from "valibot";
 
 import { flatten, object, parseAsync, pipe, string, transform } from "valibot";
 
@@ -23,7 +23,6 @@ const VEnvSchema = object({
   SLACK_REDIRECT_URI: string(),
   SESSION_SECRET: string(),
   COOKIE_DOMAIN: string(),
-
 
 });
 

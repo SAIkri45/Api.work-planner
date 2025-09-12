@@ -1,9 +1,9 @@
+import dayjs from "dayjs";
 import { and, eq, gte } from "drizzle-orm";
 import { db } from "../db/configuration.js";
+import { OTPs } from "../db/schema/otp.js";
 import { users } from "../db/schema/users.js";
 import { getSingleRecordByAColumnValue } from "../services/db/baseDbService.js";
-import { OTPs } from "../db/schema/otp.js";
-import dayjs from "dayjs";
 // Check if email exists and return a boolean accordingly
 export async function userEmailExists(email) {
     const columnsToSelect = ["id", "email"];

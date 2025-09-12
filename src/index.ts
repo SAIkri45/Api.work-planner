@@ -7,16 +7,13 @@ import { cors } from "hono/cors";
 import { appConfig } from "./config/appConfig.js";
 import { DEF_ERROR_RESP } from "./constants/appMessages.js";
 import envData from "./env.js";
+import authRoutes from "./routes/authRouters.js";
 import dashBoardRoutes from "./routes/dashBoardRoutes.js";
 import projectRouter from "./routes/projectRoutes.js";
-
-import userRoutes from "./routes/usersRouters.js";
-
-import taskAssigneesRoutes from "./routes/taskAssigneesRoutes.js";
-import authRoutes  from "./routes/authRouters.js";
-import taskRouter from "./routes/taskRoutes.js";
 import oAuthRouter from "./routes/slackOAuthRouters.js";
-
+import taskAssigneesRoutes from "./routes/taskAssigneesRoutes.js";
+import taskRouter from "./routes/taskRoutes.js";
+import userRoutes from "./routes/usersRouters.js";
 
 const apiVer = appConfig.version;
 const app = new Hono().basePath(`/${apiVer}`);

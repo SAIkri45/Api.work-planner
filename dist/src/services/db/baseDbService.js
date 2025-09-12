@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, getTableName, inArray, sql, } from "drizzle-orm";
+import { and, asc, count, desc, eq, getTableName, inArray, sql } from "drizzle-orm";
 import { db } from "../../db/configuration.js";
 import { executeQuery, prepareInQueryCondition, prepareOrderByQueryConditions, prepareSelectColumnsForQuery, prepareWhereQueryConditions } from "../../utils/dbUtils.js";
 // type SelectedKeys<T, K extends keyof T> = {
@@ -173,7 +173,7 @@ async function getSingleRecordByMultipleColumnValues(table, columns, values, col
     }
     return results[0];
 }
-//with trx
+// with trx
 async function getSingleRecordByMultipleColumnValueswithtrx(table, columns, values, trx, columnsToSelect, orderByQueryData, inQueryData) {
     const whereQueryData = {
         columns,
@@ -194,7 +194,7 @@ async function saveSingleRecord(table, record, trx) {
     const recordSaved = await client
         .insert(table)
         .values({
-        ...dataWithTimeStamps
+        ...dataWithTimeStamps,
     })
         .returning();
     return recordSaved[0];
@@ -203,7 +203,7 @@ async function saveRecords(table, records) {
     const recordsSaved = await db.insert(table).values(records).returning();
     return recordsSaved;
 }
-//with trx
+// with trx
 async function saveRecordswithtrx(table, records, trx) {
     const client = trx ?? db; // use trx if provided, else fallback to db
     const recordsSaved = await client.insert(table).values(records).returning();
@@ -245,9 +245,9 @@ async function getPaginatedRecords(table, skip, limit, filters, sorting, project
     const result = await initialQuery.limit(limit).offset(skip);
     return result;
 }
-//without trx
+// without trx
 async function getRecordsCount(table, filters) {
-    let initialQuery = db.select({ total: count() }).from(table);
+    const initialQuery = db.select({ total: count() }).from(table);
     let finalQuery;
     if (filters && filters.length > 0) {
         finalQuery = initialQuery.where(and(...filters));
@@ -258,10 +258,10 @@ async function getRecordsCount(table, filters) {
     const result = await finalQuery;
     return result[0]?.total ?? 0;
 }
-//with trx
+// with trx
 async function getRecordsCountwithtrx(table, filters, trx) {
     const dbInstance = trx ?? db;
-    let initialQuery = dbInstance.select({ total: count() }).from(table);
+    const initialQuery = dbInstance.select({ total: count() }).from(table);
     let finalQuery;
     if (filters && filters.length > 0) {
         finalQuery = initialQuery.where(and(...filters));
@@ -280,7 +280,7 @@ async function updateRecordByColumnValue(table, column, value, record, id) {
         .set(dataWithTimeStamps)
         .where(eq(columnInfo, value));
 }
-//with trx
+// with trx
 async function updateRecordByColumnValuewithtrx(table, column, value, record, trx, extraCondition) {
     const client = trx ?? db;
     const dataWithTimeStamps = {
@@ -317,7 +317,7 @@ async function updateRecordById(table, id, record, trx) {
         .returning();
     return recordUpdated[0];
 }
-//withtrx
+// withtrx
 async function updateRecordByIdwithtrx(table, id, record, trx) {
     const client = trx ?? db; // Use transaction if provided, else fallback to db
     const dataWithTimeStamps = {
@@ -365,4 +365,41 @@ async function deleteRecordsByColumn(table, column, value) {
 async function softDeleteRecordById(table, id, record) {
     return await db.update(table).set(record).where(eq(table.id, id)).returning();
 }
-export { deleteRecordById, deleteRecordsByColumn, exportData, getMultipleRecordsByAColumnValue, getMultipleRecordsByMultipleColumnValues, getPaginatedRecords, getPaginatedRecordsConditionally, getPaginatedRecordsConditionallywithtrx, getSingleRecordByMultipleColumnValueswithtrx, getRecordById, getRecordsConditionally, getRecordsCount, getRecordsCountwithtrx, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveRecords, saveRecordswithtrx, saveSingleRecord, softDeleteRecordById, updateMultipleRecordsByIds, updateRecordByColumnValue, updateRecordByColumnValuewithtrx, updateRecordById, updateRecordByIdwithtrx, updateRecordByMultipleColumnValues, };
+async function saveSingleRecordWithTrx(table, record, trx) {
+    const client = trx ?? db; // ← fallback to db if trx not passed
+    const dataWithTimeStamps = {
+        ...record,
+        created_at: new Date(),
+    };
+    const recordSaved = await client.insert(table).values(dataWithTimeStamps).returning();
+    return recordSaved[0];
+}
+async function saveRecordsWithTrx(table, records, trx) {
+    const client = trx ?? db;
+    // Always handle as array - convert single record to array if needed
+    const recordsArray = Array.isArray(records) ? records : [records];
+    const recordsWithTimeStamps = recordsArray.map(record => ({
+        ...record,
+        created_at: new Date(),
+    }));
+    const recordsSaved = await client.insert(table).values(recordsWithTimeStamps).returning();
+    return recordsSaved;
+}
+async function softDeleteRecordByIdWithTrx(table, id, record, trx) {
+    const client = trx ?? db;
+    return await client.update(table).set(record).where(eq(table.id, id)).returning();
+}
+async function updateRecordByMultipleColumnValuesWithTrx(table, columns, values, record, trx, id) {
+    const client = trx ?? db;
+    const whereQueryData = {
+        columns,
+        values,
+    };
+    const dataWithTimeStamps = { id, ...record, updated_at: new Date() };
+    const whereConditions = whereQueryData.columns.map((column, index) => eq(sql.raw(`${getTableName(table)}.${String(column)}`), whereQueryData.values[index]));
+    return await client
+        .update(table)
+        .set(dataWithTimeStamps)
+        .where(and(...whereConditions));
+}
+export { deleteRecordById, deleteRecordsByColumn, exportData, getMultipleRecordsByAColumnValue, getMultipleRecordsByMultipleColumnValues, getPaginatedRecords, getPaginatedRecordsConditionally, getPaginatedRecordsConditionallywithtrx, getRecordById, getRecordsConditionally, getRecordsCount, getRecordsCountwithtrx, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, getSingleRecordByMultipleColumnValueswithtrx, saveRecords, saveRecordswithtrx, saveRecordsWithTrx, saveSingleRecord, saveSingleRecordWithTrx, softDeleteRecordById, softDeleteRecordByIdWithTrx, updateMultipleRecordsByIds, updateRecordByColumnValue, updateRecordByColumnValuewithtrx, updateRecordById, updateRecordByIdwithtrx, updateRecordByMultipleColumnValues, updateRecordByMultipleColumnValuesWithTrx, };

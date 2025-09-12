@@ -1,23 +1,23 @@
-
 import type { InferOutput } from "valibot";
-import { email, nonEmpty, object, pipe, pipeAsync, string } from "valibot";
+
+import { email, nonEmpty, object, pipe, string } from "valibot";
+
 import { EMAIL_INVALID, EMAIL_MISSING } from "../../constants/appMessages.js";
 
 // custom password validator
-export const VUserSigninSchema = 
-  object({
+export const VUserSigninSchema
+  = object({
     email: pipe(
       string(EMAIL_INVALID),
       nonEmpty(EMAIL_MISSING),
-      email(EMAIL_INVALID)
+      email(EMAIL_INVALID),
     ),
     password: pipe(
       string("Password is required"),
-      nonEmpty("Password is required")
+      nonEmpty("Password is required"),
     ),
-  })
+  });
 
-  
 //   rawTransformAsync(async ({ dataset, addIssue }) => {
 //   const { password } = dataset.value;
 
@@ -28,13 +28,11 @@ export const VUserSigninSchema =
 
 export type ValidatedUserSignin = InferOutput<typeof VUserSigninSchema>;
 
-
 // import type { InferOutput } from "valibot";
 
 // import dayjs from "dayjs";
 // import utc from "dayjs/plugin/utc.js";
 // import { email, literal, nonEmpty, object, optional, pipe, pipeAsync, rawTransformAsync, string, union } from "valibot";
-
 
 // import { DEVICE_TYPE_INVALID, DEVICE_TYPE_MISSING, EMAIL_INVALID, EMAIL_MISSING, OTP_DOES_NOT_MATCH, OTP_EXPIRED } from "../../constants/appMessages.js";
 // import { OTPs,OTP } from "../../db/schema/otp.js";

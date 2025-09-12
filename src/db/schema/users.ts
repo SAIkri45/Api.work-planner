@@ -1,9 +1,6 @@
 import { relations } from "drizzle-orm";
-import { boolean, index, pgEnum, pgTable, serial, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
-import { object, string, optional } from "valibot";
+import { index, pgEnum, pgTable, serial, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
-import { projects } from "./projects.js";
-import { task_assignees } from "./taskAssignees.js";
 import { user_projects } from "./userProjects.js";
 
 export const userTypesEnum = pgEnum("user_type", ["SUPER_ADMIN", "EMPLOYEE", "MANAGER", "ADMIN", "TL"]);

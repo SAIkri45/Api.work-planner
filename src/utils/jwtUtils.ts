@@ -1,13 +1,17 @@
 import type { Context } from "hono";
+
 import { sign, verify } from "hono/jwt";
 import { JwtTokenExpired, JwtTokenInvalid, JwtTokenSignatureMismatched } from "hono/utils/jwt/types";
+
 import type { User } from "../db/schema/users.js";
+import type { JWTUserPayload } from "../types/appTypes";
+
+import { jwtConfig } from "../config/jwtConfig.js";
 import { DEF_400, TOKEN_EXPIRED, TOKEN_INVALID, TOKEN_MISSING, TOKEN_SIG_MISMATCH, USER_INACTIVE } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import UnauthorizedException from "../exceptions/unauthorizedException.js";
 import { getRecordById } from "../services/db/baseDbService.js";
-import { JWTUserPayload } from "../types/appTypes";
-import {jwtConfig }from "../config/jwtConfig.js";
+
 async function genJWTTokens(payload: JWTUserPayload) {
   const access_token_expiry = Math.floor(Date.now() / 1000) + jwtConfig.expires_in; // 30 days
   const access_token_payload = {
@@ -26,7 +30,6 @@ async function genJWTTokens(payload: JWTUserPayload) {
     refresh_token,
   };
 }
-
 
 async function genJWTTokensForUser(userId: number) {
   // Create Payload

@@ -1,37 +1,18 @@
-import { validateRequest } from "../validations/validateRequest.js";
 import { users } from "../db/schema/users.js";
-import { getSingleRecordByAColumnValue } from "../services/db/baseDbService.js";
-import NotFoundException from "../exceptions/notFoundException.js";
-import UnauthorizedException from "../exceptions/unauthorizedException.js";
+import UnAuthorizedException from "../exceptions/unauthorizedException.js";
+import { getSingleRecordByAColumnValue, } from "../services/db/baseDbService.js";
+import { sendSuccessResp } from "../utils/respUtils.js";
+import { validateRequest } from "../validations/validateRequest.js";
 export class AuthController {
+    // User sign in with email + password
     signInWithEmail = async (c) => {
-        try {
-            // ✅ Get request body
-            const body = await c.req.json();
-            // ✅ Validate input
-            const validated = await validateRequest("signin", body, "VUserSigninSchema" // pass the name of the schema as a string
-            );
-            // ✅ Lookup user by email
-            const user = await getSingleRecordByAColumnValue(users, "email", validated.email);
-            if (!user) {
-                throw new NotFoundException("User not found");
-            }
-            // ✅ Password validation is already done in Valibot (123456 check)
-            // But optionally, double-check if needed
-            if (validated.password !== "123456") {
-                throw new UnauthorizedException("Invalid credentials");
-            }
-            // // ✅ Return success response (add tokens if needed)
-            // return sendSuccessResp(c, 200, "Signed in successfully", {
-            //   user,
-            //   accessToken: "mock-access-token",   // replace with real JWT
-            //   refreshToken: "mock-refresh-token", // replace with real JWT
-            // });
+        const body = await c.req.json();
+        const validated = await validateRequest("signin", body, "VUserSigninSchema");
+        const user = await getSingleRecordByAColumnValue(users, "email", validated.email);
+        if (!user || user.password !== validated.password) {
+            throw new UnAuthorizedException("Invalid email or password");
         }
-        catch (err) {
-            console.error(err);
-            return c.json({ message: err.message || "Something went wrong" }, 400);
-        }
+        return sendSuccessResp(c, 200, "Signed in successfully", user);
     };
 }
 // import type { Context } from "hono";
@@ -216,4 +197,4 @@ export class AuthController {
 //     return { access_token, refresh_token, refresh_token_expires_at };
 //   };
 // }
-// export default AuthController;
+export default AuthController;

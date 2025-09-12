@@ -1,6 +1,5 @@
-import { DBTableColumns } from "../types/dbTypes";
-import { OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes";
-import { User } from "../db/schema/users";
+import type { User } from "../db/schema/users";
+import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes";
 
 /**
  * Build query data for pagination, search, filter, ordering (Users)
@@ -8,7 +7,7 @@ import { User } from "../db/schema/users";
 export function buildUserQueryData(
   searchString: string | null,
   orderBy: string | null,
-  user_status: string | null
+  user_status: string | null,
 ): {
   orderByQueryData: OrderByQueryData<User>;
   whereQueryData: WhereQueryData<User>;

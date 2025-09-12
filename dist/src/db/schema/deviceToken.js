@@ -9,5 +9,5 @@ export const device_tokens = pgTable("device_tokens", {
     updated_at: timestamp("updated_at").defaultNow(),
 }, t => [
     index("device_tokens_user_id_idx").on(t.user_id),
-    index("device_tokens_device_token_idx").on(t.device_token)
+    index("device_tokens_device_token_idx").on(t.device_token),
 ]);

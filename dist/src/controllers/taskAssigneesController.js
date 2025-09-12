@@ -1,14 +1,14 @@
 import { eq, isNull } from "drizzle-orm";
-import { FAILED_TO_FETCH_USERS, NO_NEW_ASSIGNEES, PROJECT_ID_REQUIRED, TASKID_USERID_REQUIRED, TASKS_FETCHED, TASK_ALREADY_EXISTS, TASK_ASSIGNEES_FETCHED, TASK_CANNOT_DELETED, TASK_CREATED, TASK_FAILED_TO_FETCH, TASK_ID_REQUIRED, TASK_NOT_FOUND, TASK_STATUS_NOT_COMPLETED, TASK_USERS_DELETED, TASK_VALIDATION_ERROR, USER_ADDED, USER_NOT_ADDED } from "../constants/appMessages";
+import { FAILED_TO_FETCH_USERS, NO_NEW_ASSIGNEES, PROJECT_ID_REQUIRED, TASK_ALREADY_EXISTS, TASK_ASSIGNEES_FETCHED, TASK_CANNOT_DELETED, TASK_CREATED, TASK_FAILED_TO_FETCH, TASK_ID_REQUIRED, TASK_NOT_FOUND, TASK_STATUS_NOT_COMPLETED, TASK_USERS_DELETED, TASK_VALIDATION_ERROR, TASKID_USERID_REQUIRED, TASKS_FETCHED, USER_ADDED, USER_NOT_ADDED, } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
-import { task_assignees } from "../db/schema/taskAssignees";
+import { task_assignees } from "../db/schema/taskAssignees.js";
 import { Tasks } from "../db/schema/tasks.js";
-import BadRequestException from "../exceptions/badRequestException";
-import NotFoundException from "../exceptions/notFoundException";
-import { getMultipleRecordsByAColumnValue, getRecordsConditionally, getRecordsCount, getSingleRecordByMultipleColumnValues, saveRecordswithtrx, saveSingleRecord, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService";
-import { sendSuccessResp } from "../utils/respUtils";
-import { validateRequest } from "../validations/validateRequest";
+import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
+import NotFoundException from "../exceptions/notFoundException.js";
+import { getMultipleRecordsByAColumnValue, getRecordsConditionally, getRecordsCount, getSingleRecordByMultipleColumnValues, saveRecordswithtrx, saveSingleRecord, updateRecordById, updateRecordByMultipleColumnValues, } from "../services/db/baseDbService.js";
+import { sendSuccessResp } from "../utils/respUtils.js";
+import { validateRequest } from "../validations/validateRequest.js";
 export class TaskAssigneesController {
     // Create Task (with transaction)
     createTask = async (c) => {
@@ -28,7 +28,7 @@ export class TaskAssigneesController {
                 task = await saveSingleRecord(Tasks, { ...taskData }, trx);
                 // assign users if provided
                 if (user_ids?.length) {
-                    const assigneeRecords = user_ids.map((user_id) => ({
+                    const assigneeRecords = user_ids.map(user_id => ({
                         task_id: task.id,
                         user_id,
                     }));
@@ -44,7 +44,7 @@ export class TaskAssigneesController {
     // Delete Task
     deleteTask = async (c) => {
         const id = Number(c.req.param("id"));
-        const task = (await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at",], [id, null], ["id", "task_status"]));
+        const task = (await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [id, null], ["id", "task_status"]));
         if (!task) {
             throw new NotFoundException(TASK_NOT_FOUND);
         }
@@ -61,8 +61,8 @@ export class TaskAssigneesController {
         const now = new Date();
         let deletedTask;
         await db.transaction(async (trx) => {
-            deletedTask = updateRecordById(Tasks, id, { deleted_at: now, }, trx);
-            updateRecordById(task_assignees, id, { deleted_at: now, }, trx);
+            deletedTask = updateRecordById(Tasks, id, { deleted_at: now }, trx);
+            updateRecordById(task_assignees, id, { deleted_at: now }, trx);
         });
         return sendSuccessResp(c, 200, TASK_USERS_DELETED, {
             task_id: id,
@@ -81,7 +81,7 @@ export class TaskAssigneesController {
         await updateRecordByMultipleColumnValues(task_assignees, ["task_id", "user_id"], [taskId, user_ids], { deleted_at: new Date() });
         return sendSuccessResp(c, 200, TASK_USERS_DELETED);
     };
-    //get assignees list by taskid
+    // get assignees list by taskid
     getAssigneesByTaskId = async (c) => {
         try {
             const taskId = +c.req.param("id");
@@ -98,7 +98,7 @@ export class TaskAssigneesController {
             throw new BadRequestException(FAILED_TO_FETCH_USERS);
         }
     };
-    //assign users to already exist task
+    // assign users to already exist task
     addUsersToTask = async (c) => {
         try {
             const taskId = +c.req.param("id");
@@ -136,7 +136,7 @@ export class TaskAssigneesController {
             throw new BadRequestException(USER_NOT_ADDED);
         }
     };
-    //gettasks by project id
+    // gettasks by project id
     getTasksByProjectId = async (c) => {
         try {
             const projectId = +c.req.param("id");
@@ -159,7 +159,7 @@ export class TaskAssigneesController {
             throw new BadRequestException(TASK_FAILED_TO_FETCH);
         }
     };
-    //get assignees by task id
+    // get assignees by task id
     getTaskAssignees = async (c) => {
         const taskId = +c.req.param("id");
         if (!taskId) {

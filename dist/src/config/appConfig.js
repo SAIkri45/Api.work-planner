@@ -4,4 +4,3 @@ export const appConfig = {
     version: envData.API_VERSION,
     cookie_domain: envData.COOKIE_DOMAIN,
 };
-console.log(appConfig);

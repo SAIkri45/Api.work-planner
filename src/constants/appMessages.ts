@@ -80,10 +80,6 @@ export const DEVICE_TYPE_INVALID = "Device type is invalid";
 export const DEVICE_TYPE_MISSING = "Device type is missing";
 export const FAILED_TO_UPDATE_USER = "Failed to update user";
 
-
-
-
-
 export const PROFILE_PIC_MISSING = "Profile pic is missing";
 export const PROFILE_PIC_TOO_SHORT
     = "Minimum length of the profile pic is 5 characters";
@@ -152,11 +148,6 @@ export const CONTACTS_IMPORT_SUCCESS = "Contacts imported successfully";
 export const CONTACTS_IMPORT_FAILED = "Contacts import failed";
 export const CONTACTS_IMPORT_VALIDATION_FAILED = "Contacts import validation failed";
 export const RECORDS_NOT_FOUND = "NO records found tO import";
-
-
-
-
-
 
 // template messages
 export const TEMPLATE_NAME_MISSING = "Template name is required";
@@ -387,11 +378,11 @@ export const USER_TASKS_FETCHED = "User tasks fetched successfully";
 export const TODAY_TASKS_STATUS_COUNT_FETCHED = "Today's tasks status count fetched successfully";
 export const USER_TASKS_STATUS_COUNT_FETCHED = "User tasks status count fetched successfully";
 export const TASK_ASSIGNEE_ADDED = "Task assignee added successfully";
-export const TASK_ASSIGNEE_EXISTS = "Task assignee already exists"; 
+export const TASK_ASSIGNEE_EXISTS = "Task assignee already exists";
 export const PROJECT_USERS_ASSIGNED = "Project users assigned successfully";
 export const TASK_ASSIGNEE_NOT_FOUND = "Task assignee not found";
 export const TASK_ASSIGNEE_VALIDATION_ERROR = "Task assignee details provided do not meet the required validation criteria";
-export const TASK_ASSIGNEE_USER_ID_INVALID = "Task assignee user ID is invalid";    
+export const TASK_ASSIGNEE_USER_ID_INVALID = "Task assignee user ID is invalid";
 export const TASK_ASSIGNEE_USER_ID_MISSING = "Task assignee user ID is missing";
 export const TASK_ASSIGNEE_TASK_ID_INVALID = "Task assignee task ID is invalid";
 export const TASK_ASSIGNEE_TASK_ID_MISSING = "Task assignee task ID is missing";

@@ -1,6 +1,5 @@
-import { DBTableColumns } from "../types/dbTypes";
-import { OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes";
-import { Task } from "../db/schema/tasks";
+import type { Task } from "../db/schema/tasks";
+import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes";
 
 /**
  * Build query data for pagination, search, filter, ordering (Tasks)
@@ -8,7 +7,7 @@ import { Task } from "../db/schema/tasks";
 export function buildTaskQueryData(
   searchString: string | null,
   orderBy: string | null,
-  task_status: string | null
+  task_status: string | null,
 ): {
   orderByQueryData: OrderByQueryData<Task>;
   whereQueryData: WhereQueryData<Task>;
