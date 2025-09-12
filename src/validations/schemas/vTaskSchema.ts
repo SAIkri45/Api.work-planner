@@ -1,8 +1,8 @@
 import type { InferOutput } from "valibot";
 
-import { array, minLength, nonEmpty, number, object, optional, picklist, pipe, string, transform } from "valibot";
+import { array, minLength, nonEmpty, number, object, optional, pipe, string, transform } from "valibot";
 
-import { TASK_DESCRIPTION_INVALID, TASK_STATUS_INVALID, TASK_TITLE_INVALID, TASK_TITLE_MISSING, TASK_TITLE_TOO_SHORT } from "../../constants/appMessages.js";
+import { TASK_DESCRIPTION_INVALID, TASK_TITLE_INVALID, TASK_TITLE_MISSING, TASK_TITLE_TOO_SHORT } from "../../constants/appMessages.js";
 
 // Allowed statuses
 export const allowedTaskStatuses = ["NEW", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE", "DONE"] as const;
@@ -28,11 +28,11 @@ export const VCreateTaskSchema = object({
     number("Project id is required"),
   ),
 
-  task_status: pipe(
-    string(TASK_STATUS_INVALID),
-    transform(value => value.trim()),
-    picklist(allowedTaskStatuses, TASK_STATUS_INVALID),
-  ),
+  // task_status: pipe(
+  //   string(TASK_STATUS_INVALID),
+  //   transform(value => value.trim()),
+  //   picklist(allowedTaskStatuses, TASK_STATUS_INVALID),
+  // ),
 
   start_date: pipe(string()),
 

@@ -14,28 +14,32 @@ export class TaskAssigneesController {
     createTask = async (c) => {
         try {
             const requestBody = await c.req.json();
-            const userDetails = c.get("userDetails");
+            const userDetails = c.get("user_payload");
             const validatedReq = await validateRequest("create-task", requestBody, TASK_VALIDATION_ERROR);
             const { user_ids, ...taskData } = validatedReq;
             // check duplicate task
-            const taskExists = await getSingleRecordByMultipleColumnValues(Tasks, ["task_title", "deleted_at", "project_id"], [taskData.task_title, null, taskData.project_id]);
+            const taskExists = await getSingleRecordByMultipleColumnValues(Tasks, ["task_title", "deleted_at", "project_id"], [taskData.task_title, null, taskData.project_id], ["id"]);
             if (taskExists) {
                 throw new ConflictException(TASK_ALREADY_EXISTS);
             }
             let task; // here add data type
+            let insertedDataUsers;
             await db.transaction(async (trx) => {
                 // create task
-                task = await saveSingleRecord(Tasks, { ...taskData }, trx);
+                task = await saveSingleRecord(Tasks, { ...taskData, created_by: userDetails.id }, trx);
+                // task = await saveSingleRecord<Task>(Tasks, taskData, trx);
                 // assign users if provided
                 if (user_ids?.length) {
                     const assigneeRecords = user_ids.map(user_id => ({
                         task_id: task.id,
+                        task_title: task.task_title,
+                        created_by: task.created_by,
                         user_id,
                     }));
-                    await saveRecordswithtrx(task_assignees, assigneeRecords, trx);
+                    insertedDataUsers = await saveRecordswithtrx(task_assignees, assigneeRecords, trx);
                 }
             });
-            return sendSuccessResp(c, 200, TASK_CREATED, task);
+            return sendSuccessResp(c, 200, TASK_CREATED, { ...task, insertedDataUsers });
         }
         catch (err) {
             throw err;

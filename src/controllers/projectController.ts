@@ -63,69 +63,7 @@ class ProjectController {
     }
   };
 
-  // getAllProjectsPaginated = async (c: Context) => {
-  //   const page = +c.req.query("page")! || 1;
-  //   const pageSize = +c.req.query("page_size")! || 10;
-  //   const searchString = c.req.query("search_string") || null;
-  //   const orderBy = c.req.query("order_by");
-  //   const projectStatus = c.req.query("project_status")?.toLocaleUpperCase() || null;
-  //   const startDate = c.req.query("from_date") || null;
-  //   const endDate = c.req.query("to_date") || null;
-  //   let orderByQueryData: OrderByQueryData<Project> = {
-  //     columns: ["created_at"],
-  //     values: ["desc"],
-  //   };
-
-  //   const WhereQueryData: WhereQueryData<Project> = {
-  //     columns: ["deleted_at"],
-  //     values: ["null"],
-  //   };
-
-  //   if (orderBy) {
-  //     const orderByColumns: DBTableColumns<Project>[] = [];
-  //     const orderByValues: SortDirection[] = [];
-  //     const queryStrings = orderBy.split(",");
-  //     for (const queryString of queryStrings) {
-  //       const [column, value] = queryString.split(":");
-  //       orderByColumns.push(column as DBTableColumns<Project>);
-  //       orderByValues.push(value as SortDirection);
-  //     }
-  //     orderByQueryData = {
-  //       columns: orderByColumns,
-  //       values: orderByValues,
-  //     };
-  //   }
-
-  //   if (searchString) {
-  //     // Add search string filter using LIKE
-  //     WhereQueryData.columns.push("title");
-  //     WhereQueryData.values.push(`%${searchString}%`);
-  //   }
-
-  //   if (projectStatus) {
-  //     WhereQueryData.columns.push("project_status");
-  //     WhereQueryData.values.push(projectStatus);
-  //   }
-
-  //   if (startDate || endDate) {
-  //     WhereQueryData.columns.push("due_date");
-  //     const dateFilter: { gte?: Date; lte?: Date } = {};
-  //     if (startDate)
-  //       dateFilter.gte = new Date(`${startDate}T00:00:00`);
-  //     if (endDate)
-  //       dateFilter.lte = new Date(`${endDate}T23:59:59`);
-  //     WhereQueryData.values.push(dateFilter);
-  //   }
-
-  //   const columnsToSelect = ["id", "title", "description", "logo_url", "project_status", "start_date", "due_date"] as const;
-
-  //   const result = await getPaginatedRecordsConditionally<Project>(projects, page, pageSize, orderByQueryData, WhereQueryData, columnsToSelect);
-
-  //   return sendSuccessResp(c, 200, PROJECTS_FETCHED, result);
-  // };
-
   getAllProjectsPaginated = async (c: Context) => {
-    // Get user from middleware
     const user = c.get("user_payload");
 
     const page = +c.req.query("page")! || 1;
@@ -141,7 +79,6 @@ class ProjectController {
       values: ["desc"],
     };
 
-    // Parse order by query
     if (orderBy) {
       const orderByColumns: DBTableColumns<Project>[] = [];
       const orderByValues: SortDirection[] = [];
@@ -159,7 +96,6 @@ class ProjectController {
       };
     }
 
-    // Build where query with user-based filtering
     const whereQueryData = buildProjectsWhereQueryData(
       startDate,
       endDate,
