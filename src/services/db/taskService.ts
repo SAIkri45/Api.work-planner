@@ -6,8 +6,8 @@ import { Tasks } from "../../db/schema/tasks.js";
 import { buildOrderByClause } from "../../helpers/projectHelper.js";
 import { buildTaskFilters } from "../../helpers/taskhelper.js";
 
-export async function gatAllTaskList(offset?: number, pageSize?: number, search?: string, orderBy?: string, taskStatus?: any) {
-  const filters = buildTaskFilters(search, taskStatus);
+export async function gatAllTaskList(offset?: number, pageSize?: number, search?: string, orderBy?: string, taskStatus?: any, startDate?: string, endDate?: string) {
+  const filters = buildTaskFilters(search, taskStatus, startDate, endDate);
   const orderByClause = buildOrderByClause(orderBy);
 
   const result: any = await db.query.Tasks.findMany({

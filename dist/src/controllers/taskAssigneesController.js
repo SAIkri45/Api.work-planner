@@ -15,7 +15,7 @@ export class TaskAssigneesController {
             const requestBody = await c.req.json();
             const userDetails = c.get("user_payload");
             const validatedReq = await validateRequest("create-task", requestBody, TASK_VALIDATION_ERROR);
-            const { user_ids, ...taskData } = validatedReq;
+            const { assigned_users, ...taskData } = validatedReq;
             // check duplicate task
             const taskExists = await getSingleRecordByMultipleColumnValues(Tasks, ["task_title", "deleted_at", "project_id"], [taskData.task_title, null, taskData.project_id], ["id"]);
             if (taskExists) {
@@ -28,8 +28,8 @@ export class TaskAssigneesController {
                 task = await saveSingleRecord(Tasks, { ...taskData, created_by: userDetails.id }, trx);
                 // task = await saveSingleRecord<Task>(Tasks, taskData, trx);
                 // assign users if provided
-                if (user_ids?.length) {
-                    const assigneeRecords = user_ids.map(user_id => ({
+                if (assigned_users?.length) {
+                    const assigneeRecords = assigned_users.map(user_id => ({
                         task_id: task.id,
                         task_title: task.task_title,
                         created_by: task.created_by,

@@ -15,5 +15,5 @@ export const VCreateTaskSchema = object({
     // ),
     start_date: pipe(string()),
     end_date: pipe(string()),
-    user_ids: optional(array(number("User ID must be a number"))),
+    assigned_users: optional(array(number("User ID must be a number"))),
 });

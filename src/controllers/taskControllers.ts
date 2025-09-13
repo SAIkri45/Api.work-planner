@@ -33,8 +33,10 @@ export class TasksController {
       const searchString = c.req.query("search_string");
       const orderBy = c.req.query("order_by");
       const taskStatus = c.req.query("task_status");
+      const startDate = c.req.query("from_date");
+      const endDate = c.req.query("to_date");
 
-      const { result, total_records } = await gatAllTaskList(offset, pageSize, searchString, orderBy, taskStatus);
+      const { result, total_records } = await gatAllTaskList(offset, pageSize, searchString, orderBy, taskStatus, startDate, endDate);
 
       const paginationInfo = getPaginationData(page, pageSize, total_records);
 
