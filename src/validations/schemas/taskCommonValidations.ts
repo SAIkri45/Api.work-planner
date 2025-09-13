@@ -1,5 +1,6 @@
-import { array, minLength, nonEmpty, nullish, number, optional, picklist, pipe, string, transform } from "valibot";
+import { array, isoDate, minLength, nonEmpty, nullish, number, optional, picklist, pipe, string, transform } from "valibot";
 
+import { DATE_REQUIRED, DUE_DATE_REQUIRED } from "../../constants/appMessages.js";
 import ConflictException from "../../exceptions/conflictException.js";
 
 // Allowed task statuses (match your pgEnum)
@@ -92,3 +93,15 @@ export const taskUpdatedBy = optional(
 );
 
 export const taskUserIds = nullish(array(number()));
+
+export const taskStartdate = pipe(
+  string(DATE_REQUIRED),
+  isoDate(DATE_REQUIRED),
+  transform(str => new Date(str)),
+);
+
+export const taskDueDate = pipe(
+  string(DUE_DATE_REQUIRED),
+  isoDate(DUE_DATE_REQUIRED),
+  transform(str => new Date(str)),
+);

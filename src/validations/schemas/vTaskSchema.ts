@@ -1,14 +1,16 @@
 import type { InferOutput } from "valibot";
 
-import { array, minLength, nonEmpty, number, object, optional, pipe, string, transform } from "valibot";
+import { array, minLength, nonEmpty, number, object, optional, pipe, pipeAsync, string, transform } from "valibot";
 
 import { TASK_DESCRIPTION_INVALID, TASK_TITLE_INVALID, TASK_TITLE_MISSING, TASK_TITLE_TOO_SHORT } from "../../constants/appMessages.js";
+import ConflictException from "../../exceptions/conflictException.js";
+import { taskDueDate, taskStartdate } from "./taskCommonValidations.js";
 
 // Allowed statuses
 export const allowedTaskStatuses = ["NEW", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE", "DONE"] as const;
 
 // Create Task Schema
-export const VCreateTaskSchema = object({
+export const VCreateTaskSchema = pipeAsync(object({
   task_title: pipe(
     string(TASK_TITLE_INVALID),
     nonEmpty(TASK_TITLE_MISSING),
@@ -28,19 +30,20 @@ export const VCreateTaskSchema = object({
     number("Project id is required"),
   ),
 
-  // task_status: pipe(
-  //   string(TASK_STATUS_INVALID),
-  //   transform(value => value.trim()),
-  //   picklist(allowedTaskStatuses, TASK_STATUS_INVALID),
-  // ),
+  start_date: taskStartdate,
 
-  start_date: pipe(string()),
+  end_date: taskDueDate,
 
-  end_date: pipe(string()),
+  assigned_users: optional(array(number())),
+}), transform((data) => {
+  // Cross-field validation
+  if (data.end_date && data.start_date) {
+    if (data.end_date <= data.start_date) {
+      throw new ConflictException("End Date must be after Start Date");
+    }
+  }
 
-  assigned_users: optional(
-    array(number("User ID must be a number")),
-  ),
-});
+  return data;
+}));
 
 export type ValidatedCreateTask = InferOutput<typeof VCreateTaskSchema>;
