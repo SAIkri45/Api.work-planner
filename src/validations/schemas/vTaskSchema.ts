@@ -2,7 +2,7 @@ import type { InferOutput } from "valibot";
 
 import { array, isoDate, minLength, nonEmpty, number, object, optional, pipe, pipeAsync, string, transform } from "valibot";
 
-import { DATE_REQUIRED, DUE_DATE_REQUIRED, TASK_DESCRIPTION_INVALID, TASK_TITLE_INVALID, TASK_TITLE_MISSING, TASK_TITLE_TOO_SHORT } from "../../constants/appMessages.js";
+import { DATE_REQUIRED, DUE_DATE_REQUIRED, TASK_DESCRIPTION_INVALID, TASK_TITLE_INVALID, TASK_TITLE_MIN_LENGTH, TASK_TITLE_MISSING, TASK_TITLE_TOO_SHORT } from "../../constants/appMessages.js";
 import ConflictException from "../../exceptions/conflictException.js";
 
 // Allowed statuses
@@ -17,11 +17,11 @@ export const VCreateTaskSchema = pipeAsync(object({
     minLength(3, TASK_TITLE_TOO_SHORT),
   ),
 
-  description: optional(
-    pipe(
-      string(TASK_DESCRIPTION_INVALID),
-      transform(value => value.trim()),
-    ),
+  description: pipe(
+    string(TASK_DESCRIPTION_INVALID),
+    nonEmpty(TASK_DESCRIPTION_INVALID),
+    transform(value => value.trim()),
+    minLength(3, TASK_TITLE_MIN_LENGTH),
   ),
   // created_by: pipe(number()),
 

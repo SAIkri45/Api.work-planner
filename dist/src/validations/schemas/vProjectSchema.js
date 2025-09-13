@@ -6,7 +6,7 @@ export const VCreateProjectSchema = pipeAsync(object({
     title: projectTile,
     description: ProjectDescription,
     logo_url: optional(string(PROJECT_LOGO_URL_MISSING)),
-    project_links: optional(pipe(string(PROJECT_LINKS_REQUIRED), nonEmpty(PROJECT_LINKS_REQUIRED), transform(value => value.trim()), minLength(10, PROJECT_LINKS_TOO_SHORT))),
+    project_links: optional(pipe(string(PROJECT_LINKS_REQUIRED), nonEmpty(PROJECT_LINKS_REQUIRED), transform(value => value.trim()), minLength(8, PROJECT_LINKS_TOO_SHORT))),
     // created_by: pipe(number()),
     // updated_by: nullish(number()),
     project_status: projectStatus,
