@@ -22,7 +22,7 @@ export const VCreateTaskSchema = object({
       transform(value => value.trim()),
     ),
   ),
-  created_by: pipe(number()),
+  // created_by: pipe(number()),
 
   project_id: pipe(
     number("Project id is required"),

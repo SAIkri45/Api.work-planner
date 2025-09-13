@@ -1,11 +1,11 @@
-import { desc, eq, ilike, isNull, sql } from "drizzle-orm";
+import { desc, eq, isNull, sql } from "drizzle-orm";
 import { allowedProjectStatus } from "../constants/appMessages.js";
 import { projects } from "../db/schema/projects.js";
 // filters
 export function buildProjectFilters(search, projectStatus) {
     const filters = [isNull(projects.deleted_at)];
     if (search?.trim()) {
-        filters.push(ilike(projects.title, `%${search.trim()}%`));
+        filters.push(sql `LOWER(${projects.title}) LIKE LOWER(${`%${search.trim()}%`})`);
     }
     if (projectStatus && allowedProjectStatus.includes(projectStatus.toUpperCase())) {
         filters.push(eq(projects.project_status, projectStatus.toUpperCase()));

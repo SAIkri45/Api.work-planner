@@ -6,7 +6,7 @@ export const allowedTaskStatuses = ["NEW", "IN_PROGRESS", "COMPLETED", "REVIEW",
 export const VCreateTaskSchema = object({
     task_title: pipe(string(TASK_TITLE_INVALID), nonEmpty(TASK_TITLE_MISSING), transform(value => value.trim()), minLength(3, TASK_TITLE_TOO_SHORT)),
     description: optional(pipe(string(TASK_DESCRIPTION_INVALID), transform(value => value.trim()))),
-    created_by: pipe(number()),
+    // created_by: pipe(number()),
     project_id: pipe(number("Project id is required")),
     // task_status: pipe(
     //   string(TASK_STATUS_INVALID),
