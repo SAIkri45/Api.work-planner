@@ -1,9 +1,10 @@
 import type { InferOutput } from "valibot";
 
-import { array, isoDate, minLength, nonEmpty, number, object, optional, pipe, pipeAsync, string, transform } from "valibot";
+import { array, minLength, nonEmpty, number, object, optional, pipe, pipeAsync, string, transform } from "valibot";
 
-import { DATE_REQUIRED, DUE_DATE_REQUIRED, TASK_DESCRIPTION_INVALID, TASK_TITLE_INVALID, TASK_TITLE_MIN_LENGTH, TASK_TITLE_MISSING, TASK_TITLE_TOO_SHORT } from "../../constants/appMessages.js";
+import { TASK_DESCRIPTION_INVALID, TASK_TITLE_INVALID, TASK_TITLE_MIN_LENGTH, TASK_TITLE_MISSING, TASK_TITLE_TOO_SHORT } from "../../constants/appMessages.js";
 import ConflictException from "../../exceptions/conflictException.js";
+import { taskDueDate, taskStartdate } from "./taskCommonValidations.js";
 
 // Allowed statuses
 export const allowedTaskStatuses = ["NEW", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE", "DONE"] as const;
@@ -29,18 +30,9 @@ export const VCreateTaskSchema = pipeAsync(object({
     number("Project id is required"),
   ),
 
-  start_date: pipe(
-    string(DATE_REQUIRED),
-    isoDate(DATE_REQUIRED),
-    transform(str => new Date(str)),
-  ),
+  start_date: taskStartdate,
 
-  end_date: pipe(
-    string(DUE_DATE_REQUIRED),
-    isoDate(DUE_DATE_REQUIRED),
-    transform(str => new Date(str)),
-  ),
-
+  end_date: taskDueDate,
   assigned_users: optional(array(number())),
 }), transform((data) => {
   // Cross-field validation
