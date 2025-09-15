@@ -46,27 +46,21 @@ export class TaskAssigneesController {
     };
     // Delete Task
     deleteTask = async (c) => {
-        const taskId = Number(c.req.param("id"));
-        const task = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null], ["id", "task_status"]);
-        console.log("task: ", task);
+        const taskId = +c.req.param("id");
+        if (!taskId) {
+            throw new BadRequestException(INVALID_INPUT);
+        }
+        const task = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
         if (!task) {
             throw new NotFoundException(TASK_NOT_FOUND);
         }
-        if (task.task_status !== "COMPLETED") {
+        const checkTaskStatus = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at", "task_status"], [taskId, null, "COMPLETED"], ["id"]);
+        if (!checkTaskStatus) {
             throw new BadRequestException(TASK_STATUS_NOT_COMPLETED);
         }
-        // const activeAssigneesCount = await getRecordsCount(task_assignees, [
-        //   eq(task_assignees.task_id, id),
-        //   isNull(task_assignees.deleted_at),
-        // ]);
-        // if (activeAssigneesCount !== 0) {
-        //   throw new BadRequestException(TASK_CANNOT_DELETED);
-        // }
         await db.transaction(async (trx) => {
             updateRecordById(Tasks, taskId, { deleted_at: new Date() }, trx);
-            console.log("task deleted ");
-            updateRecordByMultipleColumnValuesWithTrx(task_assignees, ["id"], [taskId], { deleted_at: new Date() }, trx);
-            console.log("task assigness deleted");
+            updateRecordByMultipleColumnValuesWithTrx(task_assignees, ["task_id"], [taskId], { deleted_at: new Date() }, trx);
         });
         return sendSuccessResp(c, 200, TASK_DELETED);
     };
