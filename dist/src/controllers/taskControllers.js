@@ -1,12 +1,12 @@
 import { and, count, gte, isNull, lte } from "drizzle-orm";
 import { error } from "node:console";
-import { TASK_ID_REQUIRED, TASK_NOT_FOUND, TASK_UPDATED, TASKS_FETCHED, } from "../constants/appMessages.js";
+import { INVALID_INPUT, TASK_NOT_FOUND, TASK_UPDATED, TASKS_FETCHED, } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
 import { Tasks } from "../db/schema/tasks.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
-import { getRecordById, updateRecordById, } from "../services/db/baseDbService.js";
+import { getRecordById, getSingleRecordByMultipleColumnValues, updateRecordById, } from "../services/db/baseDbService.js";
 import { gatAllTaskList } from "../services/db/taskService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 export class TasksController {
@@ -35,20 +35,17 @@ export class TasksController {
     };
     // Get Task By Id
     getTaskById = async (c) => {
-        try {
-            const id = c.req.param("id");
-            if (!id || Number.isNaN(id)) {
-                throw new BadRequestException(TASK_ID_REQUIRED);
-            }
-            const task = await getRecordById(Tasks, +id, ["id", "deleted_at"]);
-            if (!task || task.deleted_at !== null) {
-                throw new NotFoundException(TASK_NOT_FOUND);
-            }
-            return sendSuccessResp(c, 200, TASKS_FETCHED, task);
+        const taskId = +c.req.param("id");
+        if (!taskId) {
+            throw new BadRequestException(INVALID_INPUT);
         }
-        catch {
-            throw error;
+        const taskExists = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
+        if (!taskExists) {
+            throw new NotFoundException(TASK_NOT_FOUND);
         }
+        const columnsToSelect = ["id", "task_title", "description", "created_by", "updated_by", "start_date", "end_date", "created_at", "updated_at"];
+        const result = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null], columnsToSelect);
+        return sendSuccessResp(c, 200, TASKS_FETCHED, result);
     };
     // Edit Task (PATCH)
     editTask = async (c) => {

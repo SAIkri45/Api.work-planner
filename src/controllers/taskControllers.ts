@@ -6,7 +6,7 @@ import { error } from "node:console";
 import type { Task } from "../db/schema/tasks.js";
 
 import {
-  TASK_ID_REQUIRED,
+  INVALID_INPUT,
   TASK_NOT_FOUND,
   TASK_UPDATED,
   TASKS_FETCHED,
@@ -18,6 +18,7 @@ import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import {
   getRecordById,
+  getSingleRecordByMultipleColumnValues,
   updateRecordById,
 } from "../services/db/baseDbService.js";
 import { gatAllTaskList } from "../services/db/taskService.js";
@@ -54,24 +55,23 @@ export class TasksController {
 
   // Get Task By Id
   getTaskById = async (c: Context) => {
-    try {
-      const id = c.req.param("id");
+    const taskId = +c.req.param("id");
 
-      if (!id || Number.isNaN(id)) {
-        throw new BadRequestException(TASK_ID_REQUIRED);
-      }
-
-      const task = await getRecordById<Task>(Tasks, +id, ["id", "deleted_at"]);
-
-      if (!task || task.deleted_at !== null) {
-        throw new NotFoundException(TASK_NOT_FOUND);
-      }
-
-      return sendSuccessResp(c, 200, TASKS_FETCHED, task);
+    if (!taskId) {
+      throw new BadRequestException(INVALID_INPUT);
     }
-    catch {
-      throw error;
+
+    const taskExists = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
+
+    if (!taskExists) {
+      throw new NotFoundException(TASK_NOT_FOUND);
     }
+
+    const columnsToSelect = ["id", "task_title", "description", "created_by", "updated_by", "start_date", "end_date", "created_at", "updated_at"] as const;
+
+    const result = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], columnsToSelect);
+
+    return sendSuccessResp(c, 200, TASKS_FETCHED, result);
   };
 
   // Edit Task (PATCH)
