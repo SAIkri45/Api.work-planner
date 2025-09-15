@@ -1,14 +1,14 @@
 import { and, count, gte, isNull, lte } from "drizzle-orm";
-import { error } from "node:console";
-import { INVALID_INPUT, TASK_NOT_FOUND, TASK_UPDATED, TASKS_FETCHED, } from "../constants/appMessages.js";
+import { INVALID_INPUT, TASK_NOT_FOUND, TASK_UPDATED, TASK_VALIDATION_ERROR, TASKS_FETCHED, } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
 import { Tasks } from "../db/schema/tasks.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
-import { getRecordById, getSingleRecordByMultipleColumnValues, updateRecordById, } from "../services/db/baseDbService.js";
+import { getSingleRecordByMultipleColumnValues, updateRecordById, } from "../services/db/baseDbService.js";
 import { gatAllTaskList } from "../services/db/taskService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
+import { validateRequest } from "../validations/validateRequest.js";
 export class TasksController {
     // Get Paginated Tasks (GET)
     getPaginatedTasks = async (c) => {
@@ -43,30 +43,23 @@ export class TasksController {
         if (!taskExists) {
             throw new NotFoundException(TASK_NOT_FOUND);
         }
-        const columnsToSelect = ["id", "task_title", "description", "created_by", "updated_by", "start_date", "end_date", "created_at", "updated_at"];
+        const columnsToSelect = ["id", "task_title", "description", "task_status", "project_id", "created_by", "updated_by", "start_date", "end_date", "created_at", "updated_at"];
         const result = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null], columnsToSelect);
         return sendSuccessResp(c, 200, TASKS_FETCHED, result);
     };
     // Edit Task (PATCH)
     editTask = async (c) => {
-        try {
-            const id = Number(c.req.param("id"));
-            const body = await c.req.json();
-            const existingTask = await getRecordById(Tasks, id, [
-                "id",
-                "deleted_at",
-            ]);
-            if (!existingTask || existingTask.deleted_at !== null) {
-                throw new NotFoundException(TASK_NOT_FOUND);
-            }
-            const updatedTask = await updateRecordById(Tasks, id, {
-                ...body,
-            });
-            return sendSuccessResp(c, 200, TASK_UPDATED, updatedTask);
+        const taskId = +c.req.param("id");
+        const userDetails = c.get("user_payload");
+        const reqBody = await c.req.json();
+        const validatedReq = await validateRequest("update-task", reqBody, TASK_VALIDATION_ERROR);
+        const taskExists = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
+        if (!taskExists) {
+            throw new NotFoundException(TASK_NOT_FOUND);
         }
-        catch {
-            throw error;
-        }
+        //  const result = await updateRecordById<Task>(Tasks, taskId, validatedReq);
+        const result = await updateRecordById(Tasks, taskId, { ...validatedReq, updated_by: userDetails.id });
+        return sendSuccessResp(c, 200, TASK_UPDATED, result);
     };
     // Get Task Status Counts (GET)
     getTaskStatusCounts = async (c) => {

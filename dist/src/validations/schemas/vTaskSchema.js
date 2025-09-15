@@ -22,3 +22,22 @@ export const VCreateTaskSchema = pipeAsync(object({
     }
     return data;
 }));
+export const VUpdateTaskSchema = pipeAsync(object({
+    task_title: pipe(string(TASK_TITLE_INVALID), nonEmpty(TASK_TITLE_MISSING), transform(value => value.trim().toLocaleLowerCase()), minLength(3, TASK_TITLE_TOO_SHORT)),
+    description: pipe(string(TASK_DESCRIPTION_INVALID), nonEmpty(TASK_DESCRIPTION_INVALID), transform(value => value.trim()), minLength(3, TASK_TITLE_MIN_LENGTH)),
+    // updated_by: pipe(number()),
+    // project_id: pipe(
+    //   number("Project id is required"),
+    // ),
+    start_date: pipe(string("End date is required"), nonEmpty("Start date is required")),
+    end_date: pipe(string("End date is required"), nonEmpty("End date is required")),
+    // assigned_users: optional(array(number())),
+}), transform((data) => {
+    // Cross-field validation
+    if (data.end_date && data.start_date) {
+        if (data.end_date <= data.start_date) {
+            throw new ConflictException("End Date must be after Start Date");
+        }
+    }
+    return data;
+}));
