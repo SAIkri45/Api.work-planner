@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import ProjectController from "../controllers/projectController.js";
-import { isManagerOrAdmin } from "../middlewares/isAuthorized.js";
+import { isAuthorized, isManagerOrAdmin } from "../middlewares/isAuthorized.js";
 const projectRouter = new Hono();
 const projectControllers = new ProjectController();
 projectRouter.get("/drop-down", projectControllers.getAllProjectsDropDown);
@@ -17,6 +17,6 @@ projectRouter.get("/:id/tasks/status", projectControllers.getTasksStatusByProjec
 projectRouter.patch("/:id", isManagerOrAdmin, projectControllers.updateProject);
 projectRouter.get("/:id", projectControllers.getProjectById);
 projectRouter.delete("/:id", projectControllers.softDeleteProjectById);
-projectRouter.get("/", isManagerOrAdmin, projectControllers.getAllProjectsPaginated);
+projectRouter.get("/", isManagerOrAdmin, isAuthorized, projectControllers.getAllProjectsPaginated);
 projectRouter.post("/", isManagerOrAdmin, projectControllers.createProject);
 export default projectRouter;

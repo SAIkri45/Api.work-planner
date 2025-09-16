@@ -9,13 +9,12 @@ import { users } from "../../db/schema/users.js";
 import BadRequestException from "../../exceptions/badRequestException.js";
 import ConflictException from "../../exceptions/conflictException.js";
 import NotFoundException from "../../exceptions/notFoundException.js";
-import { buildOrderByClause } from "../../helpers/projectHelper.js";
-import { buildTaskFilters } from "../../helpers/taskhelper.js";
+import { buildOrderByClauseTasks, buildTaskFilters } from "../../helpers/taskhelper.js";
 import { getSingleRecordByMultipleColumnValues, saveRecords } from "./baseDbService.js";
 import { getAllUsersInProject } from "./projectService.js";
 export async function gatAllTaskList(offset, pageSize, search, orderBy, taskStatus, startDate, endDate) {
     const filters = buildTaskFilters(search, taskStatus, startDate, endDate);
-    const orderByClause = buildOrderByClause(orderBy);
+    const orderByClause = buildOrderByClauseTasks(orderBy);
     const result = await db.query.Tasks.findMany({
         where: and(...filters),
         orderBy: orderByClause,

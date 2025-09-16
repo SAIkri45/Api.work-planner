@@ -35,7 +35,7 @@ export function buildTaskFilters(search?: string, taskStatus?: any, startDate?: 
 
   return filters;
 }
-export function buildOrderByClause(orderBy?: string): any {
+export function buildOrderByClauseTasks(orderBy?: string): any {
   if (!orderBy) {
     return desc(Tasks.created_at);
   }
