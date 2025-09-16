@@ -61,9 +61,9 @@ export const VUpdateTaskSchema = pipeAsync(object({
   ),
   // updated_by: pipe(number()),
 
-  // project_id: pipe(
-  //   number("Project id is required"),
-  // ),
+  project_id: pipe(
+    number("Project id is required"),
+  ),
 
   start_date: pipe(
     string("End date is required"),

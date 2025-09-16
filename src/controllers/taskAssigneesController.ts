@@ -115,7 +115,7 @@ export class TaskAssigneesController {
     const taskId = +c.req.param("id");
     const reqBody = await c.req.json();
 
-    const validatedReq = await validateRequest<ValidatedRemoveUsersFromTask>("remove-users-from-task", reqBody, TASK_VALIDATION_ERROR)
+    const validatedReq = await validateRequest<ValidatedRemoveUsersFromTask>("remove-users-from-task", reqBody, TASK_VALIDATION_ERROR);
 
     const taskExist = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
 
