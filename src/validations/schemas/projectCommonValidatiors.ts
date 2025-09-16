@@ -1,6 +1,6 @@
 import { array, isoDate, minLength, nonEmpty, number, optional, picklist, pipe, regex, string, transform } from "valibot";
 
-import { allowedProjectStatus, DATE_REQUIRED, DUE_DATE_REQUIRED, PROJECT_DESCRIPTION_MIN_LENGTH, PROJECT_DESCRIPTION_REQUIRED, PROJECT_LINKS_REQUIRED, PROJECT_LINKS_TOO_SHORT, PROJECT_STATUS_REQUIRED, PROJECT_TITLE_MIN_LENGTH, PROJECT_TITLE_REQUIRED, VALID_TITLE } from "../../constants/appMessages.js";
+import { allowedProjectStatus, allowedTaskStatus, DATE_REQUIRED, DUE_DATE_REQUIRED, PROJECT_DESCRIPTION_MIN_LENGTH, PROJECT_DESCRIPTION_REQUIRED, PROJECT_LINKS_REQUIRED, PROJECT_LINKS_TOO_SHORT, PROJECT_STATUS_REQUIRED, PROJECT_TITLE_MIN_LENGTH, PROJECT_TITLE_REQUIRED, TASK_STATUS_REQUIRED, VALID_TITLE } from "../../constants/appMessages.js";
 
 export const projectTile = pipe(
   string(PROJECT_TITLE_REQUIRED),
@@ -50,4 +50,11 @@ export const projectUserIds = optional(array(number()));
 export const projectUserIdsRequired = pipe(
   array(number()),
   minLength(1, "At least one user ID is required"),
+);
+
+export const taskStatus = pipe(
+  string(TASK_STATUS_REQUIRED),
+  nonEmpty(TASK_STATUS_REQUIRED),
+  transform(value => value.trim().toUpperCase()),
+  picklist(allowedTaskStatus, TASK_STATUS_REQUIRED),
 );

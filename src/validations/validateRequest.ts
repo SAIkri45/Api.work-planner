@@ -6,7 +6,7 @@ import UnprocessableContentException from "../exceptions/unprocessableContentExc
 import { VSignInSchema, VSignUpOrSignInSchema, VSignUpOrSignInVerifySchema } from "./schemas/signInSignUpValidationSchema.js";
 import { VAddUsersToProjectSchema, VCreateProjectSchema, VRemoveUsersFromProjectSchema, VUpdateProjectSchema, VUpdateProjectStatusSchema } from "./schemas/vProjectSchema.js";
 import { VAssignUsersToTaskSchema, VRemoveUsersFromTaskSchema } from "./schemas/vTaskAssigneesSchema.js";
-import { VCreateTaskSchema, VUpdateTaskSchema } from "./schemas/vTaskSchema.js";
+import { VCreateTaskSchema, VUpdateTaskSchema, VUpdateTaskStatusSchema } from "./schemas/vTaskSchema.js";
 import { VCreateUserSchema, VUpdateUserSchema } from "./schemas/vUserSchema.js";
 
 export async function validateRequest<R extends ValidatedRequest>(
@@ -61,6 +61,9 @@ export async function validateRequest<R extends ValidatedRequest>(
       break;
     case "remove-users-from-task":
       schema = VRemoveUsersFromTaskSchema;
+      break;
+    case "update-task-status":
+      schema = VUpdateTaskStatusSchema;
       break;
     default:
       break;

@@ -1,5 +1,5 @@
 import { and, count, gte, isNull, lte } from "drizzle-orm";
-import { INVALID_INPUT, TASK_NOT_FOUND, TASK_UPDATED, TASK_VALIDATION_ERROR, TASKS_FETCHED, } from "../constants/appMessages.js";
+import { INVALID_INPUT, TASK_NOT_FOUND, TASK_STATUS_UPDATED, TASK_UPDATED, TASK_VALIDATION_ERROR, TASKS_FETCHED, } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
 import { Tasks } from "../db/schema/tasks.js";
 import BadRequestException from "../exceptions/badRequestException.js";
@@ -52,6 +52,9 @@ export class TasksController {
         const taskId = +c.req.param("id");
         const userDetails = c.get("user_payload");
         const reqBody = await c.req.json();
+        if (!taskId) {
+            throw new BadRequestException(INVALID_INPUT);
+        }
         const validatedReq = await validateRequest("update-task", reqBody, TASK_VALIDATION_ERROR);
         const taskExists = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
         if (!taskExists) {
@@ -60,6 +63,20 @@ export class TasksController {
         //  const result = await updateRecordById<Task>(Tasks, taskId, validatedReq);
         const result = await updateRecordById(Tasks, taskId, { ...validatedReq, updated_by: userDetails.id });
         return sendSuccessResp(c, 200, TASK_UPDATED, result);
+    };
+    updateTaskStatus = async (c) => {
+        const taskId = +c.req.param("id");
+        const reqBody = await c.req.json();
+        if (!taskId) {
+            throw new BadRequestException(INVALID_INPUT);
+        }
+        const validatedReq = await validateRequest("update-task-status", reqBody, TASK_VALIDATION_ERROR);
+        const taskExists = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
+        if (!taskExists) {
+            throw new NotFoundException(TASK_NOT_FOUND);
+        }
+        const result = await updateRecordById(Tasks, taskId, validatedReq);
+        return sendSuccessResp(c, 200, TASK_STATUS_UPDATED, result);
     };
     // Get Task Status Counts (GET)
     getTaskStatusCounts = async (c) => {

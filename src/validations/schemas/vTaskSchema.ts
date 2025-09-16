@@ -4,6 +4,7 @@ import { array, minLength, nonEmpty, number, object, optional, pipe, pipeAsync, 
 
 import { TASK_DESCRIPTION_INVALID, TASK_TITLE_INVALID, TASK_TITLE_MIN_LENGTH, TASK_TITLE_MISSING, TASK_TITLE_TOO_SHORT } from "../../constants/appMessages.js";
 import ConflictException from "../../exceptions/conflictException.js";
+import { taskStatus } from "./projectCommonValidatiors.js";
 import { taskDueDate, taskStartdate } from "./taskCommonValidations.js";
 
 // Allowed statuses
@@ -67,7 +68,7 @@ export const VUpdateTaskSchema = pipeAsync(object({
 
   start_date: pipe(
     string("End date is required"),
-    nonEmpty("Start date is required"),
+    nonEmpty("End date  is required"),
   ),
 
   end_date: pipe(
@@ -85,5 +86,12 @@ export const VUpdateTaskSchema = pipeAsync(object({
 
   return data;
 }));
+
+export const VUpdateTaskStatusSchema = pipeAsync(
+  object({
+    task_status: taskStatus,
+  }),
+);
 export type ValidatedCreateTask = InferOutput<typeof VCreateTaskSchema>;
 export type ValidatedUpdateTask = InferOutput<typeof VUpdateTaskSchema>;
+export type ValidatedUpdateTaskStatus = InferOutput<typeof VUpdateTaskStatusSchema>;

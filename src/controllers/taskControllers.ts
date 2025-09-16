@@ -3,11 +3,12 @@ import type { Context } from "hono";
 import { and, count, gte, isNull, lte } from "drizzle-orm";
 
 import type { Task } from "../db/schema/tasks.js";
-import type { ValidatedUpdateTask } from "../validations/schemas/vTaskSchema.js";
+import type { ValidatedUpdateTask, ValidatedUpdateTaskStatus } from "../validations/schemas/vTaskSchema.js";
 
 import {
   INVALID_INPUT,
   TASK_NOT_FOUND,
+  TASK_STATUS_UPDATED,
   TASK_UPDATED,
   TASK_VALIDATION_ERROR,
   TASKS_FETCHED,
@@ -82,6 +83,9 @@ export class TasksController {
 
     const reqBody = await c.req.json();
 
+    if (!taskId) {
+      throw new BadRequestException(INVALID_INPUT);
+    }
     const validatedReq = await validateRequest<ValidatedUpdateTask>("update-task", reqBody, TASK_VALIDATION_ERROR);
 
     const taskExists = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
@@ -94,6 +98,27 @@ export class TasksController {
     const result = await updateRecordById<Task>(Tasks, taskId, { ...validatedReq, updated_by: userDetails.id });
 
     return sendSuccessResp(c, 200, TASK_UPDATED, result);
+  };
+
+  updateTaskStatus = async (c: Context) => {
+    const taskId = +c.req.param("id");
+    const reqBody = await c.req.json();
+
+    if (!taskId) {
+      throw new BadRequestException(INVALID_INPUT);
+    }
+
+    const validatedReq = await validateRequest<ValidatedUpdateTaskStatus>("update-task-status", reqBody, TASK_VALIDATION_ERROR);
+
+    const taskExists = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
+
+    if (!taskExists) {
+      throw new NotFoundException(TASK_NOT_FOUND);
+    }
+
+    const result = await updateRecordById<Task>(Tasks, taskId, validatedReq);
+
+    return sendSuccessResp(c, 200, TASK_STATUS_UPDATED, result);
   };
 
   // Get Task Status Counts (GET)
@@ -147,43 +172,5 @@ export class TasksController {
       throw error;
     }
   };
-
-  // tasksdropdown
-  // getAllTasksDropdown = async (c: Context) => {
-  //   const page = +c.req.query("page")! || 1;
-  //   const pageSize = +c.req.query("page_size")! || 10;
-  //   const search_string = c.req.query("search_string")?.trim() || null;
-
-  //   const whereQueryData: WhereQueryData<Task> = {
-  //     columns: [],
-  //     values: [],
-  //   };
-
-  //   if (search_string) {
-  //     whereQueryData.columns.push("task_title");
-  //     whereQueryData.values.push(`%${search_string}%`);
-  //   }
-
-  //   const orderByQueryData: OrderByQueryData<Task> = {
-  //     columns: ["created_at"],
-  //     values: ["desc"],
-  //   };
-
-  //   const result = await getPaginatedRecordsConditionally<Task>(
-  //     Tasks,
-  //     page,
-  //     pageSize,
-  //     orderByQueryData,
-  //     whereQueryData,
-  //     ["id", "task_title"]
-  //   );
-
-  //   return sendSuccessResp(
-  //     c,
-  //     200,
-  //     "Dropdown tasks fetched successfully",
-  //     result
-  //   );
-  // };
 }
 export default TasksController;
