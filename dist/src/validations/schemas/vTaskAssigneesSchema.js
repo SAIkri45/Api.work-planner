@@ -10,3 +10,6 @@ export const VCreateTaskAssigneeSchema = object({
     end_date: taskEndDate,
     description: taskDescription,
 });
+export const VAssignUsersToTaskSchema = object({
+    user_ids: array(pipe(number())),
+});

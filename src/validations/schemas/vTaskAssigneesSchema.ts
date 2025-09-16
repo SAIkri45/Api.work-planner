@@ -39,4 +39,10 @@ export const VCreateTaskAssigneeSchema = object({
 
 });
 
+export const VAssignUsersToTaskSchema = object({
+  user_ids: array(pipe(number())),
+});
+
+export type ValidatedAssignUsersToTask = InferOutput<typeof VAssignUsersToTaskSchema>;
+
 export type ValidatedCreateTaskAssignee = InferOutput<typeof VCreateTaskAssigneeSchema>;

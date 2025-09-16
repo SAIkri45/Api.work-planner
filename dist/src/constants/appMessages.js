@@ -339,6 +339,7 @@ export const USER_TASKS_STATUS_COUNT_FETCHED = "User tasks status count fetched 
 export const TASK_ASSIGNEE_ADDED = "Task assignee added successfully";
 export const TASK_ASSIGNEE_EXISTS = "Task assignee already exists";
 export const PROJECT_USERS_ASSIGNED = "Project users assigned successfully";
+export const USERS_ASSIGNED = "Users assigned successfully";
 export const TASK_ASSIGNEE_NOT_FOUND = "Task assignee not found";
 export const TASK_ASSIGNEE_VALIDATION_ERROR = "Task assignee details provided do not meet the required validation criteria";
 export const TASK_ASSIGNEE_USER_ID_INVALID = "Task assignee user ID is invalid";

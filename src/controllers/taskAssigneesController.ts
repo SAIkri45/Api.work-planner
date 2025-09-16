@@ -1,13 +1,12 @@
 import type { Context } from "hono";
 
-import type { TaskAssignees } from "../db/schema/taskAssignees";
+import type { TaskAssignees } from "../db/schema/taskAssignees.js";
 import type { Task } from "../db/schema/tasks.js";
-import type { ValidatedCreateTask } from "../validations/schemas/vTaskSchema";
+import type { ValidatedAssignUsersToTask } from "../validations/schemas/vTaskAssigneesSchema.js";
+import type { ValidatedCreateTask } from "../validations/schemas/vTaskSchema.js";
 
 import {
-  FAILED_TO_FETCH_USERS,
   INVALID_INPUT,
-  NO_NEW_ASSIGNEES,
   TASK_ALREADY_EXISTS,
   TASK_ASSIGNEES_FETCHED,
   TASK_CREATED,
@@ -18,10 +17,8 @@ import {
   TASK_STATUS_NOT_COMPLETED,
   TASK_USERS_DELETED,
   TASK_VALIDATION_ERROR,
-  TASKID_USERID_REQUIRED,
   TASKS_FETCHED,
-  USER_ADDED,
-  USER_NOT_ADDED,
+  USERS_ASSIGNED,
 } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
 import { task_assignees } from "../db/schema/taskAssignees.js";
@@ -31,7 +28,6 @@ import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import {
   getMultipleRecordsByAColumnValue,
-  getRecordsConditionally,
   getSingleRecordByMultipleColumnValues,
   saveRecordswithtrx,
   saveSingleRecord,
@@ -39,6 +35,7 @@ import {
   updateRecordByMultipleColumnValues,
   updateRecordByMultipleColumnValuesWithTrx,
 } from "../services/db/baseDbService.js";
+import { assignUsersToTask, usersByTaskIdDropdown } from "../services/db/taskService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 
@@ -91,7 +88,7 @@ export class TaskAssigneesController {
     const taskId = +c.req.param("id");
 
     if (!taskId) {
-      throw new BadRequestException(INVALID_INPUT)
+      throw new BadRequestException(INVALID_INPUT);
     }
 
     const task = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
@@ -110,7 +107,6 @@ export class TaskAssigneesController {
       updateRecordById<Task>(Tasks, taskId, { deleted_at: new Date() }, trx);
 
       updateRecordByMultipleColumnValuesWithTrx<TaskAssignees>(task_assignees, ["task_id"], [taskId], { deleted_at: new Date() }, trx);
-
     });
 
     return sendSuccessResp(c, 200, TASK_DELETED);
@@ -121,118 +117,103 @@ export class TaskAssigneesController {
     const taskId = +c.req.param("id");
     const { user_ids } = await c.req.json();
 
-    const taskExist = await getSingleRecordByMultipleColumnValues<Task>(
-      Tasks,
-      ["id", "deleted_at"],
-      [taskId, null],
-      ["id"],
-    );
+    const taskExist = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
 
     if (!taskExist) {
       throw new NotFoundException(TASK_NOT_FOUND);
     }
 
-    await updateRecordByMultipleColumnValues<TaskAssignees>(
-      task_assignees,
-      ["task_id", "user_id"],
-      [taskId, user_ids],
-      { deleted_at: new Date() },
-    );
+    await updateRecordByMultipleColumnValues<TaskAssignees>(task_assignees, ["task_id", "user_id"], [taskId, user_ids], { deleted_at: new Date() });
 
     return sendSuccessResp(c, 200, TASK_USERS_DELETED);
   };
 
-  // get assignees list by taskid
   getAssigneesByTaskId = async (c: Context) => {
-    try {
-      const taskId = +c.req.param("id");
+    const taskId = +c.req.param("id");
+    const searchString = c.req.query("search_string");
 
-      if (!taskId) {
-        throw new BadRequestException(TASK_ID_REQUIRED);
-      }
-
-      const assignees = await getRecordsConditionally<TaskAssignees>(
-        task_assignees,
-        {
-          columns: ["task_id", "deleted_at"],
-          values: [taskId, null],
-        },
-        ["task_id", "user_id"],
-        { columns: ["user_id"], values: ["asc"] },
-      );
-
-      return sendSuccessResp(c, 200, TASK_ASSIGNEES_FETCHED, assignees);
+    if (!taskId) {
+      throw new BadRequestException(TASK_ID_REQUIRED);
     }
-    catch (err) {
-      throw new BadRequestException(FAILED_TO_FETCH_USERS);
+
+    const taskExist = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
+
+    if (!taskExist) {
+      throw new NotFoundException(TASK_NOT_FOUND);
     }
+
+    const result = await usersByTaskIdDropdown(taskId, searchString);
+
+    return sendSuccessResp(c, 200, TASK_ASSIGNEES_FETCHED, result);
   };
 
   // assign users to already exist task
-  addUsersToTask = async (c: Context) => {
-    try {
-      const taskId = +c.req.param("id");
+  // addUsersToTask = async (c: Context) => {
+  //   try {
+  //     const taskId = +c.req.param("id");
 
-      const requestBody = await c.req.json();
-      const { user_ids } = requestBody;
+  //     const requestBody = await c.req.json();
+  //     const { user_ids } = requestBody;
 
-      if (!taskId || !user_ids?.length) {
-        throw new BadRequestException(TASKID_USERID_REQUIRED);
-      }
+  //     if (!taskId || !user_ids?.length) {
+  //       throw new BadRequestException(TASKID_USERID_REQUIRED);
+  //     }
 
-      const task = await getSingleRecordByMultipleColumnValues<Task>(
-        Tasks,
-        ["id", "deleted_at"],
-        [taskId, null],
-      );
+  //     const task = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null]);
 
-      if (!task) {
-        throw new NotFoundException(TASK_NOT_FOUND);
-      }
+  //     if (!task) {
+  //       throw new NotFoundException(TASK_NOT_FOUND);
+  //     }
 
-      const existingAssignees
-        = await getMultipleRecordsByAColumnValue<TaskAssignees>(
-          task_assignees,
-          "task_id",
-          taskId,
-        );
+  //     const existingAssignees = await getMultipleRecordsByAColumnValue<TaskAssignees>(task_assignees, "task_id", taskId);
 
-      const existingUserIds = new Set(
-        existingAssignees.map((a: TaskAssignees) => a.user_id),
-      );
+  //     const existingUserIds = new Set(
+  //       existingAssignees.map((a: TaskAssignees) => a.user_id),
+  //     );
 
-      const newUserIds = user_ids.filter(
-        (id: number) => !existingUserIds.has(id),
-      );
+  //     const newUserIds = user_ids.filter(
+  //       (id: number) => !existingUserIds.has(id),
+  //     );
 
-      if (!newUserIds.length) {
-        return sendSuccessResp(c, 200, NO_NEW_ASSIGNEES, {
-          task_id: taskId,
-          user_ids,
-        });
-      }
+  //     const assigneeRecords = newUserIds.map((user_id: number) => ({
+  //       task_id: taskId, user_id
+  //     }));
 
-      const assigneeRecords = newUserIds.map((user_id: number) => ({
-        task_id: taskId,
-        user_id,
-      }));
+  //     await db.transaction(async (trx) => {
+  //       await saveRecordswithtrx<TaskAssignees>(task_assignees, assigneeRecords, trx)
+  //     });
 
-      await db.transaction(async (trx) => {
-        await saveRecordswithtrx<TaskAssignees>(
-          task_assignees,
-          assigneeRecords,
-          trx,
-        );
-      });
+  //     return sendSuccessResp(c, 200, USER_ADDED, { task_id: taskId, added_user_ids: newUserIds });
+  //   }
+  //   catch (err) {
+  //     throw new BadRequestException(USER_NOT_ADDED);
+  //   }
+  // };
 
-      return sendSuccessResp(c, 200, USER_ADDED, {
-        task_id: taskId,
-        added_user_ids: newUserIds,
-      });
+  // Controller function
+  assignUsersToTask = async (c: Context) => {
+    const taskId = +c.req.param("id");
+    const requestBody = await c.req.json();
+
+    if (!taskId) {
+      throw new BadRequestException(INVALID_INPUT);
     }
-    catch (err) {
-      throw new BadRequestException(USER_NOT_ADDED);
+
+    const validatedReq = await validateRequest<ValidatedAssignUsersToTask>("add-users-to-task", requestBody, TASK_VALIDATION_ERROR);
+
+    const taskExist = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
+
+    if (!taskExist) {
+      throw new NotFoundException(TASK_NOT_FOUND);
     }
+
+    const { user_ids } = validatedReq;
+
+    const uniqueUserIds = [...new Set(user_ids)];
+
+    const result = await assignUsersToTask(taskId, uniqueUserIds);
+
+    return sendSuccessResp(c, 200, USERS_ASSIGNED, result);
   };
 
   // gettasks by project id
@@ -265,43 +246,28 @@ export class TaskAssigneesController {
   };
 
   // get assignees by task id
-  getTaskAssignees = async (c: Context) => {
-    const taskId = +c.req.param("id");
+  // getTaskAssignees = async (c: Context) => {
+  //   const taskId = +c.req.param("id");
 
-    if (!taskId) {
-      throw new BadRequestException(TASK_ID_REQUIRED);
-    }
+  //   if (!taskId) {
+  //     throw new BadRequestException(TASK_ID_REQUIRED);
+  //   }
 
-    //  Check task exists
-    const task = await getSingleRecordByMultipleColumnValues<Task>(
-      Tasks,
-      ["id", "deleted_at"],
-      [taskId, null],
-    );
+  //   //  Check task exists
+  //   const task = await getSingleRecordByMultipleColumnValues<Task>(Tasks,["id", "deleted_at"],[taskId, null]);
 
-    if (!task) {
-      throw new NotFoundException(TASK_NOT_FOUND);
-    }
+  //   if (!task) {
+  //     throw new NotFoundException(TASK_NOT_FOUND);
+  //   }
 
-    //  Fetch assignees for this task
-    const assignees = await getMultipleRecordsByAColumnValue<TaskAssignees>(
-      task_assignees,
-      "task_id",
-      taskId,
-    );
+  //   //  Fetch assignees for this task
+  //   const assignees = await getMultipleRecordsByAColumnValue<TaskAssignees>( task_assignees,"task_id",taskId);
 
-    if (!assignees.length) {
-      return sendSuccessResp(c, 200, "No users assigned to this task", {
-        task_id: taskId,
-        users: [],
-      });
-    }
-
-    return sendSuccessResp(c, 200, "Task assignees fetched successfully", {
-      task_id: taskId,
-      users: assignees.map((a: TaskAssignees) => a.user_id),
-    });
-  };
+  //   return sendSuccessResp(c, 200, "Task assignees fetched successfully", {
+  //     task_id: taskId,
+  //     users: assignees.map((a: TaskAssignees) => a.user_id),
+  //   });
+  // };
 }
 
 export const TaskAssigneesControllerInstance = new TaskAssigneesController();

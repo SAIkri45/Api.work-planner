@@ -5,6 +5,7 @@ import type { AppActivity, ValidatedRequest } from "../types/appTypes.js";
 import UnprocessableContentException from "../exceptions/unprocessableContentException.js";
 import { VSignInSchema, VSignUpOrSignInSchema, VSignUpOrSignInVerifySchema } from "./schemas/signInSignUpValidationSchema.js";
 import { VAddUsersToProjectSchema, VCreateProjectSchema, VRemoveUsersFromProjectSchema, VUpdateProjectSchema, VUpdateProjectStatusSchema } from "./schemas/vProjectSchema.js";
+import { VAssignUsersToTaskSchema } from "./schemas/vTaskAssigneesSchema.js";
 import { VCreateTaskSchema, VUpdateTaskSchema } from "./schemas/vTaskSchema.js";
 import { VCreateUserSchema, VUpdateUserSchema } from "./schemas/vUserSchema.js";
 
@@ -54,6 +55,9 @@ export async function validateRequest<R extends ValidatedRequest>(
       break;
     case "update-user":
       schema = VUpdateUserSchema;
+      break;
+    case "add-users-to-task":
+      schema = VAssignUsersToTaskSchema;
       break;
     default:
       break;
