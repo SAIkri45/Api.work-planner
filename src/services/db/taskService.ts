@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, exists, ilike, isNull, not, sql } from "drizzle-orm";
 
 import type { TaskAssignees } from "../../db/schema/taskAssignees.js";
 import type { Task } from "../../db/schema/tasks.js";
@@ -8,6 +8,7 @@ import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
 import { task_assignees } from "../../db/schema/taskAssignees.js";
 import { Tasks } from "../../db/schema/tasks.js";
+import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import BadRequestException from "../../exceptions/badRequestException.js";
 import ConflictException from "../../exceptions/conflictException.js";
@@ -124,11 +125,13 @@ export async function usersByTaskIdDropdown(taskId: number, search?: string) {
         where: and(
           eq(task_assignees.task_id, taskId),
           isNull(task_assignees.deleted_at),
+
         ),
         with: {
           user: {
             where: and(
               isNull(users.deleted_at),
+              eq(users.user_status, "ACTIVE"),
               searchString ? ilike(users.display_name, `%${searchString}%`) : undefined,
             ),
             orderBy: desc(users.id),
@@ -149,4 +152,63 @@ export async function usersByTaskIdDropdown(taskId: number, search?: string) {
     .filter((user: any) => user !== null) || [];
 
   return assignedUsers;
+}
+
+export async function getUnassignedUsersForTask(taskId: number, search?: string) {
+  const searchTerm = search?.trim();
+
+  // First get the project_id for the task
+  const task = await db.query.Tasks.findFirst({
+    where: and(eq(Tasks.id, taskId), isNull(Tasks.deleted_at)),
+    columns: {
+      project_id: true,
+    },
+  });
+
+  if (!task?.project_id) {
+    return [];
+  }
+
+  return await db
+    .select({
+      id: users.id,
+      display_name: users.display_name,
+    })
+    .from(users)
+    .where(
+      and(
+        isNull(users.deleted_at),
+        eq(users.user_status, "ACTIVE"),
+        // User must be in the project
+        exists(
+          db
+            .select()
+            .from(user_projects)
+            .where(
+              and(
+                eq(user_projects.user_id, users.id),
+                eq(user_projects.project_id, task.project_id),
+                isNull(user_projects.deleted_at),
+              ),
+            ),
+        ),
+        // But NOT assigned to this task
+        not(
+          exists(
+            db
+              .select()
+              .from(task_assignees)
+              .where(
+                and(
+                  eq(task_assignees.user_id, users.id),
+                  eq(task_assignees.task_id, taskId),
+                  isNull(task_assignees.deleted_at),
+                ),
+              ),
+          ),
+        ),
+        searchTerm ? ilike(users.display_name, `%${searchTerm}%`) : undefined,
+      ),
+    )
+    .orderBy(desc(users.display_name));
 }
