@@ -13,3 +13,6 @@ export const VCreateTaskAssigneeSchema = object({
 export const VAssignUsersToTaskSchema = object({
     user_ids: array(pipe(number())),
 });
+export const VRemoveUsersFromTaskSchema = object({
+    user_ids: array(pipe(number())),
+});

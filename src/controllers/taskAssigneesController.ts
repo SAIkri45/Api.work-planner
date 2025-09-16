@@ -2,7 +2,7 @@ import type { Context } from "hono";
 
 import type { TaskAssignees } from "../db/schema/taskAssignees.js";
 import type { Task } from "../db/schema/tasks.js";
-import type { ValidatedAssignUsersToTask } from "../validations/schemas/vTaskAssigneesSchema.js";
+import type { ValidatedAssignUsersToTask, ValidatedRemoveUsersFromTask } from "../validations/schemas/vTaskAssigneesSchema.js";
 import type { ValidatedCreateTask } from "../validations/schemas/vTaskSchema.js";
 
 import {
@@ -113,7 +113,9 @@ export class TaskAssigneesController {
   // Remove Assignees by Task ID
   removeAssigneesByTaskId = async (c: Context) => {
     const taskId = +c.req.param("id");
-    const { user_ids } = await c.req.json();
+    const reqBody = await c.req.json();
+
+    const validatedReq = await validateRequest<ValidatedRemoveUsersFromTask>("remove-users-from-task", reqBody, TASK_VALIDATION_ERROR)
 
     const taskExist = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
 
@@ -121,7 +123,7 @@ export class TaskAssigneesController {
       throw new NotFoundException(TASK_NOT_FOUND);
     }
 
-    await updateRecordByMultipleColumnValues<TaskAssignees>(task_assignees, ["task_id", "user_id"], [taskId, user_ids], { deleted_at: new Date() });
+    await updateRecordByMultipleColumnValues<TaskAssignees>(task_assignees, ["task_id", "user_id"], [taskId, validatedReq.user_ids], { deleted_at: new Date() });
 
     return sendSuccessResp(c, 200, TASK_USERS_DELETED);
   };

@@ -6,17 +6,17 @@ import type { UserProjects } from "../db/schema/userProjects.js";
 import type { User } from "../db/schema/users.js";
 import type { ValidatedSignIn, ValidatedSignUpOrSignIn, ValidatedSignUpOrSignInVerification } from "../validations/schemas/signInSignUpValidationSchema.js";
 import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject, ValidatedUpdateProjectStatus } from "../validations/schemas/vProjectSchema.js";
-import type { ValidatedAssignUsersToTask, ValidatedCreateTaskAssignee } from "../validations/schemas/vTaskAssigneesSchema.js";
+import type { ValidatedAssignUsersToTask, ValidatedCreateTaskAssignee, ValidatedRemoveUsersFromTask } from "../validations/schemas/vTaskAssigneesSchema.js";
 import type { ValidatedCreateTask, ValidatedUpdateTask } from "../validations/schemas/vTaskSchema.js";
 import type { ValidatedCreateUserOrAdmin, ValidatedUpdateUser } from "../validations/schemas/vUserSchema.js";
 import type { PaginationInfo } from "./dbTypes";
 
-export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask | ValidatedCreateTaskAssignee | ValidatedUpdateUser | ValidatedUpdateProjectStatus | ValidatedAddUsersToProject | ValidatedSignUpOrSignIn | ValidatedSignUpOrSignInVerification | ValidatedSignIn | ValidatedRemoveUsersFromProject | ValidatedUpdateTask | ValidatedAssignUsersToTask;
+export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask | ValidatedCreateTaskAssignee | ValidatedUpdateUser | ValidatedUpdateProjectStatus | ValidatedAddUsersToProject | ValidatedSignUpOrSignIn | ValidatedSignUpOrSignInVerification | ValidatedSignIn | ValidatedRemoveUsersFromProject | ValidatedUpdateTask | ValidatedAssignUsersToTask | ValidatedRemoveUsersFromTask;
 export type AppActivity = UserActivity | CreateProjectActivity | CreateTaskAssigneeActivity | AuthActivity;
 export type AuthActivity = "signup-or-signin" | "signup-or-signin-verify" | "signin" | "signin-verify";
 export type UserActivity = "create-user" | "update-user";
 export type CreateProjectActivity = "create-project" | "update-project" | "add-users-to-project" | "remove-users-from-project" | "update-project-status";
-export type CreateTaskAssigneeActivity = "create-task" | "create-task-assignee" | "update-task" | "add-users-to-task";
+export type CreateTaskAssigneeActivity = "create-task" | "create-task-assignee" | "update-task" | "add-users-to-task" | "remove-users-from-task";
 export interface EmailOtpData {
   action: string;
   otp: string;

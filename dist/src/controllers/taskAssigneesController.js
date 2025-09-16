@@ -68,12 +68,13 @@ export class TaskAssigneesController {
     // Remove Assignees by Task ID
     removeAssigneesByTaskId = async (c) => {
         const taskId = +c.req.param("id");
-        const { user_ids } = await c.req.json();
+        const reqBody = await c.req.json();
+        const validatedReq = await validateRequest("remove-users-from-task", reqBody, TASK_VALIDATION_ERROR);
         const taskExist = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
         if (!taskExist) {
             throw new NotFoundException(TASK_NOT_FOUND);
         }
-        await updateRecordByMultipleColumnValues(task_assignees, ["task_id", "user_id"], [taskId, user_ids], { deleted_at: new Date() });
+        await updateRecordByMultipleColumnValues(task_assignees, ["task_id", "user_id"], [taskId, validatedReq.user_ids], { deleted_at: new Date() });
         return sendSuccessResp(c, 200, TASK_USERS_DELETED);
     };
     getAssigneesByTaskId = async (c) => {
