@@ -242,6 +242,7 @@ class ProjectController {
         return sendSuccessResp(c, 200, PROJECTS_FETCHED_SUCCESS, result);
     };
     getAllProjectUsersList = async (c) => {
+        const user = c.get("user_payload");
         const query = c.req.query();
         const page = +query.page || 1;
         const pageSize = +(c.req.query("page_size") || 10);
@@ -249,7 +250,7 @@ class ProjectController {
         const search = c.req.query("search_string");
         const orderBy = c.req.query("order_by");
         const projectStatus = c.req.query("project_status");
-        const { result, total_records } = await getAllUsersInProjectWithPagination(offset, pageSize, search, orderBy, projectStatus);
+        const { result, total_records } = await getAllUsersInProjectWithPagination(offset, pageSize, search, orderBy, projectStatus, user);
         const paginationInfo = getPaginationData(page, pageSize, total_records);
         const finalResponse = {
             pagination_info: paginationInfo,

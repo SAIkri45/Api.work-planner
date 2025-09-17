@@ -351,8 +351,9 @@ export async function getAllUsersInProjectWithPagination(
   search?: string,
   orderBy?: string,
   projectStatus?: any,
+  user?: any,
 ): Promise<{ result: ProjectWithUsersResponse[]; total_records: number }> {
-  const filters = buildProjectFilters(search, projectStatus);
+  const filters = await buildProjectFilters(search, projectStatus, user);
   const orderByClause = buildOrderByClause(orderBy);
 
   const result: any = await db.query.projects.findMany({

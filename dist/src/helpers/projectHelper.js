@@ -1,14 +1,22 @@
-import { desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { allowedProjectStatus } from "../constants/appMessages.js";
+import { db } from "../db/configuration.js";
 import { projects } from "../db/schema/projects.js";
+import { user_projects } from "../db/schema/userProjects.js";
 // filters
-export function buildProjectFilters(search, projectStatus) {
+export async function buildProjectFilters(search, projectStatus, user) {
     const filters = [isNull(projects.deleted_at)];
     if (search?.trim()) {
         filters.push(sql `LOWER(${projects.title}) LIKE LOWER(${`%${search.trim()}%`})`);
     }
     if (projectStatus && allowedProjectStatus.includes(projectStatus.toUpperCase())) {
         filters.push(eq(projects.project_status, projectStatus.toUpperCase()));
+    }
+    if (user.user_type === "EMPLOYEE") {
+        const projectIds = await getUserAssignedProjectIds(user.id);
+        if (projectIds.length > 0) {
+            filters.push(inArray(projects.id, projectIds));
+        }
     }
     return filters;
 }
@@ -22,6 +30,13 @@ export function buildOrderByClause(orderBy) {
     return dir === "desc"
         ? sql `${sql.identifier(column)} DESC`
         : sql `${sql.identifier(column)} ASC`;
+}
+async function getUserAssignedProjectIds(userId) {
+    const userProjects = await db
+        .select({ project_id: user_projects.project_id })
+        .from(user_projects)
+        .where(and(eq(user_projects.user_id, userId), isNull(user_projects.deleted_at)));
+    return userProjects.map(up => up.project_id).filter(id => id !== null);
 }
 // projects with users
 export function mapProjectsWithUsers(projects) {

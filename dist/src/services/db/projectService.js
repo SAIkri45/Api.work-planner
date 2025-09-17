@@ -250,8 +250,8 @@ export async function userCreatedProjectById(projectId) {
     }
     return result;
 }
-export async function getAllUsersInProjectWithPagination(offset, pageSize, search, orderBy, projectStatus) {
-    const filters = buildProjectFilters(search, projectStatus);
+export async function getAllUsersInProjectWithPagination(offset, pageSize, search, orderBy, projectStatus, user) {
+    const filters = await buildProjectFilters(search, projectStatus, user);
     const orderByClause = buildOrderByClause(orderBy);
     const result = await db.query.projects.findMany({
         where: and(...filters),

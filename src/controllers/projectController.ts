@@ -373,6 +373,7 @@ class ProjectController {
   };
 
   getAllProjectUsersList = async (c: Context) => {
+    const user = c.get("user_payload");
     const query = c.req.query();
     const page = +query.page || 1;
     const pageSize = +(c.req.query("page_size") || 10);
@@ -387,6 +388,7 @@ class ProjectController {
       search,
       orderBy,
       projectStatus,
+      user,
     );
 
     const paginationInfo = getPaginationData(page, pageSize, total_records);

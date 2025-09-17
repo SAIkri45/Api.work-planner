@@ -1,4 +1,4 @@
-import { desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import type { Project } from "../db/schema/projects.js";
 import type { User } from "../db/schema/users.js";
@@ -6,10 +6,12 @@ import type { ProjectUser, ProjectWithUsersResponse } from "../types/appTypes.js
 import type { WhereQueryData } from "../types/dbTypes.js";
 
 import { allowedProjectStatus } from "../constants/appMessages.js";
+import { db } from "../db/configuration.js";
 import { projects } from "../db/schema/projects.js";
+import { user_projects } from "../db/schema/userProjects.js";
 
 // filters
-export function buildProjectFilters(search?: string, projectStatus?: any): any[] {
+export async function buildProjectFilters(search?: string, projectStatus?: any, user?: any): Promise<any[]> {
   const filters: any[] = [isNull(projects.deleted_at)];
 
   if (search?.trim()) {
@@ -18,6 +20,14 @@ export function buildProjectFilters(search?: string, projectStatus?: any): any[]
 
   if (projectStatus && allowedProjectStatus.includes(projectStatus.toUpperCase())) {
     filters.push(eq(projects.project_status, projectStatus.toUpperCase() as any));
+  }
+
+  if (user.user_type === "EMPLOYEE") {
+    const projectIds = await getUserAssignedProjectIds(user.id);
+
+    if (projectIds.length > 0) {
+      filters.push(inArray(projects.id, projectIds));
+    }
   }
 
   return filters;
@@ -35,6 +45,20 @@ export function buildOrderByClause(orderBy?: string): any {
   return dir === "desc"
     ? sql`${sql.identifier(column)} DESC`
     : sql`${sql.identifier(column)} ASC`;
+}
+
+async function getUserAssignedProjectIds(userId: number): Promise<number[]> {
+  const userProjects = await db
+    .select({ project_id: user_projects.project_id })
+    .from(user_projects)
+    .where(
+      and(
+        eq(user_projects.user_id, userId),
+        isNull(user_projects.deleted_at),
+      ),
+    );
+
+  return userProjects.map(up => up.project_id).filter(id => id !== null) as number[];
 }
 
 // projects with users
