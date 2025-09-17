@@ -118,6 +118,26 @@ export interface ProjectUsersResponse {
   records: ProjectWithUsersResponse[];
 }
 
+export interface ProjectBasic {
+  id: number; // Changed from string to number based on your DB schema
+  title: string;
+  description: string | null;
+  logo_url: string | null;
+  project_status: "NEW" | "IN_PROGRESS" | "COMPLETED" | "REVIEW" | "OVERDUE" | "DONE" | null;
+  start_date: Date | null;
+  due_date: Date | null;
+}
+
+export interface ProjectsResponse {
+  pagination_info: PaginationInfo;
+  records: ProjectBasic[];
+}
+
+export interface GetAllProjectsResult {
+  result: ProjectBasic[];
+  total_records: number;
+}
+
 export interface UserTaskInfo {
   id: number;
   display_name: string;

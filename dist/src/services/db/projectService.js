@@ -353,3 +353,32 @@ export async function updateProjectStatus() {
         throw error;
     }
 }
+;
+export async function getAllProjectsWithRoleBasedAccess(offset, pageSize, search, orderBy, projectStatus, user) {
+    const filters = await buildProjectFilters(search, projectStatus, user);
+    const orderByClause = buildOrderByClause(orderBy);
+    const result = await db.query.projects.findMany({
+        where: and(...filters),
+        orderBy: orderByClause,
+        offset,
+        limit: pageSize,
+        columns: {
+            id: true,
+            title: true,
+            description: true,
+            logo_url: true,
+            project_status: true,
+            start_date: true,
+            due_date: true,
+        },
+    });
+    const totalCountResult = await db
+        .select({ count: sql `count(*)` })
+        .from(projects)
+        .where(and(...filters));
+    const total_records = totalCountResult[0].count;
+    return {
+        result,
+        total_records,
+    };
+}

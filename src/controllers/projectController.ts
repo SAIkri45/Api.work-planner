@@ -3,7 +3,7 @@ import type { Context } from "hono";
 import type { Project } from "../db/schema/projects.js";
 import type { Task } from "../db/schema/tasks.js";
 import type { UserProjects } from "../db/schema/userProjects.js";
-import type { ProjectTasksResp, ProjectUsersResponse } from "../types/appTypes.js";
+import type { ProjectsResponse, ProjectTasksResp, ProjectUsersResponse } from "../types/appTypes.js";
 import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes.js";
 import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject, ValidatedUpdateProjectStatus } from "../validations/schemas/vProjectSchema.js";
 
@@ -19,7 +19,7 @@ import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { buildProjectsWhereQueryData } from "../helpers/projectHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
-import { assignUsersToProject, checkTaskExist, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
+import { assignUsersToProject, checkTaskExist, getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 
@@ -116,6 +116,35 @@ class ProjectController {
     );
 
     return sendSuccessResp(c, 200, PROJECTS_FETCHED, result);
+  };
+
+  getAllProjects = async (c: Context) => {
+    const user = c.get("user_payload");
+    const query = c.req.query();
+    const page = +query.page || 1;
+    const pageSize = +(c.req.query("page_size") || 10);
+    const offset = (page - 1) * pageSize;
+    const search = c.req.query("search_string");
+    const orderBy = c.req.query("order_by");
+    const projectStatus = c.req.query("project_status");
+
+    const { result, total_records } = await getAllProjectsWithRoleBasedAccess(
+      offset,
+      pageSize,
+      search,
+      orderBy,
+      projectStatus,
+      user,
+    );
+
+    const paginationInfo = getPaginationData(page, pageSize, total_records);
+
+    const finalResponse: ProjectsResponse = {
+      pagination_info: paginationInfo,
+      records: result,
+    };
+
+    return sendSuccessResp(c, 200, PROJECTS_FETCHED, finalResponse);
   };
 
   softDeleteProjectById = async (c: Context) => {

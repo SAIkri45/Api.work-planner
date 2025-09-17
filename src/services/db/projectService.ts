@@ -1,7 +1,7 @@
 import { and, desc, eq, exists, gte, ilike, inArray, isNull, lte, not, sql } from "drizzle-orm";
 
 import type { UserProjects } from "../../db/schema/userProjects.js";
-import type { ProjectUser, ProjectWithUsersResponse } from "../../types/appTypes.js";
+import type { GetAllProjectsResult, ProjectBasic, ProjectUser, ProjectWithUsersResponse } from "../../types/appTypes.js";
 
 import { allowedTaskStatus } from "../../constants/appMessages.js";
 import { db } from "../../db/configuration.js";
@@ -483,4 +483,45 @@ export async function updateProjectStatus() {
   catch (error) {
     throw error;
   }
+};
+
+export async function getAllProjectsWithRoleBasedAccess(
+  offset?: number,
+  pageSize?: number,
+  search?: string,
+  orderBy?: string,
+  projectStatus?: any,
+  user?: any,
+): Promise<GetAllProjectsResult> {
+  const filters = await buildProjectFilters(search, projectStatus, user);
+  const orderByClause = buildOrderByClause(orderBy);
+
+  const result: ProjectBasic[] = await db.query.projects.findMany({
+    where: and(...filters),
+    orderBy: orderByClause,
+    offset,
+    limit: pageSize,
+    columns: {
+      id: true,
+      title: true,
+      description: true,
+      logo_url: true,
+      project_status: true,
+      start_date: true,
+      due_date: true,
+    },
+
+  });
+
+  const totalCountResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(projects)
+    .where(and(...filters));
+
+  const total_records = totalCountResult[0].count;
+
+  return {
+    result,
+    total_records,
+  };
 }

@@ -10,7 +10,7 @@ import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { buildProjectsWhereQueryData } from "../helpers/projectHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
-import { assignUsersToProject, checkTaskExist, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
+import { assignUsersToProject, checkTaskExist, getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 class ProjectController {
@@ -75,6 +75,23 @@ class ProjectController {
         const columnsToSelect = ["id", "title", "description", "logo_url", "project_status", "start_date", "due_date"];
         const result = await getPaginatedRecordsConditionally(projects, page, pageSize, orderByQueryData, whereQueryData, columnsToSelect);
         return sendSuccessResp(c, 200, PROJECTS_FETCHED, result);
+    };
+    getAllProjects = async (c) => {
+        const user = c.get("user_payload");
+        const query = c.req.query();
+        const page = +query.page || 1;
+        const pageSize = +(c.req.query("page_size") || 10);
+        const offset = (page - 1) * pageSize;
+        const search = c.req.query("search_string");
+        const orderBy = c.req.query("order_by");
+        const projectStatus = c.req.query("project_status");
+        const { result, total_records } = await getAllProjectsWithRoleBasedAccess(offset, pageSize, search, orderBy, projectStatus, user);
+        const paginationInfo = getPaginationData(page, pageSize, total_records);
+        const finalResponse = {
+            pagination_info: paginationInfo,
+            records: result,
+        };
+        return sendSuccessResp(c, 200, PROJECTS_FETCHED, finalResponse);
     };
     softDeleteProjectById = async (c) => {
         const projectId = +c.req.param("id");
