@@ -1,6 +1,6 @@
 import { createMiddleware } from "hono/factory";
+import ConflictException from "../exceptions/conflictException.js";
 import { getUserDetailsFromToken } from "../utils/jwtUtils.js";
-import { sendErrorResp } from "../utils/respUtils.js";
 const isAuthorized = createMiddleware(async (c, next) => {
     const userDetails = await getUserDetailsFromToken(c);
     c.set("user_payload", userDetails);
@@ -35,7 +35,7 @@ const isManagerOrAdmin = createMiddleware(async (c, next) => {
             await next();
         }
         else {
-            return sendErrorResp(c, 403, "Access denied");
+            throw new ConflictException("Access denied");
         }
     }
     catch (error) {
