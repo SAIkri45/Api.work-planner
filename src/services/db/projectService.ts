@@ -400,6 +400,8 @@ export async function getAllUsersInProjectWithPagination(
     project_name: project.title,
     logo_url: project.logo_url,
     project_status: project.project_status,
+    project_start_date: project.start_date,
+    project_end_date: project.due_date,
     users: project.userProjects
       .filter((userProject: any) => userProject.users)
       .map((userProject: any): ProjectUser => ({
