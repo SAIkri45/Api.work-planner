@@ -1,18 +1,21 @@
 import { and, desc, eq, exists, gte, ilike, inArray, isNull, lte, not, sql } from "drizzle-orm";
 
+import type { Task } from "../../db/schema/tasks.js";
 import type { UserProjects } from "../../db/schema/userProjects.js";
 import type { GetAllProjectsResult, ProjectBasic, ProjectUser, ProjectWithUsersResponse } from "../../types/appTypes.js";
+import type { Transaction } from "../../types/dbTypes.js";
 
 import { allowedTaskStatus } from "../../constants/appMessages.js";
 import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
+import { task_assignees } from "../../db/schema/taskAssignees.js";
 import { Tasks } from "../../db/schema/tasks.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import ConflictException from "../../exceptions/conflictException.js";
 import NotFoundException from "../../exceptions/notFoundException.js";
 import { buildOrderByClause, buildProjectFilters } from "../../helpers/projectHelper.js";
-import { saveRecords } from "./baseDbService.js";
+import { getMultipleRecordsByMultipleColumnValues, saveRecords } from "./baseDbService.js";
 
 export async function getProjectUsersById(id: number, search?: string) {
   const searchString = search?.trim();
@@ -524,4 +527,36 @@ export async function getAllProjectsWithRoleBasedAccess(
     result,
     total_records,
   };
+}
+
+export async function softDeleteTaskAssigneesByProjectId(
+  projectId: number,
+  trx?: Transaction,
+): Promise<void> {
+  if (!projectId) {
+    return;
+  }
+
+  const client = trx ?? db;
+
+  const tasks = await getMultipleRecordsByMultipleColumnValues<Task>(Tasks, ["project_id", "deleted_at"], [projectId, null], ["id"]);
+
+  const taskIds = tasks.map(task => task.id);
+
+  if (taskIds.length === 0) {
+    return;
+  }
+
+  await client
+    .update(task_assignees)
+    .set({
+      deleted_at: new Date(),
+      updated_at: new Date(),
+    })
+    .where(
+      and(
+        inArray(task_assignees.task_id, taskIds),
+        isNull(task_assignees.deleted_at),
+      ),
+    );
 }

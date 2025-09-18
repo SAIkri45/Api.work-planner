@@ -2,13 +2,14 @@ import { and, desc, eq, exists, gte, ilike, inArray, isNull, lte, not, sql } fro
 import { allowedTaskStatus } from "../../constants/appMessages.js";
 import { db } from "../../db/configuration.js";
 import { projects } from "../../db/schema/projects.js";
+import { task_assignees } from "../../db/schema/taskAssignees.js";
 import { Tasks } from "../../db/schema/tasks.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import ConflictException from "../../exceptions/conflictException.js";
 import NotFoundException from "../../exceptions/notFoundException.js";
 import { buildOrderByClause, buildProjectFilters } from "../../helpers/projectHelper.js";
-import { saveRecords } from "./baseDbService.js";
+import { getMultipleRecordsByMultipleColumnValues, saveRecords } from "./baseDbService.js";
 export async function getProjectUsersById(id, search) {
     const searchString = search?.trim();
     const result = await db.query.projects.findFirst({
@@ -381,4 +382,22 @@ export async function getAllProjectsWithRoleBasedAccess(offset, pageSize, search
         result,
         total_records,
     };
+}
+export async function softDeleteTaskAssigneesByProjectId(projectId, trx) {
+    if (!projectId) {
+        return;
+    }
+    const client = trx ?? db;
+    const tasks = await getMultipleRecordsByMultipleColumnValues(Tasks, ["project_id", "deleted_at"], [projectId, null], ["id"]);
+    const taskIds = tasks.map(task => task.id);
+    if (taskIds.length === 0) {
+        return;
+    }
+    await client
+        .update(task_assignees)
+        .set({
+        deleted_at: new Date(),
+        updated_at: new Date(),
+    })
+        .where(and(inArray(task_assignees.task_id, taskIds), isNull(task_assignees.deleted_at)));
 }

@@ -10,7 +10,7 @@ import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { buildProjectsWhereQueryData } from "../helpers/projectHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
-import { assignUsersToProject, checkTaskExist, getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
+import { assignUsersToProject, checkTaskExist, getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, softDeleteTaskAssigneesByProjectId, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 class ProjectController {
@@ -110,12 +110,11 @@ class ProjectController {
         if (!projectStatus) {
             throw new ConflictException(PROJECT_STATUS);
         }
-        // const task = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["project_id", "deleted_at"], [projectId, null], ["id"]);
         await db.transaction(async (trx) => {
             await softDeleteRecordByIdWithTrx(projects, projectId, { deleted_at: new Date() }, trx);
             await updateRecordByMultipleColumnValuesWithTrx(user_projects, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
             await updateRecordByMultipleColumnValuesWithTrx(Tasks, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
-            // await updateRecordByMultipleColumnValuesWithTrx<TaskAssignees>(task_assignees, ["task_id"], [task.id], { deleted_at: new Date() }, trx);
+            await softDeleteTaskAssigneesByProjectId(projectId, trx);
         });
         return sendSuccessResp(c, 200, PROJECT_DELETED);
     };
