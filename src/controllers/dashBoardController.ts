@@ -74,11 +74,11 @@ class DashBoardController {
 
     const { todayStart, todayEnd } = await getTodayDateRange();
 
-    whereQueryData.columns.push("end_date");
-    whereQueryData.values.push({
-      gte: todayStart,
-      lte: todayEnd,
-    });
+    whereQueryData.columns.push("created_at", "created_at");
+    whereQueryData.values.push(
+      { lte: todayEnd },
+      { gte: todayStart },
+    );
 
     if (taskStatus) {
       whereQueryData.columns.push("task_status");
