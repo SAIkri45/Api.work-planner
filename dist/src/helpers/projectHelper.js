@@ -31,7 +31,7 @@ export function buildOrderByClause(orderBy) {
         ? sql `${sql.identifier(column)} DESC`
         : sql `${sql.identifier(column)} ASC`;
 }
-async function getUserAssignedProjectIds(userId) {
+export async function getUserAssignedProjectIds(userId) {
     const userProjects = await db
         .select({ project_id: user_projects.project_id })
         .from(user_projects)

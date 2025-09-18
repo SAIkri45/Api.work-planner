@@ -12,8 +12,8 @@ import NotFoundException from "../../exceptions/notFoundException.js";
 import { buildOrderByClauseTasks, buildTaskFilters } from "../../helpers/taskhelper.js";
 import { getSingleRecordByMultipleColumnValues, saveRecords } from "./baseDbService.js";
 import { getAllUsersInProject } from "./projectService.js";
-export async function gatAllTaskList(offset, pageSize, search, orderBy, taskStatus, startDate, endDate) {
-    const filters = buildTaskFilters(search, taskStatus, startDate, endDate);
+export async function gatAllTaskList(offset, pageSize, search, orderBy, taskStatus, startDate, endDate, user) {
+    const filters = await buildTaskFilters(search, taskStatus, startDate, endDate, user);
     const orderByClause = buildOrderByClauseTasks(orderBy);
     const result = await db.query.Tasks.findMany({
         where: and(...filters),
@@ -147,4 +147,11 @@ export async function getUnassignedUsersForTask(taskId, search) {
         .from(task_assignees)
         .where(and(eq(task_assignees.user_id, users.id), eq(task_assignees.task_id, taskId), isNull(task_assignees.deleted_at))))), searchTerm ? ilike(users.display_name, `%${searchTerm}%`) : undefined))
         .orderBy(desc(users.display_name));
+}
+export async function getUserAssignedTaskIds(userId) {
+    const userTasks = await db
+        .select({ task_id: task_assignees.task_id })
+        .from(task_assignees)
+        .where(and(eq(task_assignees.user_id, userId), isNull(task_assignees.deleted_at)));
+    return userTasks.map(up => up.task_id).filter(id => id !== null);
 }

@@ -1,9 +1,10 @@
-import { and, desc, eq, gte, isNull, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 
 import { allowedTaskStatus } from "../constants/appMessages.js";
 import { Tasks } from "../db/schema/tasks.js";
+import { getUserAssignedTaskIds } from "../services/db/taskService.js";
 
-export function buildTaskFilters(search?: string, taskStatus?: any, startDate?: string, endDate?: string): any[] {
+export async function buildTaskFilters(search?: string, taskStatus?: any, startDate?: string, endDate?: string, user?: any) {
   const filters: any[] = [isNull(Tasks.deleted_at)];
 
   if (search?.trim()) {
@@ -12,6 +13,14 @@ export function buildTaskFilters(search?: string, taskStatus?: any, startDate?: 
 
   if (taskStatus && allowedTaskStatus.includes(taskStatus.toUpperCase())) {
     filters.push(eq(Tasks.task_status, taskStatus.toUpperCase() as any));
+  }
+
+  if (user.user_type === "EMPLOYEE") {
+    const taskIds = await getUserAssignedTaskIds(user.id);
+
+    if (taskIds.length > 0) {
+      filters.push(inArray(Tasks.id, taskIds));
+    }
   }
 
   // Date range filter

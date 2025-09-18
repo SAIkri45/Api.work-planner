@@ -17,8 +17,8 @@ import { buildOrderByClauseTasks, buildTaskFilters } from "../../helpers/taskhel
 import { getSingleRecordByMultipleColumnValues, saveRecords } from "./baseDbService.js";
 import { getAllUsersInProject } from "./projectService.js";
 
-export async function gatAllTaskList(offset?: number, pageSize?: number, search?: string, orderBy?: string, taskStatus?: any, startDate?: string, endDate?: string) {
-  const filters = buildTaskFilters(search, taskStatus, startDate, endDate);
+export async function gatAllTaskList(offset?: number, pageSize?: number, search?: string, orderBy?: string, taskStatus?: any, startDate?: string, endDate?: string, user?: any) {
+  const filters = await buildTaskFilters(search, taskStatus, startDate, endDate, user);
   const orderByClause = buildOrderByClauseTasks(orderBy);
 
   const result: any = await db.query.Tasks.findMany({
@@ -210,4 +210,17 @@ export async function getUnassignedUsersForTask(taskId: number, search?: string)
       ),
     )
     .orderBy(desc(users.display_name));
+}
+
+export async function getUserAssignedTaskIds(userId: number): Promise<number[]> {
+  const userTasks = await db
+    .select({ task_id: task_assignees.task_id })
+    .from(task_assignees)
+    .where(
+      and(
+        eq(task_assignees.user_id, userId),
+        isNull(task_assignees.deleted_at),
+      ),
+    );
+  return userTasks.map(up => up.task_id).filter(id => id !== null) as number[];
 }

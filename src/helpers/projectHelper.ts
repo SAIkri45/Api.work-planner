@@ -47,7 +47,7 @@ export function buildOrderByClause(orderBy?: string): any {
     : sql`${sql.identifier(column)} ASC`;
 }
 
-async function getUserAssignedProjectIds(userId: number): Promise<number[]> {
+export async function getUserAssignedProjectIds(userId: number): Promise<number[]> {
   const userProjects = await db
     .select({ project_id: user_projects.project_id })
     .from(user_projects)

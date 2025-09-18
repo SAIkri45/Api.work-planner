@@ -30,6 +30,7 @@ export class TasksController {
   // Get Paginated Tasks (GET)
   getPaginatedTasks = async (c: Context) => {
     try {
+      const user = c.get("user_payload");
       const page = +c.req.query("page")! || 1;
       const pageSize = +c.req.query("page_size")! || 10;
       const offset = (page - 1) * pageSize;
@@ -39,7 +40,7 @@ export class TasksController {
       const startDate = c.req.query("from_date");
       const endDate = c.req.query("to_date");
 
-      const { result, total_records } = await gatAllTaskList(offset, pageSize, searchString, orderBy, taskStatus, startDate, endDate);
+      const { result, total_records } = await gatAllTaskList(offset, pageSize, searchString, orderBy, taskStatus, startDate, endDate, user);
 
       const paginationInfo = getPaginationData(page, pageSize, total_records);
 
@@ -47,7 +48,6 @@ export class TasksController {
         pagination_info: paginationInfo,
         records: result,
       };
-
       return sendSuccessResp(c, 200, TASKS_FETCHED, finalResponse);
     }
     catch (error) {
