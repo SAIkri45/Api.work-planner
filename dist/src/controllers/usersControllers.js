@@ -4,48 +4,12 @@ import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { getPaginatedRecordsConditionally, getRecordById, getRecordsConditionally, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById, } from "../services/db/baseDbService.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById, } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { VCreateUserSchema } from "../validations/schemas/vUserSchema.js";
 import { validateRequest } from "../validations/validateRequest.js";
 import NotFoundException from "./../exceptions/notFoundException.js";
 export class UsersController {
-    // 1. Get paginated users
-    // getPaginatedUsers = async (c: Context) => {
-    //   try {
-    //     const page = +(c.req.query("page") || 1);
-    //     const pageSize = +(c.req.query("page_size") || 10);
-    //     const searchString = c.req.query("search_string")?.trim() || null;
-    //     const orderBy = c.req.query("order_by");
-    //     const userType = c.req.query("user_type");
-    //     // Default filters
-    //     const filters: Partial<User> = {
-    //       user_status: "ACTIVE",
-    //     };
-    //     if (userType)
-    //       filters.user_type = userType as any;
-    //     // Build query data using your helper
-    //     const { orderByQueryData, whereQueryData } = buildUserQueryData(
-    //       searchString,
-    //       orderBy ?? null,
-    //       filters,
-    //       "display_name", // default search column
-    //     );
-    //     // Fetch paginated users
-    //     const result = await getPaginatedRecordsConditionally<User>(
-    //       users,
-    //       page,
-    //       pageSize,
-    //       orderByQueryData as any,
-    //       whereQueryData as any,
-    //     );
-    //     return sendSuccessResp(c, 200, USERS_FETCHED, result);
-    //   }
-    //   catch (err) {
-    //     console.error("Error fetching paginated users:", err);
-    //     return c.json({ message: "Failed to fetch users" }, 500);
-    //   }
-    // };
     getPaginatedUsers = async (c) => {
         const page = +c.req.query("page") || 1;
         const pageSize = +c.req.query("page_size") || 10;
@@ -108,8 +72,8 @@ export class UsersController {
         const pageSize = +c.req.query("page_size") || 10;
         const searchString = c.req.query("search_string")?.trim() || null;
         const whereQueryData = {
-            columns: ["user_type"],
-            values: ["EMPLOYEE"],
+            columns: ["user_status", "deleted_at"],
+            values: ["ACTIVE", null],
         };
         if (searchString) {
             whereQueryData.columns.push("display_name");
@@ -125,8 +89,8 @@ export class UsersController {
         if (!id) {
             throw new BadRequestException(INVALID_INPUT);
         }
-        const user = await getRecordById(users, id);
-        if (!user || user.deleted_at !== null || user.user_status !== "ACTIVE") {
+        const user = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at"], [id, null], ["id"]);
+        if (!user) {
             throw new NotFoundException(USER_NOT_FOUND);
         }
         const validatedUser = await validateRequest("update-user", req, "VUpdateUserSchema");

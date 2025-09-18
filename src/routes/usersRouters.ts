@@ -1,18 +1,18 @@
 import { Hono } from "hono";
 
 import { UsersController } from "../controllers/usersControllers.js";
-import { isEmployeAuthorized } from "../middlewares/slackMiddlewares.js";
+import { isAuthorized, isManagerOrAdmin } from "../middlewares/isAuthorized.js";
 
 const userController = new UsersController();
 const userRoutes = new Hono();
 
 // userRoutes.get("/", isEmployeAuthorized,  userController.getPaginatedUsers);
-userRoutes.get("/dropdown", userController.getUsersDropdown);
-userRoutes.get("/list", userController.getPaginatedUsers);
-userRoutes.get("/employees", userController.getEmployeesList);
-userRoutes.put("/:id/userDetails", userController.updateInternalUser);
+userRoutes.get("/dropdown", isAuthorized, userController.getUsersDropdown);
+userRoutes.get("/list", isAuthorized, userController.getPaginatedUsers);
+userRoutes.get("/employees", isAuthorized, userController.getEmployeesList);
+userRoutes.put("/:id/userDetails", isAuthorized, userController.updateInternalUser);
 userRoutes.get("/:id", userController.getUserById);
-userRoutes.patch("/:id", userController.editUser);
-userRoutes.post("/", isEmployeAuthorized, userController.addUser);
+userRoutes.patch("/:id", isAuthorized, userController.editUser);
+userRoutes.post("/", isManagerOrAdmin, userController.addUser);
 
 export default userRoutes;
