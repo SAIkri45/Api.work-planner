@@ -1,11 +1,10 @@
-import { and, count, gte, isNull, lte } from "drizzle-orm";
+import { eq, gte, isNull, lte } from "drizzle-orm";
 import { INVALID_INPUT, TASK_NOT_FOUND, TASK_STATUS_UPDATED, TASK_UPDATED, TASK_VALIDATION_ERROR, TASKS_FETCHED, } from "../constants/appMessages.js";
-import { db } from "../db/configuration.js";
 import { Tasks } from "../db/schema/tasks.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
-import { getSingleRecordByMultipleColumnValues, updateRecordById, } from "../services/db/baseDbService.js";
+import { getRecordsCount, getSingleRecordByMultipleColumnValues, updateRecordById, } from "../services/db/baseDbService.js";
 import { gatAllTaskList } from "../services/db/taskService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
@@ -78,48 +77,36 @@ export class TasksController {
         const result = await updateRecordById(Tasks, taskId, validatedReq);
         return sendSuccessResp(c, 200, TASK_STATUS_UPDATED, result);
     };
-    // Get Task Status Counts (GET)
     getTaskStatusCounts = async (c) => {
-        try {
-            const { startDate, endDate } = c.req.query();
-            const conditions = [isNull(Tasks.deleted_at)];
+        const { startDate, endDate, dateField } = c.req.query();
+        const conditions = [isNull(Tasks.deleted_at)];
+        if (startDate || endDate) {
+            const dateColumn = dateField === "start_date" ? Tasks.start_date : Tasks.end_date;
             if (startDate) {
-                conditions.push(gte(Tasks.start_date, startDate));
+                conditions.push(gte(dateColumn, `${startDate}T00:00:00`));
             }
             if (endDate) {
-                conditions.push(lte(Tasks.end_date, endDate));
+                conditions.push(lte(dateColumn, `${endDate}T23:59:59`));
             }
-            const statusCounts = await db
-                .select({
-                task_status: Tasks.task_status,
-                count: count(Tasks.id).as("count"),
-            })
-                .from(Tasks)
-                .where(and(...conditions))
-                .groupBy(Tasks.task_status);
-            const overallCount = await db
-                .select({ total: count(Tasks.id) })
-                .from(Tasks)
-                .where(and(...conditions));
-            const counts = {
-                NEW: 0,
-                IN_PROGRESS: 0,
-                COMPLETED: 0,
-                REVIEW: 0,
-                OVERDUE: 0,
-                DONE: 0,
-            };
-            statusCounts.forEach((row) => {
-                counts[row.task_status] = Number(row.count);
-            });
-            return sendSuccessResp(c, 200, "Task counts fetched successfully", {
-                ...counts,
-                overall: Number(overallCount[0]?.total ?? 0),
-            });
         }
-        catch (error) {
-            throw error;
-        }
+        const [completedTasksCount, inProgressTasksCount, reviewTasksCount, overDueTasksCount, newTasksCount, doneTasksCount, totalTasksCount,] = await Promise.all([
+            getRecordsCount(Tasks, [eq(Tasks.task_status, "COMPLETED"), ...conditions]),
+            getRecordsCount(Tasks, [eq(Tasks.task_status, "IN_PROGRESS"), ...conditions]),
+            getRecordsCount(Tasks, [eq(Tasks.task_status, "REVIEW"), ...conditions]),
+            getRecordsCount(Tasks, [eq(Tasks.task_status, "OVERDUE"), ...conditions]),
+            getRecordsCount(Tasks, [eq(Tasks.task_status, "NEW"), ...conditions]),
+            getRecordsCount(Tasks, [eq(Tasks.task_status, "DONE"), ...conditions]),
+            getRecordsCount(Tasks, conditions),
+        ]);
+        return sendSuccessResp(c, 200, "Task status fetched successfully", {
+            total_tasks: totalTasksCount,
+            total_new_tasks: newTasksCount,
+            total_in_progress_tasks: inProgressTasksCount,
+            total_completed_tasks: completedTasksCount,
+            total_review_tasks: reviewTasksCount,
+            total_overdue_tasks: overDueTasksCount,
+            total_done_tasks: doneTasksCount,
+        });
     };
 }
 export default TasksController;
