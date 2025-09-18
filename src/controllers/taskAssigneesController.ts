@@ -98,7 +98,7 @@ export class TaskAssigneesController {
     const checkTaskStatus = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at", "task_status"], [taskId, null, "COMPLETED"], ["id"]);
 
     if (!checkTaskStatus) {
-      throw new BadRequestException(TASK_STATUS_NOT_COMPLETED);
+      throw new ConflictException(TASK_STATUS_NOT_COMPLETED);
     }
 
     await db.transaction(async (trx) => {

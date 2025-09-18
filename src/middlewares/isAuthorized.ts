@@ -43,7 +43,7 @@ const isManagerOrAdmin = createMiddleware(async (c: Context, next) => {
       await next();
     }
     else {
-      throw new ConflictException("Access denied");
+      throw new ConflictException("Permission denied. You don’t have access");
     }
   }
   catch (error) {
