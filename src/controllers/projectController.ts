@@ -163,7 +163,7 @@ class ProjectController {
     }
 
     const incompleteTasks = await checkTaskExist(projectId);
-    console.log(incompleteTasks[0].id);
+
     if (incompleteTasks.length > 0) {
       throw new ConflictException(PROJECT_TASKS_IN_COMPLETED);
     }
@@ -174,6 +174,8 @@ class ProjectController {
       throw new ConflictException(PROJECT_STATUS);
     }
 
+    const task = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["project_id", "deleted_at"], [projectId, null], ["id"]);
+
     await db.transaction(async (trx) => {
       await softDeleteRecordByIdWithTrx<Project>(projects, projectId, { deleted_at: new Date() }, trx);
 
@@ -181,7 +183,7 @@ class ProjectController {
 
       await updateRecordByMultipleColumnValuesWithTrx<Task>(Tasks, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
 
-      await updateRecordByMultipleColumnValuesWithTrx<TaskAssignees>(task_assignees, ["task_id"], [incompleteTasks[0].id], { deleted_at: new Date() }, trx);
+      await updateRecordByMultipleColumnValuesWithTrx<TaskAssignees>(task_assignees, ["task_id"], [task?.id], { deleted_at: new Date() }, trx);
     });
 
     return sendSuccessResp(c, 200, PROJECT_DELETED);

@@ -104,7 +104,6 @@ class ProjectController {
             throw new NotFoundException(PROJECT_NOT_FOUND_ID);
         }
         const incompleteTasks = await checkTaskExist(projectId);
-        console.log(incompleteTasks[0].id);
         if (incompleteTasks.length > 0) {
             throw new ConflictException(PROJECT_TASKS_IN_COMPLETED);
         }
@@ -112,11 +111,12 @@ class ProjectController {
         if (!projectStatus) {
             throw new ConflictException(PROJECT_STATUS);
         }
+        const task = await getSingleRecordByMultipleColumnValues(Tasks, ["project_id", "deleted_at"], [projectId, null], ["id"]);
         await db.transaction(async (trx) => {
             await softDeleteRecordByIdWithTrx(projects, projectId, { deleted_at: new Date() }, trx);
             await updateRecordByMultipleColumnValuesWithTrx(user_projects, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
             await updateRecordByMultipleColumnValuesWithTrx(Tasks, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
-            await updateRecordByMultipleColumnValuesWithTrx(task_assignees, ["task_id"], [incompleteTasks[0].id], { deleted_at: new Date() }, trx);
+            await updateRecordByMultipleColumnValuesWithTrx(task_assignees, ["task_id"], [task?.id], { deleted_at: new Date() }, trx);
         });
         return sendSuccessResp(c, 200, PROJECT_DELETED);
     };
