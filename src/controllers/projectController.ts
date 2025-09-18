@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 
 import type { Project } from "../db/schema/projects.js";
+import type { TaskAssignees } from "../db/schema/taskAssignees.js";
 import type { Task } from "../db/schema/tasks.js";
 import type { UserProjects } from "../db/schema/userProjects.js";
 import type { ProjectsResponse, ProjectTasksResp, ProjectUsersResponse } from "../types/appTypes.js";
@@ -10,6 +11,7 @@ import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemov
 import { AVILABLE_USERS_FETCHED, INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_STATUS_UPDATED, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, PROJECTS_USERS_FETCHED_SUCCESS, TASKS_STATUS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
 import { projects } from "../db/schema/projects.js";
+import { task_assignees } from "../db/schema/taskAssignees.js";
 import { Tasks } from "../db/schema/tasks.js";
 import { user_projects } from "../db/schema/userProjects.js";
 import BadRequestException from "../exceptions/badRequestException.js";
@@ -161,7 +163,7 @@ class ProjectController {
     }
 
     const incompleteTasks = await checkTaskExist(projectId);
-
+    console.log(incompleteTasks[0].id);
     if (incompleteTasks.length > 0) {
       throw new ConflictException(PROJECT_TASKS_IN_COMPLETED);
     }
@@ -178,6 +180,8 @@ class ProjectController {
       await updateRecordByMultipleColumnValuesWithTrx<UserProjects>(user_projects, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
 
       await updateRecordByMultipleColumnValuesWithTrx<Task>(Tasks, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
+
+      await updateRecordByMultipleColumnValuesWithTrx<TaskAssignees>(task_assignees, ["task_id"], [incompleteTasks[0].id], { deleted_at: new Date() }, trx);
     });
 
     return sendSuccessResp(c, 200, PROJECT_DELETED);
