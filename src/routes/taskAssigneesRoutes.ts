@@ -1,16 +1,16 @@
 import { Hono } from "hono";
 
 import { TaskAssigneesController } from "../controllers/taskAssigneesController.js";
-import { isAuthorized, isManagerOrAdmin } from "../middlewares/isAuthorized.js";
+import { isAuthorized } from "../middlewares/isAuthorized.js";
 
 const taskAssigneesRoutes = new Hono();
 const taskAssigneesController = new TaskAssigneesController();
 
-taskAssigneesRoutes.delete("/:id/assignees", taskAssigneesController.removeAssigneesByTaskId);
-taskAssigneesRoutes.get("/:id/non-assignees", taskAssigneesController.getUnassignedUsersDropdown);
-taskAssigneesRoutes.delete("/:id", taskAssigneesController.deleteTask);
-taskAssigneesRoutes.get("/:id/users", taskAssigneesController.getAssigneesByTaskId);
-taskAssigneesRoutes.post("/:id/assignees", taskAssigneesController.assignUsersToTask);
-taskAssigneesRoutes.post("/", isManagerOrAdmin, isAuthorized, taskAssigneesController.createTask);
+taskAssigneesRoutes.delete("/:id/assignees", isAuthorized, taskAssigneesController.removeAssigneesByTaskId);
+taskAssigneesRoutes.get("/:id/non-assignees", isAuthorized, taskAssigneesController.getUnassignedUsersDropdown);
+taskAssigneesRoutes.delete("/:id", isAuthorized, taskAssigneesController.deleteTask);
+taskAssigneesRoutes.get("/:id/users", isAuthorized, taskAssigneesController.getAssigneesByTaskId);
+taskAssigneesRoutes.post("/:id/assignees", isAuthorized, taskAssigneesController.assignUsersToTask);
+taskAssigneesRoutes.post("/", isAuthorized, taskAssigneesController.createTask);
 
 export default taskAssigneesRoutes;
