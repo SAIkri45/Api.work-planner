@@ -404,3 +404,5 @@ export const PASSWORD_REQUIRED = "Password is required";
 export const PASSWORD_MIN_LENGTH = "Password must be at least 8 characters";
 export const USER_EXIST_WITH_EMAIL = "User already exists with this email";
 export const USER_CREATED_SUCCESSFULLY = "User created successfully";
+export const INVALID_CREDENTIALS = "Invalid credentials";
+export const USER_LOGIN = "Login successfully";

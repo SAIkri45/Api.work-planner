@@ -1,17 +1,36 @@
+import bcrypt from "bcrypt";
+import { INVALID_CREDENTIALS, LOGIN_VALIDATION_ERROR, USER_LOGIN, USER_NOT_FOUND } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
+import NotFoundException from "../exceptions/notFoundException.js";
 import UnAuthorizedException from "../exceptions/unauthorizedException.js";
-import { getSingleRecordByAColumnValue, } from "../services/db/baseDbService.js";
+import { getSingleRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
+import { genJWTTokensForUser } from "../utils/jwtUtils.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 export class AuthController {
-    // User sign in with email + password
     signInWithEmail = async (c) => {
-        const body = await c.req.json();
-        const validated = await validateRequest("signin", body, "VUserSigninSchema");
-        const user = await getSingleRecordByAColumnValue(users, "email", validated.email);
-        if (!user || user.password !== validated.password) {
-            throw new UnAuthorizedException("Invalid email or password");
+        const requestbody = await c.req.json();
+        const validated = await validateRequest("signin", requestbody, LOGIN_VALIDATION_ERROR);
+        console.log("validated: ", validated);
+        const columnsToSelect = ["id", "slack_id", "profile_pic", "designation", "display_name", "phone", "email", "user_type", "user_status", "created_at", "updated_at", "password"];
+        const userDetails = await getSingleRecordByMultipleColumnValues(users, ["email", "deleted_at", "user_status"], [validated.email, null, "ACTIVE"], columnsToSelect);
+        console.log("userDetails: ", userDetails);
+        if (!userDetails) {
+            throw new NotFoundException(USER_NOT_FOUND);
         }
-        return sendSuccessResp(c, 200, "Signed in successfully", user);
+        const comparePassword = await bcrypt.compare(validated.password, userDetails.password);
+        console.log("comparePassword: ", comparePassword);
+        if (!comparePassword) {
+            throw new UnAuthorizedException(INVALID_CREDENTIALS);
+        }
+        const { access_token, refresh_token } = await genJWTTokensForUser(userDetails.id);
+        const { password, ...userDataWithOutPassword } = userDetails;
+        const result = {
+            user_details: userDataWithOutPassword,
+            access_token,
+            refresh_token,
+        };
+        console.log("result: ", result);
+        return sendSuccessResp(c, 200, USER_LOGIN, result);
     };
 }

@@ -165,3 +165,9 @@ export interface TaskWithProject {
     title: string;
   };
 }
+
+export interface userSignInRespData {
+  user_details: any;
+  access_token: string;
+  refresh_token: string;
+}
