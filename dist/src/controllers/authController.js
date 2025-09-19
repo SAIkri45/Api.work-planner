@@ -11,15 +11,12 @@ export class AuthController {
     signInWithEmail = async (c) => {
         const requestbody = await c.req.json();
         const validated = await validateRequest("signin", requestbody, LOGIN_VALIDATION_ERROR);
-        console.log("validated: ", validated);
         const columnsToSelect = ["id", "slack_id", "profile_pic", "designation", "display_name", "phone", "email", "user_type", "user_status", "created_at", "updated_at", "password"];
         const userDetails = await getSingleRecordByMultipleColumnValues(users, ["email", "deleted_at", "user_status"], [validated.email, null, "ACTIVE"], columnsToSelect);
-        console.log("userDetails: ", userDetails);
         if (!userDetails) {
             throw new NotFoundException(USER_NOT_FOUND);
         }
         const comparePassword = await bcrypt.compare(validated.password, userDetails.password);
-        console.log("comparePassword: ", comparePassword);
         if (!comparePassword) {
             throw new UnAuthorizedException(INVALID_CREDENTIALS);
         }
@@ -30,7 +27,6 @@ export class AuthController {
             access_token,
             refresh_token,
         };
-        console.log("result: ", result);
         return sendSuccessResp(c, 200, USER_LOGIN, result);
     };
 }
