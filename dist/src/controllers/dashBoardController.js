@@ -46,7 +46,7 @@ class DashBoardController {
         const orderBy = c.req.query("order_by");
         const taskStatus = c.req.query("task_status");
         const searchString = c.req.query("search_string");
-        const orderByQueryData = parseOrderByQuery("id", "asc", orderBy);
+        const orderByQueryData = parseOrderByQuery("id", "desc", orderBy);
         const whereQueryData = {
             columns: ["deleted_at"],
             values: [null],
