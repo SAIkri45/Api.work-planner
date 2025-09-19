@@ -1,9 +1,10 @@
 import { eq, gte, isNull, lte } from "drizzle-orm";
 import { DASHBOARD_FETCHED, TODAY_TASKS_FETCHED, TODAY_TASKS_STATUS_COUNT_FETCHED } from "../constants/appMessages.js";
 import { Tasks } from "../db/schema/tasks.js";
-import { getTodayDateRange } from "../helpers/dashBoardhelper.js";
+import { getTodayDateRange, getTodayDateRangeIst } from "../helpers/dashBoardhelper.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
-import { getRecordsConditionally, getRecordsCount } from "../services/db/baseDbService.js";
+import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
+import { getPaginatedRecordsConditionally, getRecordsCount } from "../services/db/baseDbService.js";
 import { getUserTaskStatisticsWithPagination } from "../services/db/dashBoardService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 class DashBoardController {
@@ -26,8 +27,8 @@ class DashBoardController {
         });
     };
     overAllStatistics = async (c) => {
-        const page = +(c.req.query("page") || 1);
-        const pageSize = +(c.req.query("page_size") || 10);
+        const page = +c.req.query("page") || 1;
+        const pageSize = +c.req.query("page_size") || 10;
         const offset = (page - 1) * pageSize;
         const search = c.req.query("search_string");
         const orderBy = c.req.query("order_by");
@@ -40,23 +41,29 @@ class DashBoardController {
         return sendSuccessResp(c, 200, DASHBOARD_FETCHED, finalResponse);
     };
     todayTasks = async (c) => {
-        const taskStatus = c.req.query("task_status")?.toLocaleUpperCase();
-        const orderByQueryData = {
-            columns: ["created_at"],
-            values: ["desc"],
-        };
+        const page = +c.req.query("page") || 1;
+        const pageSize = +c.req.query("page_size") || 10;
+        const orderBy = c.req.query("order_by");
+        const taskStatus = c.req.query("task_status");
+        const searchString = c.req.query("search_string");
+        const orderByQueryData = parseOrderByQuery("id", "asc", orderBy);
         const whereQueryData = {
             columns: ["deleted_at"],
             values: [null],
         };
-        const { todayStart, todayEnd } = await getTodayDateRange();
+        const { todayStart, todayEnd } = await getTodayDateRangeIst();
         whereQueryData.columns.push("created_at", "created_at");
         whereQueryData.values.push({ lte: todayEnd }, { gte: todayStart });
         if (taskStatus) {
             whereQueryData.columns.push("task_status");
             whereQueryData.values.push(taskStatus);
         }
-        const result = await getRecordsConditionally(Tasks, whereQueryData, ["id", "task_title", "task_status", "start_date", "end_date", "created_at"], orderByQueryData);
+        if (searchString) {
+            whereQueryData.columns.push("task_title");
+            whereQueryData.values.push(`%${searchString}%`);
+        }
+        const columnsToSelect = ["id", "task_title", "task_status", "start_date", "end_date", "created_at"];
+        const result = await getPaginatedRecordsConditionally(Tasks, page, pageSize, orderByQueryData, whereQueryData, columnsToSelect);
         return sendSuccessResp(c, 200, TODAY_TASKS_FETCHED, result);
     };
     todaysTasksStatusCount = async (c) => {

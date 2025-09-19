@@ -405,9 +405,8 @@ class ProjectController {
 
   getAllProjectUsersList = async (c: Context) => {
     const user = c.get("user_payload");
-    const query = c.req.query();
-    const page = +query.page || 1;
-    const pageSize = +(c.req.query("page_size") || 10);
+    const page = +c.req.query("page")! || 1;
+    const pageSize = +c.req.query("page_size")! || 10;
     const offset = (page - 1) * pageSize;
     const search = c.req.query("search_string");
     const orderBy = c.req.query("order_by");

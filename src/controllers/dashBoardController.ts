@@ -4,13 +4,14 @@ import { eq, gte, isNull, lte } from "drizzle-orm";
 
 import type { Task } from "../db/schema/tasks.js";
 import type { UserTaskStatisticsResponse } from "../types/appTypes.js";
-import type { OrderByQueryData, WhereQueryData } from "../types/dbTypes.js";
+import type { WhereQueryData } from "../types/dbTypes.js";
 
 import { DASHBOARD_FETCHED, TODAY_TASKS_FETCHED, TODAY_TASKS_STATUS_COUNT_FETCHED } from "../constants/appMessages.js";
 import { Tasks } from "../db/schema/tasks.js";
-import { getTodayDateRange } from "../helpers/dashBoardhelper.js";
+import { getTodayDateRange, getTodayDateRangeIst } from "../helpers/dashBoardhelper.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
-import { getRecordsConditionally, getRecordsCount } from "../services/db/baseDbService.js";
+import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
+import { getPaginatedRecordsConditionally, getRecordsCount } from "../services/db/baseDbService.js";
 import { getUserTaskStatisticsWithPagination } from "../services/db/dashBoardService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 
@@ -37,8 +38,8 @@ class DashBoardController {
   };
 
   overAllStatistics = async (c: Context) => {
-    const page = +(c.req.query("page") || 1);
-    const pageSize = +(c.req.query("page_size") || 10);
+    const page = +c.req.query("page")! || 1;
+    const pageSize = +c.req.query("page_size")! || 10;
     const offset = (page - 1) * pageSize;
     const search = c.req.query("search_string");
     const orderBy = c.req.query("order_by");
@@ -60,19 +61,20 @@ class DashBoardController {
   };
 
   todayTasks = async (c: Context) => {
-    const taskStatus = c.req.query("task_status")?.toLocaleUpperCase();
+    const page = +c.req.query("page")! || 1;
+    const pageSize = +c.req.query("page_size")! || 10;
+    const orderBy = c.req.query("order_by");
+    const taskStatus = c.req.query("task_status");
+    const searchString = c.req.query("search_string");
 
-    const orderByQueryData: OrderByQueryData<Task> = {
-      columns: ["created_at"],
-      values: ["desc"],
-    };
+    const orderByQueryData = parseOrderByQuery<Task>("id", "asc", orderBy);
 
     const whereQueryData: WhereQueryData<Task> = {
       columns: ["deleted_at"],
       values: [null],
     };
 
-    const { todayStart, todayEnd } = await getTodayDateRange();
+    const { todayStart, todayEnd } = await getTodayDateRangeIst();
 
     whereQueryData.columns.push("created_at", "created_at");
     whereQueryData.values.push(
@@ -85,11 +87,20 @@ class DashBoardController {
       whereQueryData.values.push(taskStatus);
     }
 
-    const result = await getRecordsConditionally<Task>(
+    if (searchString) {
+      whereQueryData.columns.push("task_title");
+      whereQueryData.values.push(`%${searchString}%`);
+    }
+
+    const columnsToSelect = ["id", "task_title", "task_status", "start_date", "end_date", "created_at"] as const;
+
+    const result = await getPaginatedRecordsConditionally<Task>(
       Tasks,
-      whereQueryData,
-      ["id", "task_title", "task_status", "start_date", "end_date", "created_at"],
+      page,
+      pageSize,
       orderByQueryData,
+      whereQueryData,
+      columnsToSelect,
     );
 
     return sendSuccessResp(c, 200, TODAY_TASKS_FETCHED, result);
