@@ -396,3 +396,11 @@ export const FILE_UPLOAD_LIMIT = "File size must be less than 5 MB";
 export const FILE_UPLOAD_SUCCESS = "File uploaded successfully";
 export const PROJECT_USERS_REMOVED = "Users removed successfully";
 export const TASK_STATUS_UPDATED = "Task status updated successfully";
+
+// add user defined messages here
+export const EMAIL_REQUIRED = "Email is required";
+export const EMAIL_MIN_LENGTH = "Email must be at least 8 characters";
+export const PASSWORD_REQUIRED = "Password is required";
+export const PASSWORD_MIN_LENGTH = "Password must be at least 8 characters";
+export const USER_EXIST_WITH_EMAIL = "User already exists with this email";
+export const USER_CREATED_SUCCESSFULLY = "User created successfully";

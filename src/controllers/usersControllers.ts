@@ -1,12 +1,13 @@
 import type { Context } from "hono";
 
+import bcrypt from "bcrypt";
 import { parseAsync } from "valibot";
 
 import type { User } from "../db/schema/users.js";
 import type { WhereQueryData } from "../types/dbTypes.js";
-import type { ValidatedCreateUserOrAdmin, ValidatedUpdateUser } from "../validations/schemas/vUserSchema.js";
+import type { ValidatedAddUser, ValidatedCreateUserOrAdmin, ValidatedUpdateUser } from "../validations/schemas/vUserSchema.js";
 
-import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USERS_FETCHED } from "../constants/appMessages.js";
+import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
@@ -179,6 +180,24 @@ export class UsersController {
     });
 
     return sendSuccessResp(c, 201, "User created successfully", newUser);
+  };
+
+  createUserByAdmin = async (c: Context) => {
+    const reqBody = await c.req.json();
+
+    const validateReq = await validateRequest<ValidatedAddUser>("create-user-by-admin", reqBody, "VAddUserSchema");
+
+    const checkUserExist = await getSingleRecordByMultipleColumnValues<User>(users, ["email"], [validateReq.email], ["email"]);
+
+    if (checkUserExist) {
+      throw new ConflictException(USER_EXIST_WITH_EMAIL);
+    }
+
+    const hashedPassword = await bcrypt.hash(validateReq.password, 10);
+
+    const { password, ...result } = await saveSingleRecord<User>(users, { ...validateReq, password: hashedPassword });
+
+    return sendSuccessResp(c, 201, USER_CREATED_SUCCESSFULLY, result);
   };
 }
 

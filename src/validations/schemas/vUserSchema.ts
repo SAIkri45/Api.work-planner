@@ -5,6 +5,7 @@ import { email as emailValidator, minLength, nonEmpty, object, optional, picklis
 import { allowedUserStatuses, allowedUserTypes, DESIGNATION_INVALID, DESIGNATION_TOO_SHORT, EMAIL_EXISTS, EMAIL_INVALID, EMAIL_MISSING, NAME_INVALID, NAME_MISSING, NAME_TOO_SHORT, PHONE_INVALID, PHONE_MISSING, PROFILE_PIC_INVALID, SLACK_ID_INVALID, USER_STATUS_INVALID, USER_TYPE_INVALID } from "../../constants/appMessages.js";
 import { userEmailExists } from "../customValidations.js";
 import { prepareValibotIssue } from "../prepareValibotIssue.js";
+import { userEmail, userPassword } from "./userCommonValidations.js";
 
 // Phone regex
 const phoneRegex = /^(\+91|\+91-|0)?[6-9]\d{9}$/;
@@ -113,6 +114,15 @@ export const VUpdateUserSchema = pipeAsync(
   }),
 );
 
+// add user by the admin
+export const VAddUserSchema = pipeAsync(
+  object({
+    email: userEmail,
+    password: userPassword,
+  }),
+);
+
 // Types
 export type ValidatedCreateUserOrAdmin = InferOutput<typeof VCreateUserSchema>;
 export type ValidatedUpdateUser = InferOutput<typeof VUpdateUserSchema>;
+export type ValidatedAddUser = InferOutput<typeof VAddUserSchema>;
