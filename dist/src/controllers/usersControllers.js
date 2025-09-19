@@ -1,10 +1,10 @@
 import { parseAsync } from "valibot";
-import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USERS_FETCHED, } from "../constants/appMessages.js";
+import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById, } from "../services/db/baseDbService.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { VCreateUserSchema } from "../validations/schemas/vUserSchema.js";
 import { validateRequest } from "../validations/validateRequest.js";
@@ -16,29 +16,11 @@ export class UsersController {
         const searchString = c.req.query("search_string") || null;
         const orderBy = c.req.query("order_by");
         const userType = c.req.query("user_type");
-        let orderByQueryData = {
-            columns: ["created_at"],
-            values: ["desc"],
-        };
+        const orderByQueryData = parseOrderByQuery("created_at", "desc", orderBy);
         const whereQueryData = {
             columns: ["user_status", "deleted_at"],
             values: ["ACTIVE", null],
         };
-        // Parse order by query
-        if (orderBy) {
-            const orderByColumns = [];
-            const orderByValues = [];
-            const queryStrings = orderBy.split(",");
-            for (const queryString of queryStrings) {
-                const [column, value] = queryString.split(":");
-                orderByColumns.push(column);
-                orderByValues.push(value);
-            }
-            orderByQueryData = {
-                columns: orderByColumns,
-                values: orderByValues,
-            };
-        }
         if (userType) {
             whereQueryData.columns.push("user_type");
             whereQueryData.values.push(userType);
@@ -47,13 +29,14 @@ export class UsersController {
             whereQueryData.columns.push("display_name");
             whereQueryData.values.push(`%${searchString}%`);
         }
-        const result = await getPaginatedRecordsConditionally(users, page, pageSize, orderByQueryData, whereQueryData);
+        const columnsToSelect = ["id", "slack_id", "profile_pic", "designation", "display_name", "phone", "email", "user_type", "user_status", "created_at", "updated_at"];
+        const result = await getPaginatedRecordsConditionally(users, page, pageSize, orderByQueryData, whereQueryData, columnsToSelect);
         return sendSuccessResp(c, 200, USERS_FETCHED, result);
     };
     // 2. Dropdown list (id + full_name only)
     getUsersDropdown = async (c) => {
         const searchString = c.req.query("search_string");
-        const orderByQueryData = parseOrderByQuery("id", "asc");
+        const orderByQueryData = parseOrderByQuery("created_at", "desc");
         const whereQueryData = {
             columns: ["user_status", "deleted_at"],
             values: ["ACTIVE", null],

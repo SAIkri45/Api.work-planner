@@ -3,35 +3,15 @@ import type { Context } from "hono";
 import { parseAsync } from "valibot";
 
 import type { User } from "../db/schema/users.js";
-import type {
-  DBTableColumns,
-  OrderByQueryData,
-  SortDirection,
-  WhereQueryData,
-} from "../types/dbTypes.js";
+import type { WhereQueryData } from "../types/dbTypes.js";
 import type { ValidatedCreateUserOrAdmin, ValidatedUpdateUser } from "../validations/schemas/vUserSchema.js";
 
-import {
-  EMPLOYEES_FETCHED,
-  FAILED_TO_UPDATE_USER,
-  INVALID_INPUT,
-  USER_FETCHED,
-  USER_NOT_FOUND,
-  USER_UPDATED,
-  USERS_FETCHED,
-} from "../constants/appMessages.js";
+import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import {
-  getPaginatedRecordsConditionally,
-  getRecordsConditionally,
-  getSingleRecordByAColumnValue,
-  getSingleRecordByMultipleColumnValues,
-  saveSingleRecord,
-  updateRecordById,
-} from "../services/db/baseDbService.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { VCreateUserSchema } from "../validations/schemas/vUserSchema.js";
 import { validateRequest } from "../validations/validateRequest.js";
@@ -45,33 +25,12 @@ export class UsersController {
     const orderBy = c.req.query("order_by");
     const userType = c.req.query("user_type");
 
-    let orderByQueryData: OrderByQueryData<User> = {
-      columns: ["created_at"],
-      values: ["desc"],
-    };
+    const orderByQueryData = parseOrderByQuery<User>("created_at", "desc", orderBy);
 
     const whereQueryData: WhereQueryData<User> = {
       columns: ["user_status", "deleted_at"],
       values: ["ACTIVE", null],
     };
-
-    // Parse order by query
-    if (orderBy) {
-      const orderByColumns: DBTableColumns<User>[] = [];
-      const orderByValues: SortDirection[] = [];
-      const queryStrings = orderBy.split(",");
-
-      for (const queryString of queryStrings) {
-        const [column, value] = queryString.split(":");
-        orderByColumns.push(column as DBTableColumns<User>);
-        orderByValues.push(value as SortDirection);
-      }
-
-      orderByQueryData = {
-        columns: orderByColumns,
-        values: orderByValues,
-      };
-    }
 
     if (userType) {
       whereQueryData.columns.push("user_type");
@@ -83,13 +42,8 @@ export class UsersController {
       whereQueryData.values.push(`%${searchString}%`);
     }
 
-    const result = await getPaginatedRecordsConditionally<User>(
-      users,
-      page,
-      pageSize,
-      orderByQueryData,
-      whereQueryData,
-    );
+    const columnsToSelect = ["id", "slack_id", "profile_pic", "designation", "display_name", "phone", "email", "user_type", "user_status", "created_at", "updated_at"] as const;
+    const result = await getPaginatedRecordsConditionally<User>(users, page, pageSize, orderByQueryData, whereQueryData, columnsToSelect);
 
     return sendSuccessResp(c, 200, USERS_FETCHED, result);
   };
@@ -98,7 +52,7 @@ export class UsersController {
   getUsersDropdown = async (c: Context) => {
     const searchString = c.req.query("search_string");
 
-    const orderByQueryData = parseOrderByQuery<User>("id", "asc");
+    const orderByQueryData = parseOrderByQuery<User>("created_at", "desc");
 
     const whereQueryData: WhereQueryData<User> = {
       columns: ["user_status", "deleted_at"],
@@ -133,13 +87,7 @@ export class UsersController {
       whereQueryData.values.push(`%${searchString}%`);
     }
 
-    const result = await getPaginatedRecordsConditionally<User>(
-      users,
-      page,
-      pageSize,
-      { columns: ["created_at"], values: ["desc"] },
-      whereQueryData,
-    );
+    const result = await getPaginatedRecordsConditionally<User>(users, page, pageSize, { columns: ["created_at"], values: ["desc"] }, whereQueryData);
 
     return sendSuccessResp(c, 200, EMPLOYEES_FETCHED, result);
   };
@@ -159,11 +107,7 @@ export class UsersController {
       throw new NotFoundException(USER_NOT_FOUND);
     }
 
-    const validatedUser: ValidatedUpdateUser = await validateRequest(
-      "update-user",
-      req,
-      "VUpdateUserSchema",
-    );
+    const validatedUser: ValidatedUpdateUser = await validateRequest("update-user", req, "VUpdateUserSchema");
 
     const updatedUser = await updateRecordById<User>(users, id, {
       user_name: validatedUser.user_name,
@@ -178,11 +122,7 @@ export class UsersController {
   getUserById = async (c: Context) => {
     const userId = Number(c.req.param("id"));
 
-    const user = await getSingleRecordByMultipleColumnValues<User>(
-      users,
-      ["id", "deleted_at"],
-      [userId, null],
-    );
+    const user = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at"], [userId, null]);
 
     if (!user) {
       throw new NotFoundException(USER_NOT_FOUND);
@@ -201,11 +141,7 @@ export class UsersController {
 
       const requestBody = await c.req.json();
 
-      const existingUser = await getSingleRecordByMultipleColumnValues<User>(
-        users,
-        ["id", "deleted_at"],
-        [userId, null],
-      );
+      const existingUser = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at"], [userId, null]);
 
       if (!existingUser) {
         throw new NotFoundException(USER_NOT_FOUND);
@@ -215,11 +151,7 @@ export class UsersController {
 
       await updateRecordById<User>(users, userId, validatedReq);
 
-      const updatedUser = await getSingleRecordByMultipleColumnValues<User>(
-        users,
-        ["id", "deleted_at"],
-        [userId, null],
-      );
+      const updatedUser = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at"], [userId, null]);
 
       return sendSuccessResp(c, 200, USER_UPDATED, updatedUser);
     }
@@ -232,11 +164,7 @@ export class UsersController {
   addUser = async (c: Context) => {
     const body = await c.req.json();
 
-    const validated = await validateRequest<ValidatedCreateUserOrAdmin>(
-      "create-user",
-      body,
-      "VUserCreateSchema",
-    );
+    const validated = await validateRequest<ValidatedCreateUserOrAdmin>("create-user", body, "VUserCreateSchema");
 
     const existingUser = await getSingleRecordByAColumnValue<User>(users, "email", validated.email);
     if (existingUser) {
