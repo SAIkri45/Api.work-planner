@@ -1,10 +1,10 @@
 import bcrypt from "bcrypt";
-import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USERS_FETCHED } from "../constants/appMessages.js";
+import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById } from "../services/db/baseDbService.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 import NotFoundException from "./../exceptions/notFoundException.js";
@@ -64,25 +64,6 @@ export class UsersController {
         const result = await getPaginatedRecordsConditionally(users, page, pageSize, { columns: ["created_at"], values: ["desc"] }, whereQueryData);
         return sendSuccessResp(c, 200, EMPLOYEES_FETCHED, result);
     };
-    // Add user
-    updateInternalUser = async (c) => {
-        const id = +c.req.param("id");
-        const req = await c.req.json();
-        if (!id) {
-            throw new BadRequestException(INVALID_INPUT);
-        }
-        const user = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at"], [id, null], ["id"]);
-        if (!user) {
-            throw new NotFoundException(USER_NOT_FOUND);
-        }
-        const validatedUser = await validateRequest("update-user", req, "VUpdateUserSchema");
-        const updatedUser = await updateRecordById(users, id, {
-            user_name: validatedUser.user_name,
-            email: validatedUser.email,
-            phone: validatedUser.phone,
-        });
-        return sendSuccessResp(c, 200, USER_UPDATED, updatedUser);
-    };
     // get single user by id
     getUserById = async (c) => {
         const userId = Number(c.req.param("id"));
@@ -109,24 +90,24 @@ export class UsersController {
             throw new BadRequestException(FAILED_TO_UPDATE_USER);
         }
     };
-    // create user
-    addUser = async (c) => {
-        const body = await c.req.json();
-        const validated = await validateRequest("create-user", body, "VUserCreateSchema");
-        const existingUser = await getSingleRecordByAColumnValue(users, "email", validated.email);
-        if (existingUser) {
-            throw new ConflictException("User already exists with this email");
+    updateUser = async (c) => {
+        const userId = +c.req.param("id");
+        const requestbody = await c.req.json();
+        if (!userId) {
+            throw new BadRequestException(INVALID_INPUT);
         }
-        const defaultPassword = "123456";
-        const newUser = await saveSingleRecord(users, {
-            ...validated,
-            password: defaultPassword,
-        });
-        return sendSuccessResp(c, 201, "User created successfully", newUser);
+        const validatedReq = await validateRequest("update-emp", requestbody, USER_VALIDATION_ERROR);
+        const userData = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at"], [userId, null], ["id"]);
+        if (!userData) {
+            throw new NotFoundException(USER_NOT_FOUND);
+        }
+        const hashedPassword = await bcrypt.hash(validatedReq.password, 10);
+        const { password, ...result } = await updateRecordById(users, userId, { ...validatedReq, password: hashedPassword });
+        return sendSuccessResp(c, 200, USER_UPDATED, result);
     };
     createUserByAdmin = async (c) => {
         const reqBody = await c.req.json();
-        const validateReq = await validateRequest("create-user-by-admin", reqBody, "VAddUserSchema");
+        const validateReq = await validateRequest("create-user-by-admin", reqBody, USER_VALIDATION_ERROR);
         const checkUserExist = await getSingleRecordByMultipleColumnValues(users, ["email"], [validateReq.email], ["email"]);
         if (checkUserExist) {
             throw new ConflictException(USER_EXIST_WITH_EMAIL);

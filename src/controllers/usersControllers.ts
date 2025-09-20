@@ -4,14 +4,14 @@ import bcrypt from "bcrypt";
 
 import type { User } from "../db/schema/users.js";
 import type { WhereQueryData } from "../types/dbTypes.js";
-import type { ValidatedAddUser, ValidatedCreateUserOrAdmin, ValidatedUpdateUser } from "../validations/schemas/vUserSchema.js";
+import type { ValidatedAddUser, ValidatedUpdateUserByLoginEmp } from "../validations/schemas/vUserSchema.js";
 
-import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USERS_FETCHED } from "../constants/appMessages.js";
+import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById } from "../services/db/baseDbService.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 import NotFoundException from "./../exceptions/notFoundException.js";
@@ -91,32 +91,6 @@ export class UsersController {
     return sendSuccessResp(c, 200, EMPLOYEES_FETCHED, result);
   };
 
-  // Add user
-  updateInternalUser = async (c: Context) => {
-    const id = +c.req.param("id");
-    const req = await c.req.json();
-
-    if (!id) {
-      throw new BadRequestException(INVALID_INPUT);
-    }
-
-    const user = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at"], [id, null], ["id"]);
-
-    if (!user) {
-      throw new NotFoundException(USER_NOT_FOUND);
-    }
-
-    const validatedUser: ValidatedUpdateUser = await validateRequest("update-user", req, "VUpdateUserSchema");
-
-    const updatedUser = await updateRecordById<User>(users, id, {
-      user_name: validatedUser.user_name,
-      email: validatedUser.email,
-      phone: validatedUser.phone,
-    });
-
-    return sendSuccessResp(c, 200, USER_UPDATED, updatedUser);
-  };
-
   // get single user by id
   getUserById = async (c: Context) => {
     const userId = Number(c.req.param("id"));
@@ -150,31 +124,34 @@ export class UsersController {
     }
   };
 
-  // create user
-  addUser = async (c: Context) => {
-    const body = await c.req.json();
+  updateUser = async (c: Context) => {
+    const userId = +c.req.param("id");
 
-    const validated = await validateRequest<ValidatedCreateUserOrAdmin>("create-user", body, "VUserCreateSchema");
+    const requestbody = await c.req.json();
 
-    const existingUser = await getSingleRecordByAColumnValue<User>(users, "email", validated.email);
-    if (existingUser) {
-      throw new ConflictException("User already exists with this email");
+    if (!userId) {
+      throw new BadRequestException(INVALID_INPUT);
     }
 
-    const defaultPassword = "123456";
+    const validatedReq = await validateRequest<ValidatedUpdateUserByLoginEmp>("update-emp", requestbody, USER_VALIDATION_ERROR);
 
-    const newUser = await saveSingleRecord<User>(users, {
-      ...validated,
-      password: defaultPassword,
-    });
+    const userData = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at"], [userId, null], ["id"]);
 
-    return sendSuccessResp(c, 201, "User created successfully", newUser);
+    if (!userData) {
+      throw new NotFoundException(USER_NOT_FOUND);
+    }
+
+    const hashedPassword = await bcrypt.hash(validatedReq.password, 10);
+
+    const { password, ...result } = await updateRecordById<User>(users, userId, { ...validatedReq, password: hashedPassword });
+
+    return sendSuccessResp(c, 200, USER_UPDATED, result);
   };
 
   createUserByAdmin = async (c: Context) => {
     const reqBody = await c.req.json();
 
-    const validateReq = await validateRequest<ValidatedAddUser>("create-user-by-admin", reqBody, "VAddUserSchema");
+    const validateReq = await validateRequest<ValidatedAddUser>("create-user-by-admin", reqBody, USER_VALIDATION_ERROR);
 
     const checkUserExist = await getSingleRecordByMultipleColumnValues<User>(users, ["email"], [validateReq.email], ["email"]);
 

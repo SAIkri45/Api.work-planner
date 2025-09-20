@@ -5,7 +5,7 @@ import { VUserSigninSchema } from "./schemas/signinValidations.js";
 import { VAddUsersToProjectSchema, VCreateProjectSchema, VRemoveUsersFromProjectSchema, VUpdateProjectSchema, VUpdateProjectStatusSchema } from "./schemas/vProjectSchema.js";
 import { VAssignUsersToTaskSchema, VRemoveUsersFromTaskSchema } from "./schemas/vTaskAssigneesSchema.js";
 import { VCreateTaskSchema, VUpdateTaskSchema, VUpdateTaskStatusSchema } from "./schemas/vTaskSchema.js";
-import { VAddUserSchema, VCreateUserSchema, VUpdateUserSchema } from "./schemas/vUserSchema.js";
+import { VAddUserSchema, VCreateUserSchema, VUpdateUserSchema, VUpdateUserSchemaByLoginUser } from "./schemas/vUserSchema.js";
 export async function validateRequest(actionType, reqData, errorMessage) {
     let schema;
     switch (actionType) {
@@ -59,6 +59,9 @@ export async function validateRequest(actionType, reqData, errorMessage) {
             break;
         case "create-user-by-admin":
             schema = VAddUserSchema;
+            break;
+        case "update-emp":
+            schema = VUpdateUserSchemaByLoginUser;
             break;
         default:
             break;
