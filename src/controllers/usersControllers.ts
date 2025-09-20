@@ -1,7 +1,6 @@
 import type { Context } from "hono";
 
 import bcrypt from "bcrypt";
-import { parseAsync } from "valibot";
 
 import type { User } from "../db/schema/users.js";
 import type { WhereQueryData } from "../types/dbTypes.js";
@@ -14,7 +13,6 @@ import ConflictException from "../exceptions/conflictException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
-import { VCreateUserSchema } from "../validations/schemas/vUserSchema.js";
 import { validateRequest } from "../validations/validateRequest.js";
 import NotFoundException from "./../exceptions/notFoundException.js";
 
@@ -135,26 +133,17 @@ export class UsersController {
   // edit user by id
   editUser = async (c: Context) => {
     try {
-      const userId = Number(c.req.param("id"));
-      if (isNaN(userId) || userId <= 0) {
-        throw new BadRequestException("Invalid user ID");
+      const userId = +c.req.param("id");
+      const requestbody = await c.req.json();
+
+      if (!userId) {
+        throw new BadRequestException(INVALID_INPUT);
       }
 
-      const requestBody = await c.req.json();
-
-      const existingUser = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at"], [userId, null]);
-
-      if (!existingUser) {
+      const user = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at"], [userId, null], ["id"]);
+      if (!user) {
         throw new NotFoundException(USER_NOT_FOUND);
       }
-
-      const validatedReq = await parseAsync(VCreateUserSchema, requestBody);
-
-      await updateRecordById<User>(users, userId, validatedReq);
-
-      const updatedUser = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at"], [userId, null]);
-
-      return sendSuccessResp(c, 200, USER_UPDATED, updatedUser);
     }
     catch (err) {
       throw new BadRequestException(FAILED_TO_UPDATE_USER);

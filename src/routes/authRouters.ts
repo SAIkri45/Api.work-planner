@@ -5,6 +5,6 @@ import { AuthController } from "../controllers/authController.js";
 const authController = new AuthController();
 const authRoutes = new Hono();
 
-authRoutes.post("/signin", authController.signInWithEmail);
+authRoutes.post("/login", authController.signInWithEmail);
 
 export default authRoutes;

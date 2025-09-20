@@ -1,5 +1,4 @@
 import bcrypt from "bcrypt";
-import { parseAsync } from "valibot";
 import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
@@ -7,7 +6,6 @@ import ConflictException from "../exceptions/conflictException.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
-import { VCreateUserSchema } from "../validations/schemas/vUserSchema.js";
 import { validateRequest } from "../validations/validateRequest.js";
 import NotFoundException from "./../exceptions/notFoundException.js";
 export class UsersController {
@@ -97,19 +95,15 @@ export class UsersController {
     // edit user by id
     editUser = async (c) => {
         try {
-            const userId = Number(c.req.param("id"));
-            if (isNaN(userId) || userId <= 0) {
-                throw new BadRequestException("Invalid user ID");
+            const userId = +c.req.param("id");
+            const requestbody = await c.req.json();
+            if (!userId) {
+                throw new BadRequestException(INVALID_INPUT);
             }
-            const requestBody = await c.req.json();
-            const existingUser = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at"], [userId, null]);
-            if (!existingUser) {
+            const user = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at"], [userId, null], ["id"]);
+            if (!user) {
                 throw new NotFoundException(USER_NOT_FOUND);
             }
-            const validatedReq = await parseAsync(VCreateUserSchema, requestBody);
-            await updateRecordById(users, userId, validatedReq);
-            const updatedUser = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at"], [userId, null]);
-            return sendSuccessResp(c, 200, USER_UPDATED, updatedUser);
         }
         catch (err) {
             throw new BadRequestException(FAILED_TO_UPDATE_USER);
