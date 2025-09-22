@@ -142,7 +142,7 @@ export class UsersController {
         if (!userId) {
             throw new BadRequestException(INVALID_INPUT);
         }
-        const user = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at", "user_status"], [userId, null, "ACTIVE"], ["id"]);
+        const user = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at", "user_status"], [userId, null, "INACTIVE"], ["id", "user_status"]);
         if (!user) {
             throw new NotFoundException(USER_NOT_FOUND);
         }
