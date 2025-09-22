@@ -117,8 +117,11 @@ export const VUpdateUserSchema = pipeAsync(
 // add user by the admin
 export const VAddUserSchema = pipeAsync(
   object({
+    display_name: userName,
     email: userEmail,
     password: userPassword,
+    phone: userPhone,
+    designation: userDesignation,
   }),
 );
 
