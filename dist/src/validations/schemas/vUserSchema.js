@@ -1,8 +1,8 @@
 import { email as emailValidator, minLength, nonEmpty, object, optional, picklist, pipe, pipeAsync, rawTransformAsync, regex, string, transform } from "valibot";
-import { allowedUserStatuses, allowedUserTypes, DESIGNATION_INVALID, DESIGNATION_TOO_SHORT, EMAIL_EXISTS, EMAIL_INVALID, EMAIL_MISSING, NAME_INVALID, NAME_MISSING, NAME_TOO_SHORT, PHONE_INVALID, PHONE_MISSING, PROFILE_PIC_INVALID, SLACK_ID_INVALID, USER_STATUS_INVALID, USER_TYPE_INVALID } from "../../constants/appMessages.js";
-import { userEmailExists } from "../customValidations.js";
+import { allowedUserStatuses, allowedUserTypes, DESIGNATION_INVALID, DESIGNATION_TOO_SHORT, EMAIL_EXISTS, EMAIL_INVALID, EMAIL_MISSING, NAME_INVALID, NAME_MISSING, NAME_TOO_SHORT, PHONE_EXISTS, PHONE_INVALID, PHONE_MISSING, PROFILE_PIC_INVALID, SLACK_ID_INVALID, USER_STATUS_INVALID, USER_TYPE_INVALID } from "../../constants/appMessages.js";
+import { checkEmailAndPhoneExistExceptUserId, userEmailExists } from "../customValidations.js";
 import { prepareValibotIssue } from "../prepareValibotIssue.js";
-import { userDesignation, userEmail, userName, userPassword, userPhone } from "./userCommonValidations.js";
+import { userDesignation, userEmail, userId, userName, userPassword, userPhone } from "./userCommonValidations.js";
 // Phone regex
 const phoneRegex = /^(\+91|\+91-|0)?[6-9]\d{9}$/;
 // Create Legal Advisor or Advocate Schema
@@ -44,9 +44,20 @@ export const VAddUserSchema = pipeAsync(object({
 }));
 // Update user
 export const VUpdateUserSchemaByLoginUser = pipeAsync(object({
+    id: userId,
     email: userEmail,
     password: userPassword,
     display_name: userName,
     designation: userDesignation,
     phone: userPhone,
+}), rawTransformAsync(async ({ dataset, addIssue }) => {
+    const { email, phone, id } = dataset.value;
+    const { emailExists, phoneExists } = await checkEmailAndPhoneExistExceptUserId(email, phone, id);
+    if (emailExists) {
+        prepareValibotIssue(dataset, addIssue, "email", email, EMAIL_EXISTS);
+    }
+    if (phoneExists) {
+        prepareValibotIssue(dataset, addIssue, "phone", phone, PHONE_EXISTS);
+    }
+    return dataset.value;
 }));

@@ -1,3 +1,5 @@
+import { desc, isNull, sql } from "drizzle-orm";
+import { projects } from "../db/schema/projects.js";
 /**
  * Build query data for pagination, search, filter, ordering (Users)
  */
@@ -39,4 +41,21 @@ export function buildUserQueryData(searchString, orderBy, user_status) {
         };
     }
     return { orderByQueryData, whereQueryData };
+}
+export async function buildFiltersRemovedUserProjects(search) {
+    const filters = [isNull(projects.deleted_at)];
+    if (search?.trim()) {
+        filters.push(sql `LOWER(${projects.title}) LIKE LOWER(${`%${search.trim()}%`})`);
+    }
+    return filters;
+}
+export function buildOrderByClauseRemovedUserProjects(orderBy) {
+    if (!orderBy) {
+        return desc(projects.created_at);
+    }
+    const [column, direction] = orderBy.split(":");
+    const dir = direction?.toLowerCase() === "desc" ? "desc" : "asc";
+    return dir === "desc"
+        ? sql `${sql.identifier(column)} DESC`
+        : sql `${sql.identifier(column)} ASC`;
 }

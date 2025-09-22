@@ -1,5 +1,9 @@
-import type { User } from "../db/schema/users";
-import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes";
+import { desc, isNull, sql } from "drizzle-orm";
+
+import type { User } from "../db/schema/users.js";
+import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes.js";
+
+import { projects } from "../db/schema/projects.js";
 
 /**
  * Build query data for pagination, search, filter, ordering (Users)
@@ -56,4 +60,27 @@ export function buildUserQueryData(
   }
 
   return { orderByQueryData, whereQueryData };
+}
+
+export async function buildFiltersRemovedUserProjects(search?: string) {
+  const filters: any[] = [isNull(projects.deleted_at)];
+
+  if (search?.trim()) {
+    filters.push(sql`LOWER(${projects.title}) LIKE LOWER(${`%${search.trim()}%`})`);
+  }
+
+  return filters;
+}
+
+export function buildOrderByClauseRemovedUserProjects(orderBy?: string): any {
+  if (!orderBy) {
+    return desc(projects.created_at);
+  }
+
+  const [column, direction] = orderBy.split(":");
+  const dir = direction?.toLowerCase() === "desc" ? "desc" : "asc";
+
+  return dir === "desc"
+    ? sql`${sql.identifier(column)} DESC`
+    : sql`${sql.identifier(column)} ASC`;
 }

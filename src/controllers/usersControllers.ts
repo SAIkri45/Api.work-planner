@@ -6,12 +6,14 @@ import type { User } from "../db/schema/users.js";
 import type { WhereQueryData } from "../types/dbTypes.js";
 import type { ValidatedAddUser, ValidatedUpdateUserByLoginEmp } from "../validations/schemas/vUserSchema.js";
 
-import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
+import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_DELETED, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
+import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveSingleRecord, updateRecordById } from "../services/db/baseDbService.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveSingleRecord, softDeleteRecordById, updateRecordById } from "../services/db/baseDbService.js";
+import { getAllRemovedProject } from "../services/db/userService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 import NotFoundException from "./../exceptions/notFoundException.js";
@@ -133,7 +135,7 @@ export class UsersController {
       throw new BadRequestException(INVALID_INPUT);
     }
 
-    const validatedReq = await validateRequest<ValidatedUpdateUserByLoginEmp>("update-emp", requestbody, USER_VALIDATION_ERROR);
+    const validatedReq = await validateRequest<ValidatedUpdateUserByLoginEmp>("update-emp", { ...requestbody, id: userId }, USER_VALIDATION_ERROR);
 
     const userData = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at"], [userId, null], ["id"]);
 
@@ -164,6 +166,50 @@ export class UsersController {
     const { password, ...result } = await saveSingleRecord<User>(users, { ...validateReq, password: hashedPassword });
 
     return sendSuccessResp(c, 201, USER_CREATED_SUCCESSFULLY, result);
+  };
+
+  getAllUserRemovedProjects = async (c: Context) => {
+    const user = c.get("user_payload");
+    const page = +c.req.query("page")! || 1;
+    const pageSize = +c.req.query("page_size")! || 10;
+    const offset = (page - 1) * pageSize;
+    const search = c.req.query("search_string");
+    const orderBy = c.req.query("order_by");
+
+    const { result, total_records } = await getAllRemovedProject(
+      user.id,
+      offset,
+      pageSize,
+      search,
+      orderBy,
+    );
+
+    const paginationInfo = getPaginationData(page, pageSize, total_records);
+
+    const finalResponse = {
+      pagination_info: paginationInfo,
+      records: result,
+    };
+
+    return sendSuccessResp(c, 200, "Removed projects fetched successfully", finalResponse);
+  };
+
+  softDeleteUserById = async (c: Context) => {
+    const userId = +c.req.param("id");
+
+    if (!userId) {
+      throw new BadRequestException(INVALID_INPUT);
+    }
+
+    const user = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at", "user_status"], [userId, null, "ACTIVE"], ["id"]);
+
+    if (!user) {
+      throw new NotFoundException(USER_NOT_FOUND);
+    }
+
+    const result = await softDeleteRecordById<User>(users, userId, { deleted_at: new Date() });
+
+    return sendSuccessResp(c, 200, USER_DELETED);
   };
 }
 

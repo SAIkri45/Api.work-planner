@@ -1,6 +1,6 @@
-import { email as emailValidator, minLength, nonEmpty, pipe, regex, string, transform } from "valibot";
+import { email as emailValidator, minLength, nonEmpty, number, pipe, regex, string, transform } from "valibot";
 
-import { DESIGNATION_MIN_LENGTH, DESIGNATION_REQUIRED, EMAIL_MIN_LENGTH, EMAIL_REQUIRED, INVALID_PHONE_NUMBER, PASSWORD_MIN_LENGTH, PASSWORD_REQUIRED, USER_NAME_MIN_LENGTH, USER_NAME_REQUIRED, USER_PHONE_REQUIRED } from "../../constants/appMessages.js";
+import { DESIGNATION_MIN_LENGTH, DESIGNATION_REQUIRED, EMAIL_MIN_LENGTH, EMAIL_REQUIRED, INVALID_PHONE_NUMBER, PASSWORD_MIN_LENGTH, PASSWORD_REQUIRED, USER_ID_REQUIRED, USER_NAME_MIN_LENGTH, USER_NAME_REQUIRED, USER_PHONE_REQUIRED } from "../../constants/appMessages.js";
 
 export const userEmail = pipe(
   string(EMAIL_REQUIRED),
@@ -34,3 +34,5 @@ export const userName = pipe(
   nonEmpty(USER_NAME_REQUIRED),
   minLength(3, USER_NAME_MIN_LENGTH),
 );
+
+export const userId = pipe(number(USER_ID_REQUIRED));

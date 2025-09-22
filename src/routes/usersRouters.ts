@@ -7,9 +7,11 @@ const userController = new UsersController();
 const userRoutes = new Hono();
 
 userRoutes.get("/dropdown", isAuthorized, userController.getUsersDropdown);
+userRoutes.get("/removed-projects", isAuthorized, userController.getAllUserRemovedProjects);
 userRoutes.get("/employees", isAuthorized, userController.getEmployeesList);
 userRoutes.get("/:id", isAuthorized, userController.getUserById);
 userRoutes.patch("/:id", isAuthorized, userController.updateUser);
+userRoutes.delete("/:id", isManagerOrAdmin, userController.softDeleteUserById);
 userRoutes.post("/", isManagerOrAdmin, userController.createUserByAdmin);
 userRoutes.get("/", isAuthorized, userController.getPaginatedUsers);
 

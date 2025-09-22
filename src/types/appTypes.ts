@@ -171,3 +171,7 @@ export interface userSignInRespData {
   access_token: string;
   refresh_token: string;
 }
+
+export interface ProjectStatus {
+  project_status: "NEW" | "IN_PROGRESS" | "COMPLETED" | "REVIEW" | "OVERDUE" | "DONE" | null;
+}

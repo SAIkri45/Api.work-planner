@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { and, eq, gte } from "drizzle-orm";
+import { and, eq, gte, not, or } from "drizzle-orm";
 import { db } from "../db/configuration.js";
 import { OTPs } from "../db/schema/otp.js";
 import { users } from "../db/schema/users.js";
@@ -31,4 +31,25 @@ export async function isOtpExpiresForEmail(email, action, otp) {
         .where(and(eq(OTPs.email, email), eq(OTPs.action, action), eq(OTPs.otp, otp), gte(OTPs.expires_at, dayjs.utc().toDate())))
         .limit(1);
     return otpRecord.length > 0;
+}
+export async function checkEmailAndPhoneExistExceptUserId(email, phone, userId) {
+    if (!email && !phone) {
+        return { emailExists: false, phoneExists: false };
+    }
+    const conditions = [];
+    if (email)
+        conditions.push(eq(users.email, email));
+    if (phone)
+        conditions.push(eq(users.phone, phone));
+    const existingUsers = await db
+        .select({
+        id: users.id,
+        email: users.email,
+        phone: users.phone,
+    })
+        .from(users)
+        .where(and(or(...conditions), not(eq(users.id, userId))));
+    const emailExists = email ? existingUsers.some(user => user.email === email) : false;
+    const phoneExists = phone ? existingUsers.some(user => user.phone === phone) : false;
+    return { emailExists, phoneExists };
 }
