@@ -169,7 +169,7 @@ export class UsersController {
 
     const hashedPassword = await bcrypt.hash(validateReq.password, 10);
 
-    const { password, ...result } = await saveSingleRecord<User>(users, { ...validateReq, password: hashedPassword });
+    const { password, ...result } = await saveSingleRecord<User>(users, { ...validateReq, user_name: validateReq.display_name, password: hashedPassword });
 
     return sendSuccessResp(c, 201, USER_CREATED_SUCCESSFULLY, result);
   };

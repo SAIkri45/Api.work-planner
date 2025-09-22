@@ -119,7 +119,7 @@ export class UsersController {
             throw new ConflictException(USER_EXIST_WITH_EMAIL);
         }
         const hashedPassword = await bcrypt.hash(validateReq.password, 10);
-        const { password, ...result } = await saveSingleRecord(users, { ...validateReq, password: hashedPassword });
+        const { password, ...result } = await saveSingleRecord(users, { ...validateReq, user_name: validateReq.display_name, password: hashedPassword });
         return sendSuccessResp(c, 201, USER_CREATED_SUCCESSFULLY, result);
     };
     getAllUserRemovedProjects = async (c) => {
