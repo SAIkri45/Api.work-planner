@@ -107,8 +107,7 @@ export class UsersController {
         if (!userData) {
             throw new NotFoundException(USER_NOT_FOUND);
         }
-        const hashedPassword = await bcrypt.hash(validatedReq.password, 10);
-        const { password, ...result } = await updateRecordById(users, userId, { ...validatedReq, password: hashedPassword });
+        const result = await updateRecordById(users, userId, validatedReq);
         return sendSuccessResp(c, 200, USER_UPDATED, result);
     };
     createUserByAdmin = async (c) => {

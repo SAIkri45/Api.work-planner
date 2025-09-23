@@ -149,9 +149,7 @@ export class UsersController {
       throw new NotFoundException(USER_NOT_FOUND);
     }
 
-    const hashedPassword = await bcrypt.hash(validatedReq.password, 10);
-
-    const { password, ...result } = await updateRecordById<User>(users, userId, { ...validatedReq, password: hashedPassword });
+    const result = await updateRecordById<User>(users, userId, validatedReq);
 
     return sendSuccessResp(c, 200, USER_UPDATED, result);
   };

@@ -145,7 +145,6 @@ export const VUpdateUserSchemaByLoginUser = pipeAsync(
   object({
     id: userId,
     email: userEmail,
-    password: userPassword,
     display_name: userName,
     designation: userDesignation,
     phone: userPhone,
