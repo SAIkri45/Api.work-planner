@@ -18,6 +18,7 @@ import { getAllRemovedProject } from "../services/db/userService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 import NotFoundException from "./../exceptions/notFoundException.js";
+import ForbiddenException from "../exceptions/forbiddenException.js";
 
 export class UsersController {
   getPaginatedUsers = async (c: Context) => {
@@ -257,7 +258,7 @@ export class UsersController {
     }
 
     if (user?.user_status !== "ACTIVE") {
-      throw new UnauthorizedException(USER_STATUS);
+      throw new ForbiddenException(USER_STATUS);
     }
     const hashedPassword = await bcrypt.hash(validateReq.password, 10);
 

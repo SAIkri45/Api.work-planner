@@ -3,7 +3,6 @@ import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_S
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
-import UnauthorizedException from "../exceptions/unauthorizedException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveSingleRecord, softDeleteRecordById, updateRecordById } from "../services/db/baseDbService.js";
@@ -11,6 +10,7 @@ import { getAllRemovedProject } from "../services/db/userService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 import NotFoundException from "./../exceptions/notFoundException.js";
+import ForbiddenException from "../exceptions/forbiddenException.js";
 export class UsersController {
     getPaginatedUsers = async (c) => {
         const page = +c.req.query("page") || 1;
@@ -175,7 +175,7 @@ export class UsersController {
             throw new NotFoundException(USER_NOT_FOUND);
         }
         if (user?.user_status !== "ACTIVE") {
-            throw new UnauthorizedException(USER_STATUS);
+            throw new ForbiddenException(USER_STATUS);
         }
         const hashedPassword = await bcrypt.hash(validateReq.password, 10);
         await updateRecordById(users, userId, { password: hashedPassword });
