@@ -101,7 +101,7 @@ export class UsersController {
       throw new BadRequestException(INVALID_INPUT);
     }
 
-    const columnsToSelect = ["id", "display_name", "profile_pic", "designation", "phone", "email", "user_type", "user_status", "created_at", "updated_at"] as const;
+    const columnsToSelect = ["id", "display_name", "profile_pic", "designation", "password", "phone", "email", "user_type", "user_status", "created_at", "updated_at"] as const;
 
     const user = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at", "user_status"], [userId, null, "ACTIVE"], columnsToSelect);
 
