@@ -56,8 +56,8 @@ export class UsersController {
     const orderByQueryData = parseOrderByQuery<User>("created_at", "desc");
 
     const whereQueryData: WhereQueryData<User> = {
-      columns: ["user_status", "deleted_at"],
-      values: ["ACTIVE", null],
+      columns: ["deleted_at"],
+      values: [null],
     };
 
     const columnsToSelect = ["id", "display_name"] as const;

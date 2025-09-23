@@ -39,8 +39,8 @@ export class UsersController {
         const searchString = c.req.query("search_string");
         const orderByQueryData = parseOrderByQuery("created_at", "desc");
         const whereQueryData = {
-            columns: ["user_status", "deleted_at"],
-            values: ["ACTIVE", null],
+            columns: ["deleted_at"],
+            values: [null],
         };
         const columnsToSelect = ["id", "display_name"];
         if (searchString) {
