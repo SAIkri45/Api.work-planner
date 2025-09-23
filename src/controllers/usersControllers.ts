@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 
 import type { User } from "../db/schema/users.js";
 import type { WhereQueryData } from "../types/dbTypes.js";
-import type { ValidatedAddUser, ValidatedUpdateUserByLoginEmp } from "../validations/schemas/vUserSchema.js";
+import type { ValidatedAddUser, ValidatedUpdateUserByLoginEmp, ValidatedUpdateUserStatus } from "../validations/schemas/vUserSchema.js";
 
 import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_DELETED, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
@@ -216,6 +216,28 @@ export class UsersController {
     const result = await softDeleteRecordById<User>(users, userId, { deleted_at: new Date() });
 
     return sendSuccessResp(c, 200, USER_DELETED);
+  };
+
+  updateUserStatus = async (c: Context) => {
+    const userId = +c.req.param("id");
+
+    const requestbody = await c.req.json();
+
+    const validatedReq = await validateRequest<ValidatedUpdateUserStatus>("update-user-status", requestbody, USER_VALIDATION_ERROR);
+
+    if (!userId) {
+      throw new BadRequestException(INVALID_INPUT);
+    }
+
+    const user = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at"], [userId, null], ["id", "user_status"]);
+
+    if (!user) {
+      throw new NotFoundException(USER_NOT_FOUND);
+    }
+
+    const { password, ...result } = await updateRecordById<User>(users, userId, { user_status: validatedReq.user_status });
+
+    return sendSuccessResp(c, 200, USER_UPDATED, result);
   };
 }
 

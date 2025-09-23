@@ -149,5 +149,19 @@ export class UsersController {
         const result = await softDeleteRecordById(users, userId, { deleted_at: new Date() });
         return sendSuccessResp(c, 200, USER_DELETED);
     };
+    updateUserStatus = async (c) => {
+        const userId = +c.req.param("id");
+        const requestbody = await c.req.json();
+        const validatedReq = await validateRequest("update-user-status", requestbody, USER_VALIDATION_ERROR);
+        if (!userId) {
+            throw new BadRequestException(INVALID_INPUT);
+        }
+        const user = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at"], [userId, null], ["id", "user_status"]);
+        if (!user) {
+            throw new NotFoundException(USER_NOT_FOUND);
+        }
+        const { password, ...result } = await updateRecordById(users, userId, { user_status: validatedReq.user_status });
+        return sendSuccessResp(c, 200, USER_UPDATED, result);
+    };
 }
 export default UsersController;

@@ -6,6 +6,7 @@ const userRoutes = new Hono();
 userRoutes.get("/dropdown", isAuthorized, userController.getUsersDropdown);
 userRoutes.get("/removed-projects", isAuthorized, userController.getAllUserRemovedProjects);
 userRoutes.get("/employees", isAuthorized, userController.getEmployeesList);
+userRoutes.patch("/:id/status", isManagerOrAdmin, userController.updateUserStatus);
 userRoutes.get("/:id", isAuthorized, userController.getUserById);
 userRoutes.patch("/:id", isAuthorized, userController.updateUser);
 userRoutes.delete("/:id", isManagerOrAdmin, userController.softDeleteUserById);

@@ -1,5 +1,5 @@
 import { email as emailValidator, minLength, nonEmpty, object, optional, picklist, pipe, pipeAsync, rawTransformAsync, regex, string, transform } from "valibot";
-import { allowedUserStatuses, allowedUserTypes, DESIGNATION_INVALID, DESIGNATION_TOO_SHORT, EMAIL_EXISTS, EMAIL_INVALID, EMAIL_MISSING, NAME_INVALID, NAME_MISSING, NAME_TOO_SHORT, PHONE_EXISTS, PHONE_INVALID, PHONE_MISSING, PROFILE_PIC_INVALID, SLACK_ID_INVALID, USER_STATUS_INVALID, USER_TYPE_INVALID } from "../../constants/appMessages.js";
+import { allowedUserStatuses, allowedUserTypes, DESIGNATION_INVALID, DESIGNATION_TOO_SHORT, EMAIL_EXISTS, EMAIL_INVALID, EMAIL_MISSING, NAME_INVALID, NAME_MISSING, NAME_TOO_SHORT, PHONE_EXISTS, PHONE_INVALID, PHONE_MISSING, PROFILE_PIC_INVALID, SLACK_ID_INVALID, USER_STATUS_INVALID, USER_STATUS_REQUIRED, USER_TYPE_INVALID } from "../../constants/appMessages.js";
 import { checkEmailAndPhoneExistExceptUserId, userEmailExists } from "../customValidations.js";
 import { prepareValibotIssue } from "../prepareValibotIssue.js";
 import { userDesignation, userEmail, userId, userName, userPassword, userPhone } from "./userCommonValidations.js";
@@ -63,4 +63,7 @@ export const VUpdateUserSchemaByLoginUser = pipeAsync(object({
         prepareValibotIssue(dataset, addIssue, "phone", phone, PHONE_EXISTS);
     }
     return dataset.value;
+}));
+export const VUserStatusSchema = pipeAsync(object({
+    user_status: pipe(string(USER_STATUS_REQUIRED), transform(value => value.trim().toUpperCase()), nonEmpty(USER_STATUS_REQUIRED), picklist(allowedUserStatuses, USER_STATUS_REQUIRED)),
 }));

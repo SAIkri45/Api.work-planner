@@ -296,6 +296,7 @@ export const SLACK_ID_MISSING = "slack_id is missing";
 
 export const USER_STATUS_INVALID = "User status is invalid";
 export const USER_IDS_REQUIRED = "User IDs are required";
+export const USER_STATUS_REQUIRED = "User status is required";
 
 // projects
 

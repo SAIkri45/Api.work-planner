@@ -261,6 +261,7 @@ export const SLACK_ID_INVALID = "slack_id is invalid";
 export const SLACK_ID_MISSING = "slack_id is missing";
 export const USER_STATUS_INVALID = "User status is invalid";
 export const USER_IDS_REQUIRED = "User IDs are required";
+export const USER_STATUS_REQUIRED = "User status is required";
 // projects
 export const PROJECT_TITLE_REQUIRED = "Project Title is required";
 export const PROJECT_TITLE_MIN_LENGTH = "Project Title min 3 letters";
