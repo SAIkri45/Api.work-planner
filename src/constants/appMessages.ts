@@ -41,7 +41,7 @@ export const USER_INACTIVE = "Your status is inactive. Please contact manager";
 export const USER_NOT_FOUND = "User not found";
 export const RESET_TOKEN_NOT_FOUND = "Reset token not found";
 export const USER_TYPE_INVALID = "User type is invalid";
-
+export const USER_STATUS = "User is inactive. Please contact admin";
 export const NAME_INVALID = "Name is invalid";
 export const NAME_MISSING = "Name is missing";
 export const NAME_TOO_SHORT

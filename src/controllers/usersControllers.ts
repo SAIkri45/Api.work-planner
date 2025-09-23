@@ -6,10 +6,11 @@ import type { User } from "../db/schema/users.js";
 import type { WhereQueryData } from "../types/dbTypes.js";
 import type { ValidatedAddUser, ValidatedUpdateUserByLoginEmp, ValidatedUpdateUserPassword, ValidatedUpdateUserStatus } from "../validations/schemas/vUserSchema.js";
 
-import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_DELETED, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_PASSWORD_CHANGED, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
+import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_DELETED, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_PASSWORD_CHANGED, USER_STATUS, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
+import UnauthorizedException from "../exceptions/unauthorizedException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveSingleRecord, softDeleteRecordById, updateRecordById } from "../services/db/baseDbService.js";
@@ -253,6 +254,10 @@ export class UsersController {
 
     if (!user) {
       throw new NotFoundException(USER_NOT_FOUND);
+    }
+
+    if (user?.user_status !== "ACTIVE") {
+      throw new UnauthorizedException(USER_STATUS);
     }
     const hashedPassword = await bcrypt.hash(validateReq.password, 10);
 
