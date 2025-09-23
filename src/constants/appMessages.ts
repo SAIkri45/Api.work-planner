@@ -414,3 +414,4 @@ export const DESIGNATION_MIN_LENGTH = "Designation must be at least 8 characters
 export const USER_NAME_REQUIRED = "User name is required";
 export const USER_NAME_MIN_LENGTH = "User name must be at least 3 characters";
 export const USER_ID_REQUIRED = "User id is required";
+export const USER_PASSWORD_CHANGED = "Password changed successfully";

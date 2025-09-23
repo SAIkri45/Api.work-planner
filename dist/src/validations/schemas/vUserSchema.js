@@ -76,3 +76,6 @@ export const VUpdateUserSchemaByLoginUser = pipeAsync(object({
 export const VUserStatusSchema = pipeAsync(object({
     user_status: pipe(string(USER_STATUS_REQUIRED), transform(value => value.trim().toUpperCase()), nonEmpty(USER_STATUS_REQUIRED), picklist(allowedUserStatuses, USER_STATUS_REQUIRED)),
 }));
+export const VUpdateUserPasswordSchema = pipeAsync(object({
+    password: userPassword,
+}));

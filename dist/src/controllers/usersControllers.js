@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_DELETED, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
+import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_DELETED, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_PASSWORD_CHANGED, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
@@ -161,6 +161,21 @@ export class UsersController {
         }
         const { password, ...result } = await updateRecordById(users, userId, { user_status: validatedReq.user_status });
         return sendSuccessResp(c, 200, USER_UPDATED, result);
+    };
+    resetPassword = async (c) => {
+        const userId = +c.req.param("id");
+        const requestbody = await c.req.json();
+        if (!userId) {
+            throw new BadRequestException(INVALID_INPUT);
+        }
+        const validateReq = await validateRequest("update-user-password", requestbody, USER_VALIDATION_ERROR);
+        const user = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at", "user_status"], [userId, null, "ACTIVE"], ["id", "user_status"]);
+        if (!user) {
+            throw new NotFoundException(USER_NOT_FOUND);
+        }
+        const hashedPassword = await bcrypt.hash(validateReq.password, 10);
+        await updateRecordById(users, userId, { password: hashedPassword });
+        return sendSuccessResp(c, 200, USER_PASSWORD_CHANGED);
     };
 }
 export default UsersController;

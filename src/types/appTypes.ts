@@ -8,13 +8,13 @@ import type { ValidatedSignIn, ValidatedSignUpOrSignIn, ValidatedSignUpOrSignInV
 import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject, ValidatedUpdateProjectStatus } from "../validations/schemas/vProjectSchema.js";
 import type { ValidatedAssignUsersToTask, ValidatedCreateTaskAssignee, ValidatedRemoveUsersFromTask } from "../validations/schemas/vTaskAssigneesSchema.js";
 import type { ValidatedCreateTask, ValidatedUpdateTask, ValidatedUpdateTaskStatus } from "../validations/schemas/vTaskSchema.js";
-import type { ValidatedAddUser, ValidatedCreateUserOrAdmin, ValidatedUpdateUser, ValidatedUpdateUserByLoginEmp, ValidatedUpdateUserStatus } from "../validations/schemas/vUserSchema.js";
+import type { ValidatedAddUser, ValidatedCreateUserOrAdmin, ValidatedUpdateUser, ValidatedUpdateUserByLoginEmp, ValidatedUpdateUserPassword, ValidatedUpdateUserStatus } from "../validations/schemas/vUserSchema.js";
 import type { PaginationInfo } from "./dbTypes";
 
-export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask | ValidatedCreateTaskAssignee | ValidatedUpdateUser | ValidatedUpdateProjectStatus | ValidatedAddUsersToProject | ValidatedSignUpOrSignIn | ValidatedSignUpOrSignInVerification | ValidatedSignIn | ValidatedRemoveUsersFromProject | ValidatedUpdateTask | ValidatedAssignUsersToTask | ValidatedRemoveUsersFromTask | ValidatedUpdateTaskStatus | ValidatedAddUser | ValidatedUpdateUserByLoginEmp | ValidatedUpdateUserStatus;
+export type ValidatedRequest = ValidatedCreateUserOrAdmin | ValidatedCreateProject | ValidatedUpdateProject | ValidatedCreateTask | ValidatedCreateTaskAssignee | ValidatedUpdateUser | ValidatedUpdateUserPassword | ValidatedUpdateProjectStatus | ValidatedAddUsersToProject | ValidatedSignUpOrSignIn | ValidatedSignUpOrSignInVerification | ValidatedSignIn | ValidatedRemoveUsersFromProject | ValidatedUpdateTask | ValidatedAssignUsersToTask | ValidatedRemoveUsersFromTask | ValidatedUpdateTaskStatus | ValidatedAddUser | ValidatedUpdateUserByLoginEmp | ValidatedUpdateUserStatus;
 export type AppActivity = UserActivity | CreateProjectActivity | CreateTaskAssigneeActivity | AuthActivity;
 export type AuthActivity = "signup-or-signin" | "signup-or-signin-verify" | "signin" | "signin-verify";
-export type UserActivity = "create-user" | "update-user" | "create-user-by-admin" | "update-emp" | "update-user-status";
+export type UserActivity = "create-user" | "update-user" | "create-user-by-admin" | "update-emp" | "update-user-status" | "update-user-password";
 export type CreateProjectActivity = "create-project" | "update-project" | "add-users-to-project" | "remove-users-from-project" | "update-project-status";
 export type CreateTaskAssigneeActivity = "create-task" | "create-task-assignee" | "update-task" | "add-users-to-task" | "remove-users-from-task" | "update-task-status";
 export interface EmailOtpData {

@@ -177,8 +177,15 @@ export const VUserStatusSchema = pipeAsync(
   }),
 );
 
+export const VUpdateUserPasswordSchema = pipeAsync(
+  object({
+    password: userPassword,
+  }),
+);
+
 export type ValidatedCreateUserOrAdmin = InferOutput<typeof VCreateUserSchema>;
 export type ValidatedUpdateUser = InferOutput<typeof VUpdateUserSchema>;
 export type ValidatedAddUser = InferOutput<typeof VAddUserSchema>;
 export type ValidatedUpdateUserByLoginEmp = InferOutput<typeof VUpdateUserSchemaByLoginUser>;
 export type ValidatedUpdateUserStatus = InferOutput<typeof VUserStatusSchema>;
+export type ValidatedUpdateUserPassword = InferOutput<typeof VUpdateUserPasswordSchema>;
