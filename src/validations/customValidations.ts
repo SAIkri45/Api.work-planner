@@ -83,3 +83,32 @@ export async function checkEmailAndPhoneExistExceptUserId(email: string, phone: 
 
   return { emailExists, phoneExists };
 }
+
+export async function checkEmailAndPhoneExist(email: string, phone: string) {
+  if (!email && !phone) {
+    return { emailExists: false, phoneExists: false };
+  }
+
+  const conditions = [];
+  if (email)
+    conditions.push(eq(users.email, email));
+  if (phone)
+    conditions.push(eq(users.phone, phone));
+
+  const existingUsers = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      phone: users.phone,
+    })
+    .from(users)
+    .where(and(
+      or(...conditions),
+      eq(users.user_status, "ACTIVE"),
+    ));
+
+  const emailExists = email ? existingUsers.some(user => user.email === email) : false;
+  const phoneExists = phone ? existingUsers.some(user => user.phone === phone) : false;
+
+  return { emailExists, phoneExists };
+}
