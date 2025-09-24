@@ -6,8 +6,9 @@ import type { User } from "../db/schema/users.js";
 import type { userSignInRespData } from "../types/appTypes.js";
 import type { ValidatedUserSignin } from "../validations/schemas/signinValidations.js";
 
-import { INVALID_CREDENTIALS, LOGIN_VALIDATION_ERROR, USER_LOGIN } from "../constants/appMessages.js";
+import { INVALID_CREDENTIALS, LOGIN_EMAIL_NOT_FOUND, LOGIN_VALIDATION_ERROR, USER_LOGIN } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
+import NotFoundException from "../exceptions/notFoundException.js";
 import UnAuthorizedException from "../exceptions/unauthorizedException.js";
 import { getSingleRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { genJWTTokensForUser } from "../utils/jwtUtils.js";
@@ -27,9 +28,13 @@ export class AuthController {
     const isValidUser = userDetails?.email;
     const storedPassword = userDetails?.password || "";
 
+    if (!isValidUser) {
+      throw new NotFoundException(LOGIN_EMAIL_NOT_FOUND);
+    }
+
     const comparePassword = await bcrypt.compare(validated.password, storedPassword);
 
-    if (!isValidUser || !comparePassword) {
+    if (!comparePassword) {
       throw new UnAuthorizedException(INVALID_CREDENTIALS);
     }
 

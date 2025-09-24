@@ -1,10 +1,8 @@
 import type { InferOutput } from "valibot";
 
-import { email as emailValidator, minLength, nonEmpty, object, pipe, pipeAsync, rawTransformAsync, string, transform } from "valibot";
+import { email as emailValidator, minLength, nonEmpty, object, pipe, pipeAsync, string, transform } from "valibot";
 
-import { EMAIL_REQUIRED, LOGIN_EMAIL_NOT_FOUND, PASSWORD_MIN_LENGTH, PASSWORD_REQUIRED } from "../../constants/appMessages.js";
-import { checkEmailExist } from "../customValidations.js";
-import { prepareValibotIssue } from "../prepareValibotIssue.js";
+import { EMAIL_REQUIRED, PASSWORD_MIN_LENGTH, PASSWORD_REQUIRED } from "../../constants/appMessages.js";
 
 export const VUserSigninSchema = pipeAsync(
   object({
@@ -21,14 +19,14 @@ export const VUserSigninSchema = pipeAsync(
     ),
 
   }),
-  rawTransformAsync(async ({ dataset, addIssue }) => {
-    const { email } = dataset.value;
-    const emailNotExist = await checkEmailExist(email);
-    if (email && emailNotExist) {
-      prepareValibotIssue(dataset, addIssue, "email", email, LOGIN_EMAIL_NOT_FOUND);
-    }
-    return dataset.value;
-  }),
+  // rawTransformAsync(async ({ dataset, addIssue }) => {
+  //   const { email } = dataset.value;
+  //   const emailNotExist = await checkEmailExist(email);
+  //   if (email && emailNotExist) {
+  //     prepareValibotIssue(dataset, addIssue, "email", email, INVALID_EMAIL);
+  //   }
+  //   return dataset.value;
+  // }),
 );
 
 export type ValidatedUserSignin = InferOutput<typeof VUserSigninSchema>;
