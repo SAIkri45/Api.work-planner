@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt";
-import { INVALID_CREDENTIALS, LOGIN_VALIDATION_ERROR, USER_LOGIN, USER_NOT_FOUND } from "../constants/appMessages.js";
+import { INVALID_CREDENTIALS, LOGIN_VALIDATION_ERROR, USER_LOGIN } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
-import NotFoundException from "../exceptions/notFoundException.js";
 import UnAuthorizedException from "../exceptions/unauthorizedException.js";
 import { getSingleRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { genJWTTokensForUser } from "../utils/jwtUtils.js";
@@ -14,7 +13,7 @@ export class AuthController {
         const columnsToSelect = ["id", "slack_id", "profile_pic", "designation", "display_name", "phone", "email", "user_type", "user_status", "created_at", "updated_at", "password"];
         const userDetails = await getSingleRecordByMultipleColumnValues(users, ["email", "deleted_at", "user_status"], [validated.email, null, "ACTIVE"], columnsToSelect);
         if (!userDetails) {
-            throw new NotFoundException(USER_NOT_FOUND);
+            throw new UnAuthorizedException(INVALID_CREDENTIALS);
         }
         const comparePassword = await bcrypt.compare(validated.password, userDetails.password);
         if (!comparePassword) {
