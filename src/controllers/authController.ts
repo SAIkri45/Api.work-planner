@@ -24,7 +24,7 @@ export class AuthController {
 
     const userDetails = await getSingleRecordByMultipleColumnValues<User>(users, ["email", "deleted_at", "user_status"], [validated.email, null, "ACTIVE"], columnsToSelect);
 
-    if (!userDetails) {
+    if (!userDetails?.email) {
       throw new UnAuthorizedException(INVALID_CREDENTIALS);
     }
 

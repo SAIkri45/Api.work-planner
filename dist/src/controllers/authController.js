@@ -12,7 +12,7 @@ export class AuthController {
         const validated = await validateRequest("signin", requestbody, LOGIN_VALIDATION_ERROR);
         const columnsToSelect = ["id", "slack_id", "profile_pic", "designation", "display_name", "phone", "email", "user_type", "user_status", "created_at", "updated_at", "password"];
         const userDetails = await getSingleRecordByMultipleColumnValues(users, ["email", "deleted_at", "user_status"], [validated.email, null, "ACTIVE"], columnsToSelect);
-        if (!userDetails) {
+        if (!userDetails?.email) {
             throw new UnAuthorizedException(INVALID_CREDENTIALS);
         }
         const comparePassword = await bcrypt.compare(validated.password, userDetails.password);
