@@ -8,13 +8,11 @@ class BaseException extends Error {
   constructor(
     status: StatusCode,
     message: string,
-    name: string,
     isOperational: boolean,
     errData?: any,
   ) {
     super(message);
     this.status = status;
-    this.name = name;
     this.isOperational = isOperational;
     this.errData = errData;
   }
