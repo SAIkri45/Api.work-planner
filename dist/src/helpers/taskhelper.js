@@ -1,6 +1,7 @@
-import { and, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { allowedTaskStatus } from "../constants/appMessages.js";
 import { Tasks } from "../db/schema/tasks.js";
+import { getRecordsCount } from "../services/db/baseDbService.js";
 import { getUserAssignedTaskIds } from "../services/db/taskService.js";
 export async function buildTaskFilters(search, taskStatus, startDate, endDate, user) {
     const filters = [isNull(Tasks.deleted_at)];
@@ -42,4 +43,47 @@ export function buildOrderByClauseTasks(orderBy) {
     return dir === "desc"
         ? sql `${sql.identifier(column)} DESC`
         : sql `${sql.identifier(column)} ASC`;
+}
+export function getDateRange(daysBack, duration = 7) {
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - daysBack);
+    endDate.setHours(23, 59, 59, 999);
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - (duration - 1));
+    startDate.setHours(0, 0, 0, 0);
+    return { startDate: startDate.toISOString(), endDate: endDate.toISOString() };
+}
+export async function getTaskCounts(dateRange) {
+    const conditions = [
+        isNull(Tasks.deleted_at),
+        gte(Tasks.created_at, new Date(dateRange.startDate)),
+        lte(Tasks.created_at, new Date(dateRange.endDate)),
+    ];
+    const productiveConditions = or(eq(Tasks.task_status, "COMPLETED"), eq(Tasks.task_status, "DONE"), eq(Tasks.task_status, "IN_PROGRESS"));
+    const [productive, overdue, total] = await Promise.all([
+        getRecordsCount(Tasks, [...conditions, productiveConditions]),
+        getRecordsCount(Tasks, [...conditions, eq(Tasks.task_status, "OVERDUE")]),
+        getRecordsCount(Tasks, conditions),
+    ]);
+    return { productive, overdue, total };
+}
+export function buildWeeklySummaryResponse(currentWeek, previousWeek) {
+    const productivityPercentage = currentWeek.total > 0
+        ? Math.round((currentWeek.productive / currentWeek.total) * 100)
+        : 0;
+    const calculateChange = (current, previous) => previous > 0 ? Number(((current - previous) / previous * 100).toFixed(2)) : (current > 0 ? 100 : 0);
+    return {
+        productivity_percentage: productivityPercentage,
+        productive_tasks: {
+            count: currentWeek.productive,
+            change_percentage: calculateChange(currentWeek.productive, previousWeek.productive),
+            is_increase: currentWeek.productive >= previousWeek.productive,
+        },
+        overdue_tasks: {
+            count: currentWeek.overdue,
+            change_percentage: Math.abs(calculateChange(currentWeek.overdue, previousWeek.overdue)),
+            is_increase: currentWeek.overdue >= previousWeek.overdue,
+        },
+        total_tasks: currentWeek.total,
+    };
 }

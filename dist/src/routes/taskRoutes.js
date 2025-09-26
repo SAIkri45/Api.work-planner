@@ -4,6 +4,7 @@ import { isAuthorized } from "../middlewares/isAuthorized.js";
 const taskRoutes = new Hono();
 const tasksController = new TasksController();
 taskRoutes.get("/status/counts", tasksController.getTaskStatusCounts);
+taskRoutes.get("/weekly-summary", tasksController.getWeeklySummary);
 taskRoutes.patch("/:id/status", isAuthorized, tasksController.updateTaskStatus);
 taskRoutes.get("/:id", isAuthorized, tasksController.getTaskById);
 taskRoutes.patch("/:id", isAuthorized, tasksController.editTask);
