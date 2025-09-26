@@ -1,9 +1,9 @@
-import { DEF_401 } from "../constants/appMessages.js";
+import { DEF_401, NAME_401 } from "../constants/appMessages.js";
 import BaseException from "./baseException.js";
 
 class UnauthorizedException extends BaseException {
   constructor(message: string) {
-    super(401, message || DEF_401, true);
+    super(401, message || DEF_401, NAME_401, true);
   }
 }
 
