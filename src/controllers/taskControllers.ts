@@ -17,6 +17,7 @@ import { Tasks } from "../db/schema/tasks.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
+import { buildWeeklySummaryResponse, getDateRange, getTaskCounts } from "../helpers/taskhelper.js";
 import {
   getRecordsCount,
   getSingleRecordByMultipleColumnValues,
@@ -165,6 +166,16 @@ export class TasksController {
       total_done_tasks: doneTasksCount,
 
     });
+  };
+
+  getWeeklySummary = async (c: Context) => {
+    const [currentWeek, previousWeek] = await Promise.all([
+      getTaskCounts(getDateRange(0)),
+      getTaskCounts(getDateRange(7)),
+    ]);
+
+    const responseData = buildWeeklySummaryResponse(currentWeek, previousWeek);
+    return sendSuccessResp(c, 200, "Weekly summary fetched successfully", responseData);
   };
 }
 export default TasksController;

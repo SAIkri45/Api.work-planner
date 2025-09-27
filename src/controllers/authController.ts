@@ -6,10 +6,9 @@ import type { User } from "../db/schema/users.js";
 import type { userSignInRespData } from "../types/appTypes.js";
 import type { ValidatedUserSignin } from "../validations/schemas/signinValidations.js";
 
-import { INVALID_CREDENTIALS, LOGIN_VALIDATION_ERROR, USER_LOGIN, USER_NOT_FOUND } from "../constants/appMessages.js";
+import { INVALID_CREDENTIALS, LOGIN_VALIDATION_ERROR, USER_LOGIN } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import NotFoundException from "../exceptions/notFoundException.js";
-import UnAuthorizedException from "../exceptions/unauthorizedException.js";
 import { getSingleRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { genJWTTokensForUser } from "../utils/jwtUtils.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
@@ -25,14 +24,14 @@ export class AuthController {
 
     const userDetails = await getSingleRecordByMultipleColumnValues<User>(users, ["email", "deleted_at", "user_status"], [validated.email, null, "ACTIVE"], columnsToSelect);
 
-    if (!userDetails) {
-      throw new NotFoundException(USER_NOT_FOUND);
+    if (!userDetails || !userDetails.email) {
+      throw new NotFoundException(INVALID_CREDENTIALS);
     }
 
-    const comparePassword = await bcrypt.compare(validated.password, userDetails.password);
+    const comparePassword = await bcrypt.compare(validated.password, userDetails?.password);
 
     if (!comparePassword) {
-      throw new UnAuthorizedException(INVALID_CREDENTIALS);
+      throw new NotFoundException(INVALID_CREDENTIALS);
     }
 
     const { access_token, refresh_token } = await genJWTTokensForUser(userDetails.id);

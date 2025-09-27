@@ -55,6 +55,7 @@ export const EMAIL_MISSING = "Email is missing";
 export const PHONE_MISSING = "Phone number is missing";
 export const PHONE_REQUIRED = "Mobile number is required";
 export const EMAIL_EXISTS = "Email already exists";
+
 export const USER_VALIDATION_ERROR
     = "User details provided do not meet the required validation criteria";
 export const USER_ADDED = "User added successfully";
@@ -415,3 +416,4 @@ export const USER_NAME_REQUIRED = "User name is required";
 export const USER_NAME_MIN_LENGTH = "User name must be at least 3 characters";
 export const USER_ID_REQUIRED = "User id is required";
 export const USER_PASSWORD_CHANGED = "Password changed successfully";
+export const INVALID_EMAIL = "Invalid email address";

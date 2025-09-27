@@ -3,7 +3,7 @@ import { and, eq, gte, not, or } from "drizzle-orm";
 import { db } from "../db/configuration.js";
 import { OTPs } from "../db/schema/otp.js";
 import { users } from "../db/schema/users.js";
-import { getSingleRecordByAColumnValue } from "../services/db/baseDbService.js";
+import { getSingleRecordByAColumnValue, getSingleRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 // Check if email exists and return a boolean accordingly
 export async function userEmailExists(email) {
     const columnsToSelect = ["id", "email"];
@@ -73,4 +73,9 @@ export async function checkEmailAndPhoneExist(email, phone) {
     const emailExists = email ? existingUsers.some(user => user.email === email) : false;
     const phoneExists = phone ? existingUsers.some(user => user.phone === phone) : false;
     return { emailExists, phoneExists };
+}
+export async function checkEmailExist(email) {
+    const columnsToSelect = ["id", "email"];
+    const result = await getSingleRecordByMultipleColumnValues(users, ["email", "user_status", "deleted_at"], [email, "ACTIVE", null], columnsToSelect);
+    return !result;
 }

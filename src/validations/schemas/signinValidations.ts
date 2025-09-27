@@ -19,6 +19,14 @@ export const VUserSigninSchema = pipeAsync(
     ),
 
   }),
+  // rawTransformAsync(async ({ dataset, addIssue }) => {
+  //   const { email } = dataset.value;
+  //   const emailNotExist = await checkEmailExist(email);
+  //   if (email && emailNotExist) {
+  //     prepareValibotIssue(dataset, addIssue, "email", email, INVALID_EMAIL);
+  //   }
+  //   return dataset.value;
+  // }),
 );
 
 export type ValidatedUserSignin = InferOutput<typeof VUserSigninSchema>;
