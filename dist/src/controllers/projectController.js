@@ -8,8 +8,7 @@ import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { buildProjectsWhereQueryData } from "../helpers/projectHelper.js";
-import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
+import { getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
 import { assignUsersToProject, checkTaskExist, getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, softDeleteTaskAssigneesByProjectId, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
@@ -44,43 +43,11 @@ class ProjectController {
             throw error;
         }
     };
-    getAllProjectsPaginated = async (c) => {
-        const user = c.get("user_payload");
-        const page = +c.req.query("page") || 1;
-        const pageSize = +c.req.query("page_size") || 10;
-        const searchString = c.req.query("search_string") || null;
-        const orderBy = c.req.query("order_by");
-        const projectStatus = c.req.query("project_status") || null;
-        const startDate = c.req.query("from_date") || null;
-        const endDate = c.req.query("to_date") || null;
-        let orderByQueryData = {
-            columns: ["created_at"],
-            values: ["desc"],
-        };
-        if (orderBy) {
-            const orderByColumns = [];
-            const orderByValues = [];
-            const queryStrings = orderBy.split(",");
-            for (const queryString of queryStrings) {
-                const [column, value] = queryString.split(":");
-                orderByColumns.push(column);
-                orderByValues.push(value);
-            }
-            orderByQueryData = {
-                columns: orderByColumns,
-                values: orderByValues,
-            };
-        }
-        const whereQueryData = buildProjectsWhereQueryData(startDate, endDate, projectStatus, searchString, user);
-        const columnsToSelect = ["id", "title", "description", "logo_url", "project_status", "start_date", "due_date"];
-        const result = await getPaginatedRecordsConditionally(projects, page, pageSize, orderByQueryData, whereQueryData, columnsToSelect);
-        return sendSuccessResp(c, 200, PROJECTS_FETCHED, result);
-    };
     getAllProjects = async (c) => {
         const user = c.get("user_payload");
         const query = c.req.query();
         const page = +query.page || 1;
-        const pageSize = +(c.req.query("page_size") || 10);
+        const pageSize = +c.req.query("page_size") || 10;
         const offset = (page - 1) * pageSize;
         const search = c.req.query("search_string");
         const orderBy = c.req.query("order_by");
@@ -150,7 +117,7 @@ class ProjectController {
     updateProject = async (c) => {
         const reqData = await c.req.json();
         const userDetails = c.get("user_payload");
-        const projectId = +(c.req.param("id"));
+        const projectId = +c.req.param("id");
         if (!projectId) {
             throw new BadRequestException(INVALID_INPUT);
         }

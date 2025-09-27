@@ -4,7 +4,7 @@ import type { Project } from "../db/schema/projects.js";
 import type { Task } from "../db/schema/tasks.js";
 import type { UserProjects } from "../db/schema/userProjects.js";
 import type { ProjectsResponse, ProjectTasksResp, ProjectUsersResponse } from "../types/appTypes.js";
-import type { DBTableColumns, OrderByQueryData, SortDirection, WhereQueryData } from "../types/dbTypes.js";
+import type { WhereQueryData } from "../types/dbTypes.js";
 import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject, ValidatedUpdateProjectStatus } from "../validations/schemas/vProjectSchema.js";
 
 import { AVILABLE_USERS_FETCHED, INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_STATUS_UPDATED, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, PROJECTS_USERS_FETCHED_SUCCESS, TASKS_FETCHED, TASKS_STATUS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
@@ -17,8 +17,7 @@ import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
-import { buildProjectsWhereQueryData } from "../helpers/projectHelper.js";
-import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
+import { getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
 import { assignUsersToProject, checkTaskExist, getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, softDeleteTaskAssigneesByProjectId, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
@@ -63,66 +62,12 @@ class ProjectController {
     }
   };
 
-  getAllProjectsPaginated = async (c: Context) => {
-    const user = c.get("user_payload");
-
-    const page = +c.req.query("page")! || 1;
-    const pageSize = +c.req.query("page_size")! || 10;
-    const searchString = c.req.query("search_string") || null;
-    const orderBy = c.req.query("order_by");
-    const projectStatus = c.req.query("project_status") || null;
-    const startDate = c.req.query("from_date") || null;
-    const endDate = c.req.query("to_date") || null;
-
-    let orderByQueryData: OrderByQueryData<Project> = {
-      columns: ["created_at"],
-      values: ["desc"],
-    };
-
-    if (orderBy) {
-      const orderByColumns: DBTableColumns<Project>[] = [];
-      const orderByValues: SortDirection[] = [];
-      const queryStrings = orderBy.split(",");
-
-      for (const queryString of queryStrings) {
-        const [column, value] = queryString.split(":");
-        orderByColumns.push(column as DBTableColumns<Project>);
-        orderByValues.push(value as SortDirection);
-      }
-
-      orderByQueryData = {
-        columns: orderByColumns,
-        values: orderByValues,
-      };
-    }
-
-    const whereQueryData = buildProjectsWhereQueryData(
-      startDate,
-      endDate,
-      projectStatus,
-      searchString,
-      user,
-    );
-
-    const columnsToSelect = ["id", "title", "description", "logo_url", "project_status", "start_date", "due_date"] as const;
-
-    const result = await getPaginatedRecordsConditionally<Project>(
-      projects,
-      page,
-      pageSize,
-      orderByQueryData,
-      whereQueryData,
-      columnsToSelect,
-    );
-
-    return sendSuccessResp(c, 200, PROJECTS_FETCHED, result);
-  };
-
   getAllProjects = async (c: Context) => {
     const user = c.get("user_payload");
+
     const query = c.req.query();
     const page = +query.page || 1;
-    const pageSize = +(c.req.query("page_size") || 10);
+    const pageSize = +c.req.query("page_size")! || 10;
     const offset = (page - 1) * pageSize;
     const search = c.req.query("search_string");
     const orderBy = c.req.query("order_by");
@@ -231,7 +176,7 @@ class ProjectController {
     const reqData = await c.req.json();
     const userDetails = c.get("user_payload");
 
-    const projectId = +(c.req.param("id"));
+    const projectId = +c.req.param("id");
 
     if (!projectId) {
       throw new BadRequestException(INVALID_INPUT);
