@@ -36,7 +36,7 @@ export class AuthController {
 
     const { access_token, refresh_token } = await genJWTTokensForUser(userDetails.id);
     const { password, ...userDataWithOutPassword } = userDetails;
-
+    // if login just send msg why details
     const result: userSignInRespData = {
       user_details: userDataWithOutPassword,
       access_token,

@@ -74,7 +74,7 @@ class DashBoardController {
       values: [null],
     };
 
-    const { todayStart, todayEnd } = await getTodayDateRangeIst();
+    const { todayStart, todayEnd } = getTodayDateRangeIst();
 
     whereQueryData.columns.push("created_at", "created_at");
     whereQueryData.values.push(
@@ -107,7 +107,7 @@ class DashBoardController {
   };
 
   todaysTasksStatusCount = async (c: Context) => {
-    const { todayStart, todayEnd } = await getTodayDateRange();
+    const { todayStart, todayEnd } = getTodayDateRange();
 
     const [completedTasksCount, inProgressTasksCount, reviewTasksCount, overDueTasksCount, newTasksCount, totalTasksCount]:
     [number, number, number, number, number, number] = await Promise.all([

@@ -13,7 +13,6 @@ import { user_projects } from "../db/schema/userProjects.js";
 // filters
 export async function buildProjectFilters(search?: string, projectStatus?: any, user?: any): Promise<any[]> {
   const filters: any[] = [isNull(projects.deleted_at)];
-
   if (search?.trim()) {
     filters.push(sql`LOWER(${projects.title}) LIKE LOWER(${`%${search.trim()}%`})`);
   }
@@ -24,10 +23,11 @@ export async function buildProjectFilters(search?: string, projectStatus?: any, 
 
   if (user.user_type === "EMPLOYEE") {
     const projectIds = await getUserAssignedProjectIds(user.id);
-
-    if (projectIds.length > 0) {
-      filters.push(inArray(projects.id, projectIds));
+    if (projectIds.length === 0) {
+      // Return impossible condition (always false)
+      return [sql`1 = 0`];
     }
+    filters.push(inArray(projects.id, projectIds));
   }
 
   return filters;

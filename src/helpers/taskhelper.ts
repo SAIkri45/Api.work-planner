@@ -19,9 +19,10 @@ export async function buildTaskFilters(search?: string, taskStatus?: any, startD
   if (user.user_type === "EMPLOYEE") {
     const taskIds = await getUserAssignedTaskIds(user.id);
 
-    if (taskIds.length > 0) {
-      filters.push(inArray(Tasks.id, taskIds));
+    if (taskIds.length === 0) {
+      return [sql`1 = 0`];
     }
+    filters.push(inArray(Tasks.id, taskIds));
   }
 
   // Date range filter
@@ -70,12 +71,19 @@ export function getDateRange(daysBack: number, duration: number = 7) {
   return { startDate: startDate.toISOString(), endDate: endDate.toISOString() };
 }
 
-export async function getTaskCounts(dateRange: { startDate: string; endDate: string }) {
+export async function getTaskCounts(dateRange: { startDate: string; endDate: string }, userId: number) {
   const conditions = [
     isNull(Tasks.deleted_at),
     gte(Tasks.created_at, new Date(dateRange.startDate)),
     lte(Tasks.created_at, new Date(dateRange.endDate)),
   ];
+
+  if (userId) {
+    const taskIds = await getUserAssignedTaskIds(userId);
+    if (taskIds.length > 0) {
+      conditions.push(inArray(Tasks.id, taskIds));
+    }
+  }
 
   const productiveConditions = or(
     eq(Tasks.task_status, "COMPLETED"),
@@ -96,21 +104,29 @@ export function buildWeeklySummaryResponse(currentWeek: any, previousWeek: any) 
   const productivityPercentage = currentWeek.total > 0
     ? Math.round((currentWeek.productive / currentWeek.total) * 100)
     : 0;
+  const calculateChange = (current: number, previous: number) => {
+    if (previous === 0)
+      return null; // no previous data
+    return Number((((current - previous) / previous) * 100).toFixed(2));
+  };
 
-  const calculateChange = (current: number, previous: number) =>
-    previous > 0 ? Number(((current - previous) / previous * 100).toFixed(2)) : (current > 0 ? 100 : 0);
+  const isIncrease = (current: number, previous: number) => {
+    if (previous === 0)
+      return null; // no previous data
+    return current > previous;
+  };
 
   return {
     productivity_percentage: productivityPercentage,
     productive_tasks: {
       count: currentWeek.productive,
       change_percentage: calculateChange(currentWeek.productive, previousWeek.productive),
-      is_increase: currentWeek.productive >= previousWeek.productive,
+      is_increase: isIncrease(currentWeek.productive, previousWeek.productive),
     },
     overdue_tasks: {
       count: currentWeek.overdue,
-      change_percentage: Math.abs(calculateChange(currentWeek.overdue, previousWeek.overdue)),
-      is_increase: currentWeek.overdue >= previousWeek.overdue,
+      change_percentage: Math.abs(calculateChange(currentWeek.overdue, previousWeek.overdue) ?? 0),
+      is_increase: isIncrease(currentWeek.overdue, previousWeek.overdue),
     },
     total_tasks: currentWeek.total,
   };

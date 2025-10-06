@@ -43,7 +43,7 @@ async function getRecordsConditionally<
   columnsToSelect?: any,
   orderByQueryData?: OrderByQueryData<R>,
   inQueryData?: InQueryData<R>,
-  trx?: unknown,
+
 ) {
   const columnsRequired = prepareSelectColumnsForQuery(table, columnsToSelect);
   const whereConditions = prepareWhereQueryConditions(table, whereQueryData);
@@ -232,7 +232,7 @@ async function getPaginatedRecordsConditionallywithtrx<
     orderByConditions,
     inQueryCondition,
     paginationData,
-    trx,
+
   );
 
   return {
@@ -382,7 +382,7 @@ async function getSingleRecordByMultipleColumnValueswithtrx<
     columnsToSelect,
     orderByQueryData,
     inQueryData,
-    trx,
+
   );
 
   if (!results) {

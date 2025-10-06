@@ -19,7 +19,7 @@ async function getRecordById(table, id, columnsToSelect) {
     }
     return result[0];
 }
-async function getRecordsConditionally(table, whereQueryData, columnsToSelect, orderByQueryData, inQueryData, trx) {
+async function getRecordsConditionally(table, whereQueryData, columnsToSelect, orderByQueryData, inQueryData) {
     const columnsRequired = prepareSelectColumnsForQuery(table, columnsToSelect);
     const whereConditions = prepareWhereQueryConditions(table, whereQueryData);
     const inQueryCondition = prepareInQueryCondition(table, inQueryData);
@@ -126,7 +126,7 @@ async function getPaginatedRecordsConditionallywithtrx(table, page, pageSize, or
     const inQueryCondition = prepareInQueryCondition(table, inQueryData);
     const whereQuery = whereConditions ? and(...whereConditions) : null;
     const paginationData = { page, pageSize };
-    const results = await executeQuery(table, whereQuery, columnsRequired, orderByConditions, inQueryCondition, paginationData, trx);
+    const results = await executeQuery(table, whereQuery, columnsRequired, orderByConditions, inQueryCondition, paginationData);
     return {
         pagination_info,
         records: results,
@@ -179,7 +179,7 @@ async function getSingleRecordByMultipleColumnValueswithtrx(table, columns, valu
         columns,
         values,
     };
-    const results = await getRecordsConditionally(table, whereQueryData, columnsToSelect, orderByQueryData, inQueryData, trx);
+    const results = await getRecordsConditionally(table, whereQueryData, columnsToSelect, orderByQueryData, inQueryData);
     if (!results) {
         return null;
     }

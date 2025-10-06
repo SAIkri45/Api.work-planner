@@ -14,9 +14,11 @@ export async function buildProjectFilters(search, projectStatus, user) {
     }
     if (user.user_type === "EMPLOYEE") {
         const projectIds = await getUserAssignedProjectIds(user.id);
-        if (projectIds.length > 0) {
-            filters.push(inArray(projects.id, projectIds));
+        if (projectIds.length === 0) {
+            // Return impossible condition (always false)
+            return [sql `1 = 0`];
         }
+        filters.push(inArray(projects.id, projectIds));
     }
     return filters;
 }

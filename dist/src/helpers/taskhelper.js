@@ -13,9 +13,10 @@ export async function buildTaskFilters(search, taskStatus, startDate, endDate, u
     }
     if (user.user_type === "EMPLOYEE") {
         const taskIds = await getUserAssignedTaskIds(user.id);
-        if (taskIds.length > 0) {
-            filters.push(inArray(Tasks.id, taskIds));
+        if (taskIds.length === 0) {
+            return [sql `1 = 0`];
         }
+        filters.push(inArray(Tasks.id, taskIds));
     }
     // Date range filter
     if (startDate || endDate) {
@@ -53,12 +54,18 @@ export function getDateRange(daysBack, duration = 7) {
     startDate.setHours(0, 0, 0, 0);
     return { startDate: startDate.toISOString(), endDate: endDate.toISOString() };
 }
-export async function getTaskCounts(dateRange) {
+export async function getTaskCounts(dateRange, userId) {
     const conditions = [
         isNull(Tasks.deleted_at),
         gte(Tasks.created_at, new Date(dateRange.startDate)),
         lte(Tasks.created_at, new Date(dateRange.endDate)),
     ];
+    if (userId) {
+        const taskIds = await getUserAssignedTaskIds(userId);
+        if (taskIds.length > 0) {
+            conditions.push(inArray(Tasks.id, taskIds));
+        }
+    }
     const productiveConditions = or(eq(Tasks.task_status, "COMPLETED"), eq(Tasks.task_status, "DONE"), eq(Tasks.task_status, "IN_PROGRESS"));
     const [productive, overdue, total] = await Promise.all([
         getRecordsCount(Tasks, [...conditions, productiveConditions]),
@@ -71,18 +78,27 @@ export function buildWeeklySummaryResponse(currentWeek, previousWeek) {
     const productivityPercentage = currentWeek.total > 0
         ? Math.round((currentWeek.productive / currentWeek.total) * 100)
         : 0;
-    const calculateChange = (current, previous) => previous > 0 ? Number(((current - previous) / previous * 100).toFixed(2)) : (current > 0 ? 100 : 0);
+    const calculateChange = (current, previous) => {
+        if (previous === 0)
+            return null; // no previous data
+        return Number((((current - previous) / previous) * 100).toFixed(2));
+    };
+    const isIncrease = (current, previous) => {
+        if (previous === 0)
+            return null; // no previous data
+        return current > previous;
+    };
     return {
         productivity_percentage: productivityPercentage,
         productive_tasks: {
             count: currentWeek.productive,
             change_percentage: calculateChange(currentWeek.productive, previousWeek.productive),
-            is_increase: currentWeek.productive >= previousWeek.productive,
+            is_increase: isIncrease(currentWeek.productive, previousWeek.productive),
         },
         overdue_tasks: {
             count: currentWeek.overdue,
-            change_percentage: Math.abs(calculateChange(currentWeek.overdue, previousWeek.overdue)),
-            is_increase: currentWeek.overdue >= previousWeek.overdue,
+            change_percentage: Math.abs(calculateChange(currentWeek.overdue, previousWeek.overdue) ?? 0),
+            is_increase: isIncrease(currentWeek.overdue, previousWeek.overdue),
         },
         total_tasks: currentWeek.total,
     };

@@ -7,7 +7,7 @@ import type { ProjectsResponse, ProjectTasksResp, ProjectUsersResponse } from ".
 import type { WhereQueryData } from "../types/dbTypes.js";
 import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject, ValidatedUpdateProjectStatus } from "../validations/schemas/vProjectSchema.js";
 
-import { AVILABLE_USERS_FETCHED, INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_STATUS_UPDATED, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, PROJECTS_USERS_FETCHED_SUCCESS, TASKS_FETCHED, TASKS_STATUS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
+import { AVILABLE_USERS_FETCHED, INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_ID_REQUIRED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_STATUS_UPDATED, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, PROJECTS_USERS_FETCHED_SUCCESS, TASKS_FETCHED, TASKS_STATUS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
 import { projects } from "../db/schema/projects.js";
 import { Tasks } from "../db/schema/tasks.js";
@@ -96,13 +96,13 @@ class ProjectController {
     const projectId = +c.req.param("id");
 
     if (!projectId) {
-      throw new BadRequestException(INVALID_INPUT);
+      throw new BadRequestException(PROJECT_ID_REQUIRED);
     }
 
     const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
 
     if (!projectExists) {
-      throw new NotFoundException(PROJECT_NOT_FOUND_ID);
+      throw new NotFoundException(PROJECT_NOT_FOUND);
     }
 
     const incompleteTasks = await checkTaskExist(projectId);
@@ -201,7 +201,7 @@ class ProjectController {
     const requestBody = await c.req.json();
 
     if (!projectId) {
-      throw new BadRequestException(INVALID_INPUT);
+      throw new BadRequestException(PROJECT_ID_REQUIRED);
     }
 
     const validatedReq = await validateRequest<ValidatedAddUsersToProject>("add-users-to-project", { ...requestBody, project_id: projectId }, PROJECT_USERS_VALIDATION_ERROR);

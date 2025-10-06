@@ -214,7 +214,7 @@ async function executeQuery<R extends DBTableRow, C extends keyof R = keyof R>(
   orderByConditions: SQL[],
   inQueryCondition: SQL | null,
   paginationData?: { page: number; pageSize: number },
-  trx?: unknown,
+
 ) {
   let dQuery = columnsRequired
     ? db.select(columnsRequired).from(table).$dynamic()

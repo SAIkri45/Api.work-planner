@@ -41,13 +41,13 @@ export const taskStartDate = optional(
     string("start_date is required"),
     transform((value) => {
       // Strict ISO or YYYY-MM-DD format validation
-      if (!/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d{1,3}Z)?)?)?$/.test(value)) {
+      if (!/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3}Z)?)?)?$/.test(value)) {
         throw new ConflictException("Invalid start_date format. Use YYYY-MM-DD or full ISO string.");
       }
 
       const date = new Date(value);
 
-      if (isNaN(date.getTime())) {
+      if (Number.isNaN(date.getTime())) {
         throw new ConflictException("Invalid start_date. Please provide a valid date.");
       }
 
@@ -60,13 +60,13 @@ export const taskEndDate = optional(
   pipe(
     string("end_date must be a string"),
     transform((value) => {
-      if (!/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d{1,3}Z)?)?)?$/.test(value)) {
+      if (!/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3}Z)?)?)?$/.test(value)) {
         throw new ConflictException("Invalid end_date format. Use YYYY-MM-DD or full ISO string.");
       }
 
       const date = new Date(value);
 
-      if (isNaN(date.getTime())) {
+      if (Number.isNaN(date.getTime())) {
         throw new ConflictException("Invalid end_date. Please provide a valid date.");
       }
 

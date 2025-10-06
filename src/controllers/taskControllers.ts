@@ -1,13 +1,14 @@
 import type { Context } from "hono";
 
-import { eq, gte, isNull, lte } from "drizzle-orm";
+import { eq, gte, inArray, isNull, lte } from "drizzle-orm";
 
 import type { Task } from "../db/schema/tasks.js";
 import type { ValidatedUpdateTask, ValidatedUpdateTaskStatus } from "../validations/schemas/vTaskSchema.js";
 
 import {
-  INVALID_INPUT,
+  TASK_ID_REQUIRED,
   TASK_NOT_FOUND,
+  TASK_STATUS_FETCHED,
   TASK_STATUS_UPDATED,
   TASK_UPDATED,
   TASK_VALIDATION_ERROR,
@@ -23,37 +24,32 @@ import {
   getSingleRecordByMultipleColumnValues,
   updateRecordById,
 } from "../services/db/baseDbService.js";
-import { gatAllTaskList } from "../services/db/taskService.js";
+import { gatAllTaskList, getUserAssignedTaskIds } from "../services/db/taskService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 
 export class TasksController {
   // Get Paginated Tasks (GET)
   getPaginatedTasks = async (c: Context) => {
-    try {
-      const user = c.get("user_payload");
-      const page = +c.req.query("page")! || 1;
-      const pageSize = +c.req.query("page_size")! || 10;
-      const offset = (page - 1) * pageSize;
-      const searchString = c.req.query("search_string");
-      const orderBy = c.req.query("order_by");
-      const taskStatus = c.req.query("task_status");
-      const startDate = c.req.query("from_date");
-      const endDate = c.req.query("to_date");
+    const user = c.get("user_payload");
+    const page = +c.req.query("page")! || 1;
+    const pageSize = +c.req.query("page_size")! || 10;
+    const offset = (page - 1) * pageSize;
+    const searchString = c.req.query("search_string");
+    const orderBy = c.req.query("order_by");
+    const taskStatus = c.req.query("task_status");
+    const startDate = c.req.query("from_date");
+    const endDate = c.req.query("to_date");
 
-      const { result, total_records } = await gatAllTaskList(offset, pageSize, searchString, orderBy, taskStatus, startDate, endDate, user);
+    const { result, total_records } = await gatAllTaskList(offset, pageSize, searchString, orderBy, taskStatus, startDate, endDate, user);
 
-      const paginationInfo = getPaginationData(page, pageSize, total_records);
+    const paginationInfo = getPaginationData(page, pageSize, total_records);
 
-      const finalResponse = {
-        pagination_info: paginationInfo,
-        records: result,
-      };
-      return sendSuccessResp(c, 200, TASKS_FETCHED, finalResponse);
-    }
-    catch (error) {
-      throw error;
-    }
+    const finalResponse = {
+      pagination_info: paginationInfo,
+      records: result,
+    };
+    return sendSuccessResp(c, 200, TASKS_FETCHED, finalResponse);
   };
 
   // Get Task By Id
@@ -61,18 +57,18 @@ export class TasksController {
     const taskId = +c.req.param("id");
 
     if (!taskId) {
-      throw new BadRequestException(INVALID_INPUT);
+      throw new BadRequestException(TASK_ID_REQUIRED);
     }
 
-    const taskExists = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
+    const result = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
 
-    if (!taskExists) {
+    if (!result) {
       throw new NotFoundException(TASK_NOT_FOUND);
     }
 
-    const columnsToSelect = ["id", "task_title", "description", "task_status", "project_id", "created_by", "updated_by", "start_date", "end_date", "created_at", "updated_at"] as const;
+    // const columnsToSelect = ["id", "task_title", "description", "task_status", "project_id", "created_by", "updated_by", "start_date", "end_date", "created_at", "updated_at"] as const;
 
-    const result = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], columnsToSelect);
+    // const result = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], columnsToSelect);
 
     return sendSuccessResp(c, 200, TASKS_FETCHED, result);
   };
@@ -85,7 +81,7 @@ export class TasksController {
     const reqBody = await c.req.json();
 
     if (!taskId) {
-      throw new BadRequestException(INVALID_INPUT);
+      throw new BadRequestException(TASK_ID_REQUIRED);
     }
     const validatedReq = await validateRequest<ValidatedUpdateTask>("update-task", reqBody, TASK_VALIDATION_ERROR);
 
@@ -106,7 +102,7 @@ export class TasksController {
     const reqBody = await c.req.json();
 
     if (!taskId) {
-      throw new BadRequestException(INVALID_INPUT);
+      throw new BadRequestException(TASK_ID_REQUIRED);
     }
 
     const validatedReq = await validateRequest<ValidatedUpdateTaskStatus>("update-task-status", reqBody, TASK_VALIDATION_ERROR);
@@ -124,6 +120,7 @@ export class TasksController {
 
   getTaskStatusCounts = async (c: Context) => {
     const { startDate, endDate, dateField } = c.req.query();
+    const user = c.get("user_payload");
 
     const conditions = [isNull(Tasks.deleted_at)];
 
@@ -136,6 +133,10 @@ export class TasksController {
       if (endDate) {
         conditions.push(lte(dateColumn, `${endDate}T23:59:59`));
       }
+    }
+    const userTaskIds = await getUserAssignedTaskIds(user.id);
+    if (userTaskIds.length > 0) {
+      conditions.push(inArray(Tasks.id, userTaskIds));
     }
 
     const [
@@ -156,7 +157,7 @@ export class TasksController {
       getRecordsCount(Tasks, conditions),
     ]);
 
-    return sendSuccessResp(c, 200, "Task status fetched successfully", {
+    return sendSuccessResp(c, 200, TASK_STATUS_FETCHED, {
       total_tasks: totalTasksCount,
       total_new_tasks: newTasksCount,
       total_in_progress_tasks: inProgressTasksCount,
@@ -169,9 +170,10 @@ export class TasksController {
   };
 
   getWeeklySummary = async (c: Context) => {
+    const user = c.get("user_payload");
     const [currentWeek, previousWeek] = await Promise.all([
-      getTaskCounts(getDateRange(0)),
-      getTaskCounts(getDateRange(7)),
+      getTaskCounts(getDateRange(0), user.id),
+      getTaskCounts(getDateRange(7), user.id),
     ]);
 
     const responseData = buildWeeklySummaryResponse(currentWeek, previousWeek);

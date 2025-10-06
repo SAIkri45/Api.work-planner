@@ -12,19 +12,14 @@ const isAuthorized = createMiddleware(async (c: Context, next) => {
 });
 
 const isManagerOrAdmin = createMiddleware(async (c: Context, next) => {
-  try {
-    const userDetails = await getUserDetailsFromToken(c);
+  const userDetails = await getUserDetailsFromToken(c);
 
-    if (userDetails.user_type === "ADMIN" || userDetails.user_type === "MANAGER") {
-      c.set("user_payload", userDetails);
-      await next();
-    }
-    else {
-      throw new ConflictException("Permission denied. You don’t have access");
-    }
+  if (userDetails.user_type === "ADMIN" || userDetails.user_type === "MANAGER") {
+    c.set("user_payload", userDetails);
+    await next();
   }
-  catch (error) {
-    throw error;
+  else {
+    throw new ConflictException("Permission denied. You don’t have access");
   }
 });
 

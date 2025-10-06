@@ -40,45 +40,40 @@ import { validateRequest } from "../validations/validateRequest.js";
 export class TaskAssigneesController {
   // Create Task (with transaction)
   createTask = async (c: Context) => {
-    try {
-      const requestBody = await c.req.json();
-      const userDetails = c.get("user_payload");
+    const requestBody = await c.req.json();
+    const userDetails = c.get("user_payload");
 
-      const validatedReq = await validateRequest<ValidatedCreateTask>("create-task", requestBody, TASK_VALIDATION_ERROR);
+    const validatedReq = await validateRequest<ValidatedCreateTask>("create-task", requestBody, TASK_VALIDATION_ERROR);
 
-      const { assigned_users, ...taskData } = validatedReq;
+    const { assigned_users, ...taskData } = validatedReq;
 
-      // check duplicate task
-      const taskExists = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["task_title", "deleted_at", "project_id"], [taskData.task_title, null, taskData.project_id], ["id"]);
+    // check duplicate task
+    const taskExists = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["task_title", "deleted_at", "project_id"], [taskData.task_title, null, taskData.project_id], ["id"]);
 
-      if (taskExists) {
-        throw new ConflictException(TASK_ALREADY_EXISTS);
+    if (taskExists) {
+      throw new ConflictException(TASK_ALREADY_EXISTS);
+    }
+
+    let task: any;// here add data type
+    let insertedDataUsers: any;
+    await db.transaction(async (trx) => {
+      // create task
+      task = await saveSingleRecord<Task>(Tasks, { ...taskData, created_by: userDetails.id }, trx);
+      // task = await saveSingleRecord<Task>(Tasks, taskData, trx);
+      // assign users if provided
+      if (assigned_users?.length) {
+        const assigneeRecords = assigned_users.map(user_id => ({
+          task_id: task.id,
+          task_title: task.task_title,
+          created_by: task.created_by,
+          user_id,
+        }));
+
+        insertedDataUsers = await saveRecordswithtrx<TaskAssignees>(task_assignees, assigneeRecords, trx);
       }
+    });
 
-      let task: any;// here add data type
-      let insertedDataUsers: any;
-      await db.transaction(async (trx) => {
-        // create task
-        task = await saveSingleRecord<Task>(Tasks, { ...taskData, created_by: userDetails.id }, trx);
-        // task = await saveSingleRecord<Task>(Tasks, taskData, trx);
-        // assign users if provided
-        if (assigned_users?.length) {
-          const assigneeRecords = assigned_users.map(user_id => ({
-            task_id: task.id,
-            task_title: task.task_title,
-            created_by: task.created_by,
-            user_id,
-          }));
-
-          insertedDataUsers = await saveRecordswithtrx<TaskAssignees>(task_assignees, assigneeRecords, trx);
-        }
-      });
-
-      return sendSuccessResp(c, 200, TASK_CREATED, { ...task, insertedDataUsers });
-    }
-    catch (err) {
-      throw err;
-    }
+    return sendSuccessResp(c, 200, TASK_CREATED, { ...task, insertedDataUsers });
   };
 
   // Delete Task
@@ -86,7 +81,7 @@ export class TaskAssigneesController {
     const taskId = +c.req.param("id");
 
     if (!taskId) {
-      throw new BadRequestException(INVALID_INPUT);
+      throw new BadRequestException(TASK_ID_REQUIRED);
     }
 
     const task = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);

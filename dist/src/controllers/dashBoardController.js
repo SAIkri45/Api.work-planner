@@ -51,7 +51,7 @@ class DashBoardController {
             columns: ["deleted_at"],
             values: [null],
         };
-        const { todayStart, todayEnd } = await getTodayDateRangeIst();
+        const { todayStart, todayEnd } = getTodayDateRangeIst();
         whereQueryData.columns.push("created_at", "created_at");
         whereQueryData.values.push({ lte: todayEnd }, { gte: todayStart });
         if (taskStatus) {
@@ -67,7 +67,7 @@ class DashBoardController {
         return sendSuccessResp(c, 200, TODAY_TASKS_FETCHED, result);
     };
     todaysTasksStatusCount = async (c) => {
-        const { todayStart, todayEnd } = await getTodayDateRange();
+        const { todayStart, todayEnd } = getTodayDateRange();
         const [completedTasksCount, inProgressTasksCount, reviewTasksCount, overDueTasksCount, newTasksCount, totalTasksCount] = await Promise.all([
             getRecordsCount(Tasks, [eq(Tasks.task_status, "COMPLETED"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
             getRecordsCount(Tasks, [eq(Tasks.task_status, "IN_PROGRESS"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),

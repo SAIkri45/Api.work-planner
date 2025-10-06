@@ -6,7 +6,7 @@ import type { User } from "../db/schema/users.js";
 import type { WhereQueryData } from "../types/dbTypes.js";
 import type { ValidatedAddUser, ValidatedUpdateUserByLoginEmp, ValidatedUpdateUserPassword, ValidatedUpdateUserStatus } from "../validations/schemas/vUserSchema.js";
 
-import { EMPLOYEES_FETCHED, FAILED_TO_UPDATE_USER, INVALID_INPUT, USER_CREATED_SUCCESSFULLY, USER_DELETED, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_NOT_FOUND, USER_PASSWORD_CHANGED, USER_STATUS, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
+import { EMPLOYEES_FETCHED, INVALID_INPUT, USER_CREATED, USER_DELETED, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_ID_REQUIRED, USER_NOT_FOUND, USER_PASSWORD_CHANGED, USER_STATUS, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
@@ -99,7 +99,7 @@ export class UsersController {
     const userId = +c.req.param("id");
 
     if (!userId) {
-      throw new BadRequestException(INVALID_INPUT);
+      throw new BadRequestException(USER_ID_REQUIRED);
     }
 
     const columnsToSelect = ["id", "display_name", "profile_pic", "designation", "phone", "email", "user_type", "user_status", "created_at", "updated_at"] as const;
@@ -113,33 +113,13 @@ export class UsersController {
     return sendSuccessResp(c, 200, USER_FETCHED, user);
   };
 
-  // edit user by id
-  editUser = async (c: Context) => {
-    try {
-      const userId = +c.req.param("id");
-      const requestbody = await c.req.json();
-
-      if (!userId) {
-        throw new BadRequestException(INVALID_INPUT);
-      }
-
-      const user = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at"], [userId, null], ["id"]);
-      if (!user) {
-        throw new NotFoundException(USER_NOT_FOUND);
-      }
-    }
-    catch (err) {
-      throw new BadRequestException(FAILED_TO_UPDATE_USER);
-    }
-  };
-
   updateUser = async (c: Context) => {
     const userId = +c.req.param("id");
 
     const requestbody = await c.req.json();
 
     if (!userId) {
-      throw new BadRequestException(INVALID_INPUT);
+      throw new BadRequestException(USER_ID_REQUIRED);
     }
 
     const validatedReq = await validateRequest<ValidatedUpdateUserByLoginEmp>("update-emp", { ...requestbody, id: userId }, USER_VALIDATION_ERROR);
@@ -170,9 +150,10 @@ export class UsersController {
 
     const { password, ...result } = await saveSingleRecord<User>(users, { ...validateReq, user_name: validateReq.display_name, password: hashedPassword });
 
-    return sendSuccessResp(c, 201, USER_CREATED_SUCCESSFULLY, result);
+    return sendSuccessResp(c, 201, USER_CREATED, result);
   };
 
+  // TODO
   getAllUserRemovedProjects = async (c: Context) => {
     const user = c.get("user_payload");
     const page = +c.req.query("page")! || 1;
@@ -199,6 +180,7 @@ export class UsersController {
     return sendSuccessResp(c, 200, "Removed projects fetched successfully", finalResponse);
   };
 
+  // TODO : soft delete
   softDeleteUserById = async (c: Context) => {
     const userId = +c.req.param("id");
 
@@ -212,7 +194,7 @@ export class UsersController {
       throw new NotFoundException(USER_NOT_FOUND);
     }
 
-    const result = await softDeleteRecordById<User>(users, userId, { deleted_at: new Date() });
+    await softDeleteRecordById<User>(users, userId, { deleted_at: new Date() });
 
     return sendSuccessResp(c, 200, USER_DELETED);
   };
@@ -225,7 +207,7 @@ export class UsersController {
     const validatedReq = await validateRequest<ValidatedUpdateUserStatus>("update-user-status", requestbody, USER_VALIDATION_ERROR);
 
     if (!userId) {
-      throw new BadRequestException(INVALID_INPUT);
+      throw new BadRequestException(USER_ID_REQUIRED);
     }
 
     const user = await getSingleRecordByMultipleColumnValues<User>(users, ["id", "deleted_at"], [userId, null], ["id", "user_status"]);
