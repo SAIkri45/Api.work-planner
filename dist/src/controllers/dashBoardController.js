@@ -52,7 +52,7 @@ class DashBoardController {
             values: [null],
         };
         const { todayStart, todayEnd } = getTodayDateRangeIst();
-        whereQueryData.columns.push("created_at", "created_at");
+        whereQueryData.columns.push("start_date", "end_date");
         whereQueryData.values.push({ lte: todayEnd }, { gte: todayStart });
         if (taskStatus) {
             whereQueryData.columns.push("task_status");
@@ -68,13 +68,15 @@ class DashBoardController {
     };
     todaysTasksStatusCount = async (c) => {
         const { todayStart, todayEnd } = getTodayDateRange();
+        const todayStartISO = todayStart.toISOString();
+        const todayEndISO = todayEnd.toISOString();
         const [completedTasksCount, inProgressTasksCount, reviewTasksCount, overDueTasksCount, newTasksCount, totalTasksCount] = await Promise.all([
-            getRecordsCount(Tasks, [eq(Tasks.task_status, "COMPLETED"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
-            getRecordsCount(Tasks, [eq(Tasks.task_status, "IN_PROGRESS"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
-            getRecordsCount(Tasks, [eq(Tasks.task_status, "REVIEW"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
-            getRecordsCount(Tasks, [eq(Tasks.task_status, "OVERDUE"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
-            getRecordsCount(Tasks, [eq(Tasks.task_status, "NEW"), gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
-            getRecordsCount(Tasks, [gte(Tasks.created_at, todayStart), lte(Tasks.created_at, todayEnd), isNull(Tasks.deleted_at)]),
+            getRecordsCount(Tasks, [eq(Tasks.task_status, "COMPLETED"), lte(Tasks.start_date, todayEndISO), gte(Tasks.end_date, todayStartISO), isNull(Tasks.deleted_at)]),
+            getRecordsCount(Tasks, [eq(Tasks.task_status, "IN_PROGRESS"), lte(Tasks.start_date, todayEndISO), gte(Tasks.end_date, todayStartISO), isNull(Tasks.deleted_at)]),
+            getRecordsCount(Tasks, [eq(Tasks.task_status, "REVIEW"), lte(Tasks.start_date, todayEndISO), gte(Tasks.end_date, todayStartISO), isNull(Tasks.deleted_at)]),
+            getRecordsCount(Tasks, [eq(Tasks.task_status, "OVERDUE"), lte(Tasks.start_date, todayEndISO), gte(Tasks.end_date, todayStartISO), isNull(Tasks.deleted_at)]),
+            getRecordsCount(Tasks, [eq(Tasks.task_status, "NEW"), lte(Tasks.start_date, todayEndISO), gte(Tasks.end_date, todayStartISO), isNull(Tasks.deleted_at)]),
+            getRecordsCount(Tasks, [lte(Tasks.start_date, todayEndISO), gte(Tasks.end_date, todayStartISO), isNull(Tasks.deleted_at)]),
         ]);
         return sendSuccessResp(c, 200, TODAY_TASKS_STATUS_COUNT_FETCHED, {
             total_tasks_count: totalTasksCount,
