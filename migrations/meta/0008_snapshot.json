@@ -1,6 +1,6 @@
- {
-  "id": "0320769d-5279-4492-a7b6-ef80808a68b7",
-  "prevId": "ab2f99fc-c3a0-4550-95ab-d91271baa6c6",
+{
+  "id": "d9747be8-7141-466c-8003-9215aa31b7be",
+  "prevId": "979b2a73-ed70-430b-8066-64e25380d145",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -730,8 +730,7 @@
           "name": "project_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
-          
+          "notNull": false
         },
         "description": {
           "name": "description",
@@ -922,18 +921,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "project_title": {
-          "name": "project_title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "user_name": {
-          "name": "user_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -1069,6 +1056,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "password": {
+          "name": "password",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'123456'"
+        },
         "profile_pic": {
           "name": "profile_pic",
           "type": "varchar",
@@ -1102,18 +1096,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'ACTIVE'"
-        },
-        "is_verified": {
-          "name": "is_verified",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "is_new_user": {
-          "name": "is_new_user",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false
         },
         "created_at": {
           "name": "created_at",
