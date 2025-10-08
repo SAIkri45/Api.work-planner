@@ -76,7 +76,7 @@ export const taskEndDate = optional(
 );
 
 export const taskProjectId = pipe(
-  number("Project ID is required"),
+  number("Project  is required"),
   transform(val => Number(val)),
 );
 

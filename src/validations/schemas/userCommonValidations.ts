@@ -1,12 +1,12 @@
 import { email as emailValidator, minLength, nonEmpty, number, pipe, regex, string, transform } from "valibot";
 
-import { DESIGNATION_MIN_LENGTH, DESIGNATION_REQUIRED, EMAIL_MIN_LENGTH, EMAIL_REQUIRED, INVALID_PHONE_NUMBER, PASSWORD_MIN_LENGTH, PASSWORD_REQUIRED, USER_ID_REQUIRED, USER_NAME_MIN_LENGTH, USER_NAME_REQUIRED, USER_PHONE_REQUIRED } from "../../constants/appMessages.js";
+import { DESIGNATION_MIN_LENGTH, DESIGNATION_REQUIRED, EMAIL_MIN_LENGTH, EMAIL_REQUIRED, INVALID_EMAIL, INVALID_PHONE_NUMBER, PASSWORD_MIN_LENGTH, PASSWORD_REQUIRED, USER_ID_REQUIRED, USER_NAME_MIN_LENGTH, USER_NAME_REQUIRED, USER_PHONE_REQUIRED } from "../../constants/appMessages.js";
 
 export const userEmail = pipe(
   string(EMAIL_REQUIRED),
   nonEmpty(EMAIL_REQUIRED),
   transform(value => value.trim().toLowerCase()),
-  emailValidator(EMAIL_REQUIRED),
+  emailValidator(INVALID_EMAIL),
   minLength(8, EMAIL_MIN_LENGTH),
 );
 

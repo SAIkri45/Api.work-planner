@@ -12,7 +12,6 @@ import { task_assignees } from "../../db/schema/taskAssignees.js";
 import { Tasks } from "../../db/schema/tasks.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
-import ConflictException from "../../exceptions/conflictException.js";
 import NotFoundException from "../../exceptions/notFoundException.js";
 import { buildOrderByClause, buildProjectFilters } from "../../helpers/projectHelper.js";
 import { getMultipleRecordsByMultipleColumnValues, saveRecords } from "./baseDbService.js";
@@ -63,14 +62,8 @@ export async function getProjectUsersById(id: number, search?: string) {
 export async function insertUsersToProject(projectId: number, userIds: number[]) {
   if (!userIds.length)
     return [];
-
-  const userProjectRecords = userIds.map((userId: number) => ({
-    project_id: projectId,
-    user_id: userId,
-  }));
-
+  const userProjectRecords = userIds.map((userId: number) => ({ project_id: projectId, user_id: userId }));
   await saveRecords<UserProjects>(user_projects, userProjectRecords);
-
   return userProjectRecords;
 }
 
@@ -189,40 +182,14 @@ export async function getNonExistingUsers(projectId: number, search?: string) {
       ),
     );
 }
+export async function assignUsersToProject(projectId: number, userIds: number[]) {
+  if (!userIds.length)
+    return { assigned_users: [] };
 
-export async function assignUsersToProject(projectId: number, uniqueUserIds: number[]) {
-  const [activeUserIds, allUserIds] = await Promise.all([
-    checkedUsersInProject(projectId),
-    getAllUsersInProject(projectId),
-  ]);
+  // Directly insert users into project
+  const insertedRecords = await insertUsersToProject(projectId, userIds);
 
-  const activeSet = new Set(activeUserIds);
-  const allUsersSet = new Set(allUserIds);
-
-  const alreadyActiveUsers = uniqueUserIds.filter(id => activeSet.has(id));
-
-  if (alreadyActiveUsers.length > 0) {
-    throw new ConflictException(`Users already exist in project: ${alreadyActiveUsers.join(", ")}`);
-  }
-
-  const softDeletedUsers = uniqueUserIds.filter(
-    id => !activeSet.has(id) && allUsersSet.has(id),
-  );
-
-  const newUsers = uniqueUserIds.filter(id => !allUsersSet.has(id));
-
-  const usersToInsert = [...softDeletedUsers, ...newUsers];
-
-  const result = [];
-
-  if (usersToInsert.length > 0) {
-    const insertedRecords = await insertUsersToProject(projectId, usersToInsert);
-    result.push(...insertedRecords);
-  }
-
-  return {
-    assigned_users: result,
-  };
+  return { assigned_users: insertedRecords };
 }
 
 export async function getTasksByProjectId(

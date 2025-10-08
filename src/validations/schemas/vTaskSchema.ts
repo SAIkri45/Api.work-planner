@@ -28,7 +28,7 @@ export const VCreateTaskSchema = pipeAsync(object({
   // created_by: pipe(number()),
 
   project_id: pipe(
-    number("Project id is required"),
+    number("Project is required"),
   ),
 
   start_date: taskStartdate,

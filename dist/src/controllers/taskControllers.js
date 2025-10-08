@@ -35,7 +35,7 @@ export class TasksController {
         if (!taskId) {
             throw new BadRequestException(TASK_ID_REQUIRED);
         }
-        const result = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
+        const result = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null]);
         if (!result) {
             throw new NotFoundException(TASK_NOT_FOUND);
         }

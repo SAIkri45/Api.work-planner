@@ -62,7 +62,7 @@ class SlackOAuthController {
                     getSlackId(tokenData.user_id);
                     return sendSuccessResp(c, 200, "Authorization successful", { user: userDetails, slack_token: refreshed, jwt_token: jwtTokens });
                 }
-                catch (e) {
+                catch {
                     // If refresh fails, save the new token
                     await saveSingleRecord(slack_tokens, tokenData);
                     getSlackId(tokenData.user_id);

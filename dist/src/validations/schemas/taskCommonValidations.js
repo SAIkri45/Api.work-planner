@@ -34,7 +34,7 @@ export const taskEndDate = optional(pipe(string("end_date must be a string"), tr
     }
     return date;
 })));
-export const taskProjectId = pipe(number("Project ID is required"), transform(val => Number(val)));
+export const taskProjectId = pipe(number("Project  is required"), transform(val => Number(val)));
 export const taskCreatedBy = pipe(number("Created by is required"), transform(val => Number(val)));
 export const taskUpdatedBy = optional(pipe(number("Updated by must be a number"), transform(val => Number(val))));
 export const taskUserIds = nullish(array(number()));

@@ -1,4 +1,4 @@
-import { AVILABLE_USERS_FETCHED, INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_ID_REQUIRED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_STATUS_UPDATED, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, PROJECTS_USERS_FETCHED_SUCCESS, TASKS_FETCHED, TASKS_STATUS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
+import { AVILABLE_USERS_FETCHED, INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_FETCHED, PROJECT_ID_REQUIRED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_STATUS_UPDATED, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_USERS_FETCHED_SUCCESS, TASKS_FETCHED, TASKS_STATUS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
 import { projects } from "../db/schema/projects.js";
 import { Tasks } from "../db/schema/tasks.js";
@@ -14,34 +14,28 @@ import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 class ProjectController {
     createProject = async (c) => {
-        try {
-            const requestBody = await c.req.json();
-            const userDetails = c.get("user_payload");
-            const validatedReq = await validateRequest("create-project", requestBody, PROJECT_VALIDATION_ERROR);
-            const { assigned_users, ...projectData } = validatedReq;
-            const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["title", "deleted_at"], [validatedReq.title, null], ["id"]);
-            if (projectExists) {
-                throw new ConflictException(PROJECT_ALREADY_EXISTS);
+        const requestBody = await c.req.json();
+        const userDetails = c.get("user_payload");
+        const validatedReq = await validateRequest("create-project", requestBody, PROJECT_VALIDATION_ERROR);
+        const { assigned_users, ...projectData } = validatedReq;
+        const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["title", "deleted_at"], [validatedReq.title, null], ["id"]);
+        if (projectExists) {
+            throw new ConflictException(PROJECT_ALREADY_EXISTS);
+        }
+        let insertedData;
+        let insertedDataUsers;
+        await db.transaction(async (trx) => {
+            insertedData = await saveSingleRecordWithTrx(projects, { ...projectData, created_by: userDetails.id }, trx);
+            // insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
+            if (assigned_users?.length) {
+                const userProjectRecords = assigned_users.map(user_id => ({
+                    user_id,
+                    project_id: insertedData.id,
+                }));
+                insertedDataUsers = await saveRecordsWithTrx(user_projects, userProjectRecords, trx);
             }
-            let insertedData;
-            let insertedDataUsers;
-            await db.transaction(async (trx) => {
-                insertedData = await saveSingleRecordWithTrx(projects, { ...projectData, created_by: userDetails.id }, trx);
-                // insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
-                if (assigned_users?.length) {
-                    const userProjectRecords = assigned_users.map(user_id => ({
-                        user_id,
-                        project_id: insertedData.id,
-                    }));
-                    insertedDataUsers = await saveRecordsWithTrx(user_projects, userProjectRecords, trx);
-                }
-            });
-            return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
-        }
-        catch (error) {
-            console.error("Error at create Project", error.message);
-            throw error;
-        }
+        });
+        return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
     };
     getAllProjects = async (c) => {
         const user = c.get("user_payload");
@@ -54,10 +48,7 @@ class ProjectController {
         const projectStatus = c.req.query("project_status");
         const { result, total_records } = await getAllProjectsWithRoleBasedAccess(offset, pageSize, search, orderBy, projectStatus, user);
         const paginationInfo = getPaginationData(page, pageSize, total_records);
-        const finalResponse = {
-            pagination_info: paginationInfo,
-            records: result,
-        };
+        const finalResponse = { pagination_info: paginationInfo, records: result };
         return sendSuccessResp(c, 200, PROJECTS_FETCHED, finalResponse);
     };
     softDeleteProjectById = async (c) => {
@@ -88,10 +79,7 @@ class ProjectController {
     getAllProjectsDropDown = async (c) => {
         const searchString = c.req.query("search_string");
         const orderByQueryData = parseOrderByQuery("id", "asc");
-        const whereQueryData = {
-            columns: ["deleted_at"],
-            values: [null],
-        };
+        const whereQueryData = { columns: ["deleted_at"], values: [null] };
         const columnsToSelect = ["id", "title"];
         if (searchString) {
             // Add search string filter using LIKE
@@ -112,7 +100,7 @@ class ProjectController {
             throw new NotFoundException(PROJECT_NOT_FOUND_ID);
         }
         const result = await getProjectUsersById(projectId, searchString);
-        return sendSuccessResp(c, 200, USER_FETCHED, result);
+        return sendSuccessResp(c, 200, PROJECTS_USERS_FETCHED_SUCCESS, result);
     };
     updateProject = async (c) => {
         const reqData = await c.req.json();
@@ -188,7 +176,7 @@ class ProjectController {
         const taskStatus = c.req.query("task_status");
         const dueDate = c.req.query("due_date");
         if (!projectId) {
-            throw new BadRequestException(INVALID_INPUT);
+            throw new BadRequestException(PROJECT_ID_REQUIRED);
         }
         const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
         if (!projectExists) {
@@ -196,10 +184,7 @@ class ProjectController {
         }
         const { result, total_records } = await getTasksByProjectId(projectId, search, offset, pageSize, orderBy, taskStatus, dueDate);
         const paginationInfo = getPaginationData(page, pageSize, total_records);
-        const finalResponse = {
-            pagination_info: paginationInfo,
-            records: result,
-        };
+        const finalResponse = { pagination_info: paginationInfo, records: result };
         return sendSuccessResp(c, 200, TASKS_FETCHED, finalResponse);
     };
     getTasksStatusByProjectId = async (c) => {
@@ -221,10 +206,10 @@ class ProjectController {
         }
         const projectExists = await getSingleRecordByMultipleColumnValues(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
         if (!projectExists) {
-            throw new NotFoundException(PROJECT_NOT_FOUND_ID);
+            throw new NotFoundException(PROJECT_NOT_FOUND);
         }
         const result = await userCreatedProjectById(projectId);
-        return sendSuccessResp(c, 200, PROJECTS_FETCHED_SUCCESS, result);
+        return sendSuccessResp(c, 200, PROJECT_FETCHED, result);
     };
     getAllProjectUsersList = async (c) => {
         const user = c.get("user_payload");
@@ -236,10 +221,7 @@ class ProjectController {
         const projectStatus = c.req.query("project_status");
         const { result, total_records } = await getAllUsersInProjectWithPagination(offset, pageSize, search, orderBy, projectStatus, user);
         const paginationInfo = getPaginationData(page, pageSize, total_records);
-        const finalResponse = {
-            pagination_info: paginationInfo,
-            records: result,
-        };
+        const finalResponse = { pagination_info: paginationInfo, records: result };
         return sendSuccessResp(c, 200, PROJECTS_USERS_FETCHED_SUCCESS, finalResponse);
     };
     updateProjectStatus = async (c) => {

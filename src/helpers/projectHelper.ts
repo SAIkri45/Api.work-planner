@@ -29,7 +29,6 @@ export async function buildProjectFilters(search?: string, projectStatus?: any, 
     }
     filters.push(inArray(projects.id, projectIds));
   }
-
   return filters;
 }
 

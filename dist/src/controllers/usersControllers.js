@@ -14,7 +14,7 @@ import NotFoundException from "./../exceptions/notFoundException.js";
 export class UsersController {
     getPaginatedUsers = async (c) => {
         const page = +c.req.query("page") || 1;
-        const pageSize = +c.req.query("page_size") || 10;
+        const pageSize = +(c.req.query("page_size") || 10);
         const searchString = c.req.query("search_string") || null;
         const orderBy = c.req.query("order_by");
         const userType = c.req.query("user_type");
@@ -121,11 +121,10 @@ export class UsersController {
         };
         return sendSuccessResp(c, 200, "Removed projects fetched successfully", finalResponse);
     };
-    // TODO : soft delete
     softDeleteUserById = async (c) => {
         const userId = +c.req.param("id");
         if (!userId) {
-            throw new BadRequestException(INVALID_INPUT);
+            throw new BadRequestException(USER_ID_REQUIRED);
         }
         const user = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at"], [userId, null], ["id", "user_status"]);
         if (!user) {
@@ -155,7 +154,7 @@ export class UsersController {
             throw new BadRequestException(INVALID_INPUT);
         }
         const validateReq = await validateRequest("update-user-password", requestbody, USER_VALIDATION_ERROR);
-        const user = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at", "user_status"], [userId, null, "ACTIVE"], ["id", "user_status"]);
+        const user = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at"], [userId, null], ["id", "user_status"]);
         if (!user) {
             throw new NotFoundException(USER_NOT_FOUND);
         }
