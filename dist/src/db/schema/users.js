@@ -31,7 +31,6 @@ export const users = pgTable("users", {
 ]);
 export const userRelations = relations(users, ({ many }) => ({
     user_projects: many(user_projects),
-    projects: many(projects),
     task_assignees: many(task_assignees),
     _createdProjects: many(projects, {
         relationName: "createdByUser",
