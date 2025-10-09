@@ -45,13 +45,16 @@ export class TaskAssigneesController {
 
     const validatedReq = await validateRequest<ValidatedCreateTask>("create-task", requestBody, TASK_VALIDATION_ERROR);
 
-    const { assigned_users, ...taskData } = validatedReq;
+    let { assigned_users, ...taskData } = validatedReq;
 
     // check duplicate task
     const taskExists = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["task_title", "deleted_at", "project_id"], [taskData.task_title, null, taskData.project_id], ["id"]);
 
     if (taskExists) {
       throw new ConflictException(TASK_ALREADY_EXISTS);
+    }
+    if(userDetails.user_type === "EMPLOYEE"){
+      assigned_users = [userDetails.id];
     }
 
     let task: any;// here add data type

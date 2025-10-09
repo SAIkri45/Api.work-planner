@@ -21,21 +21,22 @@ import { getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRec
 import { assignUsersToProject, checkTaskExist, getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, softDeleteTaskAssigneesByProjectId, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
+import { User } from "../db/schema/users.js";
 
 class ProjectController {
   createProject = async (c: Context) => {
     const requestBody = await c.req.json();
-    const userDetails = c.get("user_payload");
+    const userDetails:User = c.get("user_payload");
     const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
     const { assigned_users, ...projectData } = validatedReq;
     const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["title", "deleted_at"], [validatedReq.title, null], ["id"]);
     if (projectExists) {
       throw new ConflictException(PROJECT_ALREADY_EXISTS);
     }
-    let insertedData: any;
-    let insertedDataUsers: any;
+    let insertedData ={} as Project;
+    let insertedDataUsers: UserProjects[]=[];
     await db.transaction(async (trx) => {
-      insertedData = await saveSingleRecordWithTrx<Project>(projects, { ...projectData, created_by: userDetails.id }, trx);
+       insertedData = await saveSingleRecordWithTrx<Project>(projects, { ...projectData, created_by: userDetails.id }, trx);
       // insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
       if (assigned_users?.length) {
         const userProjectRecords = assigned_users.map(user_id => ({
@@ -49,7 +50,7 @@ class ProjectController {
   };
 
   getAllProjects = async (c: Context) => {
-    const user = c.get("user_payload");
+    const user:User = c.get("user_payload");
     const query = c.req.query();
     const page = +query.page || 1;
     const pageSize = +c.req.query("page_size")! || 10;
@@ -119,7 +120,7 @@ class ProjectController {
 
   updateProject = async (c: Context) => {
     const reqData = await c.req.json();
-    const userDetails = c.get("user_payload");
+    const userDetails:User= c.get("user_payload");
     const projectId = +c.req.param("id");
     if (!projectId) {
       throw new BadRequestException(INVALID_INPUT);

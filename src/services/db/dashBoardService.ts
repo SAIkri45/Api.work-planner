@@ -1,11 +1,13 @@
-import { and, desc, ilike, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, isNull, like, lte, sql } from "drizzle-orm";
 
 import type { UserTaskInfo } from "../../types/appTypes.js";
 
 import { db } from "../../db/configuration.js";
 import { task_assignees } from "../../db/schema/taskAssignees.js";
-import { Tasks } from "../../db/schema/tasks.js";
+import { Task, Tasks } from "../../db/schema/tasks.js";
 import { users } from "../../db/schema/users.js";
+import { getTodayDateRangeIst } from "../../helpers/dashBoardhelper.js";
+import { TaskStatus } from "../../constants/appMessages.js";
 
 export async function getUserTaskStatisticsWithPagination(
   offset?: number,
@@ -31,7 +33,8 @@ export async function getUserTaskStatisticsWithPagination(
     orderByClause = desc(users.created_at);
   }
 
-  const result: any = await db.query.users.findMany({
+  // Fetch users with task assignments
+  const result = await db.query.users.findMany({
     where: and(...filters),
     orderBy: orderByClause,
     offset,
@@ -43,21 +46,23 @@ export async function getUserTaskStatisticsWithPagination(
     with: {
       task_assignees: {
         columns: {
-          task_id: true,
+          task_id: true, // include only task_id from the join table
         },
         where: isNull(task_assignees.deleted_at),
         with: {
           task: {
-            where: isNull(Tasks.deleted_at),
             columns: {
               id: true,
               task_status: true,
+              deleted_at:true,
+
             },
           },
         },
       },
     },
-  } as any);
+  });
+
 
   const totalCountResult = await db
     .select({ count: sql<number>`count(*)` })
@@ -66,10 +71,10 @@ export async function getUserTaskStatisticsWithPagination(
 
   const total_records = totalCountResult[0].count;
 
-  const processedResult: UserTaskInfo[] = result.map((user: any) => {
+  const processedResult= result.map((user) => {
     const validTasks = user.task_assignees
-      .filter((assignee: any) => assignee.task && assignee.task.task_status)
-      .map((assignee: any) => assignee.task.task_status);
+    .filter((assignee) => assignee.task && !assignee.task.deleted_at)
+    .map((assignee) => assignee.task?.task_status as TaskStatus);
 
     const statusCounts = {
       NEW: validTasks.filter((status: string) => status === "NEW").length,
@@ -95,4 +100,62 @@ export async function getUserTaskStatisticsWithPagination(
     result: processedResult,
     total_records,
   };
+}
+
+
+
+
+export async function getTodayTasksWithUsersService(page: number,pageSize: number,taskStatus?:string,searchString?: string,) {
+  const { todayStart, todayEnd } = getTodayDateRangeIst();
+  const offset = (page - 1) * pageSize;
+  const todayStartStr = todayStart.toISOString(); // 'YYYY-MM-DDTHH:MM:SS.sssZ'
+  const todayEndStr = todayEnd.toISOString();
+  const conditions: any[] = [isNull(Tasks.deleted_at)];
+  conditions.push(and(lte(Tasks.start_date, todayEndStr), gte(Tasks.end_date, todayStartStr)));
+  const validStatuses: TaskStatus[] = ["NEW", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE" ];
+  if (taskStatus && validStatuses.includes(taskStatus as TaskStatus)) {
+    conditions.push(eq(Tasks.task_status, taskStatus as TaskStatus));
+  }
+  if (searchString?.trim()) conditions.push(like(Tasks.task_title, `%${searchString.trim()}%`));
+  const totalCountResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(Tasks)
+    .where(and(...conditions));
+
+  const totalRecords = totalCountResult[0]?.count || 0;
+  const tasks = await db.query.Tasks.findMany({
+    where: and(...conditions),
+    limit: pageSize,
+    offset,
+    with: {
+      assignees: {
+           columns: {},
+        with: {
+          user: {
+            columns: {
+              id: true,
+              display_name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+   
+  const mapped_tasks =  tasks.map(task => ({
+  id: task.id,
+  task_title: task.task_title,
+  task_status: task.task_status,
+  start_date: task.start_date,
+  end_date: task.end_date,
+  created_at: task.created_at,
+  users: task.assignees?.map(a => a.user) || [], 
+}));
+
+  return {
+    result: mapped_tasks,
+    total_records: totalRecords,
+  };
+
 }
