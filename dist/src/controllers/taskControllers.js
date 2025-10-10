@@ -89,9 +89,7 @@ export class TasksController {
         }
         if (user.user_type !== "ADMIN" && user.user_type !== "MANAGER") {
             const userTaskIds = await getUserAssignedTaskIds(user.id);
-            if (userTaskIds.length > 0) {
-                conditions.push(inArray(Tasks.id, userTaskIds));
-            }
+            conditions.push(userTaskIds.length > 0 ? inArray(Tasks.id, userTaskIds) : eq(Tasks.id, 0));
         }
         const [completedTasksCount, inProgressTasksCount, reviewTasksCount, overDueTasksCount, newTasksCount, doneTasksCount, totalTasksCount,] = await Promise.all([
             getRecordsCount(Tasks, [eq(Tasks.task_status, "COMPLETED"), ...conditions]),
