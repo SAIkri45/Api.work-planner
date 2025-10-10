@@ -114,9 +114,10 @@ export class TasksController {
     };
     getWeeklySummary = async (c) => {
         const user = c.get("user_payload");
+        const userId = user.user_type === "EMPLOYEE" ? user.id : undefined;
         const [currentWeek, previousWeek] = await Promise.all([
-            getTaskCounts(getDateRange(0), user.id),
-            getTaskCounts(getDateRange(7), user.id),
+            getTaskCounts(getDateRange(0), userId),
+            getTaskCounts(getDateRange(7), userId),
         ]);
         const responseData = buildWeeklySummaryResponse(currentWeek, previousWeek);
         return sendSuccessResp(c, 200, "Weekly summary fetched successfully", responseData);

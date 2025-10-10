@@ -71,7 +71,7 @@ export function getDateRange(daysBack: number, duration: number = 7) {
   return { startDate: startDate.toISOString(), endDate: endDate.toISOString() };
 }
 
-export async function getTaskCounts(dateRange: { startDate: string; endDate: string }, userId: number) {
+export async function getTaskCounts(dateRange: { startDate: string; endDate: string }, userId?: number) {
   const conditions = [
     isNull(Tasks.deleted_at),
     gte(Tasks.created_at, new Date(dateRange.startDate)),
