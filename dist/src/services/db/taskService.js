@@ -12,7 +12,7 @@ import NotFoundException from "../../exceptions/notFoundException.js";
 import { buildOrderByClauseTasks, buildTaskFilters } from "../../helpers/taskhelper.js";
 import { getSingleRecordByMultipleColumnValues, saveRecords } from "./baseDbService.js";
 import { getAllUsersInProject } from "./projectService.js";
-export async function gatAllTaskList(offset, pageSize, search, orderBy, taskStatus, startDate, endDate, user) {
+export async function getAllTaskList(offset, pageSize, search, orderBy, taskStatus, startDate, endDate, user) {
     const filters = await buildTaskFilters(search, taskStatus, startDate, endDate, user);
     const orderByClause = buildOrderByClauseTasks(orderBy);
     const result = await db.query.Tasks.findMany({

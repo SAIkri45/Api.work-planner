@@ -17,7 +17,7 @@ import { buildOrderByClauseTasks, buildTaskFilters } from "../../helpers/taskhel
 import { getSingleRecordByMultipleColumnValues, saveRecords } from "./baseDbService.js";
 import { getAllUsersInProject } from "./projectService.js";
 
-export async function gatAllTaskList(offset?: number, pageSize?: number, search?: string, orderBy?: string, taskStatus?: any, startDate?: string, endDate?: string, user?: any) {
+export async function getAllTaskList(offset?: number, pageSize?: number, search?: string, orderBy?: string, taskStatus?: any, startDate?: string, endDate?: string, user?: any) {
   const filters = await buildTaskFilters(search, taskStatus, startDate, endDate, user);
   const orderByClause = buildOrderByClauseTasks(orderBy);
 

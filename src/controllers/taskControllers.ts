@@ -24,9 +24,10 @@ import {
   getSingleRecordByMultipleColumnValues,
   updateRecordById,
 } from "../services/db/baseDbService.js";
-import { gatAllTaskList, getUserAssignedTaskIds } from "../services/db/taskService.js";
+import { getAllTaskList, getUserAssignedTaskIds } from "../services/db/taskService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
+import { User } from "../db/schema/users.js";
 
 export class TasksController {
   // Get Paginated Tasks (GET)
@@ -41,7 +42,7 @@ export class TasksController {
     const startDate = c.req.query("from_date");
     const endDate = c.req.query("to_date");
 
-    const { result, total_records } = await gatAllTaskList(offset, pageSize, searchString, orderBy, taskStatus, startDate, endDate, user);
+    const { result, total_records } = await getAllTaskList(offset, pageSize, searchString, orderBy, taskStatus, startDate, endDate, user);
 
     const paginationInfo = getPaginationData(page, pageSize, total_records);
 
@@ -120,7 +121,7 @@ export class TasksController {
 
   getTaskStatusCounts = async (c: Context) => {
     const { startDate, endDate, dateField } = c.req.query();
-    const user = c.get("user_payload");
+    const user:User = c.get("user_payload");
 
     const conditions = [isNull(Tasks.deleted_at)];
 
@@ -134,11 +135,12 @@ export class TasksController {
         conditions.push(lte(dateColumn, `${endDate}T23:59:59`));
       }
     }
-    const userTaskIds = await getUserAssignedTaskIds(user.id);
-    if (userTaskIds.length > 0) {
-      conditions.push(inArray(Tasks.id, userTaskIds));
+    if(user.user_type !== "ADMIN" && user.user_type !== "MANAGER") { 
+       const userTaskIds = await getUserAssignedTaskIds(user.id);
+       if (userTaskIds.length > 0) {
+            conditions.push(inArray(Tasks.id, userTaskIds));
+       }
     }
-
     const [
       completedTasksCount,
       inProgressTasksCount,

@@ -6,7 +6,7 @@ import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { buildWeeklySummaryResponse, getDateRange, getTaskCounts } from "../helpers/taskhelper.js";
 import { getRecordsCount, getSingleRecordByMultipleColumnValues, updateRecordById, } from "../services/db/baseDbService.js";
-import { gatAllTaskList, getUserAssignedTaskIds } from "../services/db/taskService.js";
+import { getAllTaskList, getUserAssignedTaskIds } from "../services/db/taskService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 export class TasksController {
@@ -21,7 +21,7 @@ export class TasksController {
         const taskStatus = c.req.query("task_status");
         const startDate = c.req.query("from_date");
         const endDate = c.req.query("to_date");
-        const { result, total_records } = await gatAllTaskList(offset, pageSize, searchString, orderBy, taskStatus, startDate, endDate, user);
+        const { result, total_records } = await getAllTaskList(offset, pageSize, searchString, orderBy, taskStatus, startDate, endDate, user);
         const paginationInfo = getPaginationData(page, pageSize, total_records);
         const finalResponse = {
             pagination_info: paginationInfo,
@@ -87,9 +87,11 @@ export class TasksController {
                 conditions.push(lte(dateColumn, `${endDate}T23:59:59`));
             }
         }
-        const userTaskIds = await getUserAssignedTaskIds(user.id);
-        if (userTaskIds.length > 0) {
-            conditions.push(inArray(Tasks.id, userTaskIds));
+        if (user.user_type !== "ADMIN" && user.user_type !== "MANAGER") {
+            const userTaskIds = await getUserAssignedTaskIds(user.id);
+            if (userTaskIds.length > 0) {
+                conditions.push(inArray(Tasks.id, userTaskIds));
+            }
         }
         const [completedTasksCount, inProgressTasksCount, reviewTasksCount, overDueTasksCount, newTasksCount, doneTasksCount, totalTasksCount,] = await Promise.all([
             getRecordsCount(Tasks, [eq(Tasks.task_status, "COMPLETED"), ...conditions]),
