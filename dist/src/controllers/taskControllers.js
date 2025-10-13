@@ -39,8 +39,6 @@ export class TasksController {
         if (!result) {
             throw new NotFoundException(TASK_NOT_FOUND);
         }
-        // const columnsToSelect = ["id", "task_title", "description", "task_status", "project_id", "created_by", "updated_by", "start_date", "end_date", "created_at", "updated_at"] as const;
-        // const result = await getSingleRecordByMultipleColumnValues<Task>(Tasks, ["id", "deleted_at"], [taskId, null], columnsToSelect);
         return sendSuccessResp(c, 200, TASKS_FETCHED, result);
     };
     // Edit Task (PATCH)

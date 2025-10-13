@@ -38,7 +38,7 @@ export const VCreateTaskSchema = pipeAsync(object({
 }), transform((data) => {
   // Cross-field validation
   if (data.end_date && data.start_date) {
-    if (data.end_date <= data.start_date) {
+    if (data.end_date < data.start_date) {
       throw new ConflictException("End Date must be after Start Date");
     }
   }
@@ -79,7 +79,7 @@ export const VUpdateTaskSchema = pipeAsync(object({
 }), transform((data) => {
   // Cross-field validation
   if (data.end_date && data.start_date) {
-    if (data.end_date <= data.start_date) {
+    if (data.end_date < data.start_date) {
       throw new ConflictException("End Date must be after Start Date");
     }
   }

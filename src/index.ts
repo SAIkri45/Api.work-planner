@@ -14,10 +14,14 @@ import oAuthRouter from "./routes/slackOAuthRouters.js";
 import taskAssigneesRoutes from "./routes/taskAssigneesRoutes.js";
 import taskRouter from "./routes/taskRoutes.js";
 import userRoutes from "./routes/usersRouters.js";
+import notificationRoute from "./routes/notificationRoutes.js";
+import { initSocket } from "../socket/index.js";
 
 const apiVer = appConfig.version;
 const app = new Hono().basePath(`/${apiVer}`);
 const port = envData.PORT || 3000;
+
+
 
 app.use("*", cors());
 // app.use(
@@ -40,6 +44,7 @@ app.route("/dash-board", dashBoardRoutes);
 app.route("/", oAuthRouter);
 app.route("/users", userRoutes);
 app.route("/task-assignees", taskAssigneesRoutes);
+app.route("/notifications",notificationRoute)
 
 app.route("/auth", authRoutes);
 
@@ -66,10 +71,11 @@ app.onError((err: any, c: Context) => {
   });
 });
 
-serve({
+const server = serve({
   fetch: app.fetch,
   port,
 });
 
 // eslint-disable-next-line no-console
 console.log(`Server is running on port ${port}`);
+initSocket(server);

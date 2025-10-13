@@ -24,6 +24,7 @@ export class UsersController {
     const page = +c.req.query("page")! || 1;
     const pageSize = +(c.req.query("page_size") || 10);
     const searchString = c.req.query("search_string") || null;
+    const designation = c.req.query("designation");
     const orderBy = c.req.query("order_by");
     const userType = c.req.query("user_type");
 
@@ -42,6 +43,10 @@ export class UsersController {
     if (searchString) {
       whereQueryData.columns.push("display_name");
       whereQueryData.values.push(`%${searchString}%`);
+    }
+    if(designation){
+      whereQueryData.columns.push("designation");
+      whereQueryData.values.push(designation);
     }
 
     const columnsToSelect = ["id", "slack_id", "profile_pic", "designation", "display_name", "phone", "email", "user_type", "user_status", "created_at", "updated_at"] as const;

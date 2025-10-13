@@ -18,7 +18,7 @@ import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
-import { assignUsersToProject, checkTaskExist, getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, softDeleteTaskAssigneesByProjectId, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
+import { assignUsersToProject, checkTaskExist, createProjectWithAssignments, getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, softDeleteTaskAssigneesByProjectId, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 import { User } from "../db/schema/users.js";
@@ -28,25 +28,20 @@ class ProjectController {
     const requestBody = await c.req.json();
     const userDetails:User = c.get("user_payload");
     const validatedReq = await validateRequest<ValidatedCreateProject>("create-project", requestBody, PROJECT_VALIDATION_ERROR);
+    console.log(validatedReq)
     const { assigned_users, ...projectData } = validatedReq;
+    console.log(assigned_users)
     const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["title", "deleted_at"], [validatedReq.title, null], ["id"]);
     if (projectExists) {
       throw new ConflictException(PROJECT_ALREADY_EXISTS);
     }
-    let insertedData ={} as Project;
-    let insertedDataUsers: UserProjects[]=[];
-    await db.transaction(async (trx) => {
-       insertedData = await saveSingleRecordWithTrx<Project>(projects, { ...projectData, created_by: userDetails.id }, trx);
-      // insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
-      if (assigned_users?.length) {
-        const userProjectRecords = assigned_users.map(user_id => ({
-          user_id,
-          project_id: insertedData.id,
-        }));
-        insertedDataUsers = await saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
-      }
-    });
-    return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
+    const { project, userProjects } = await createProjectWithAssignments(
+      projectData,
+      assigned_users || [],
+      userDetails.id
+    );
+
+    return sendSuccessResp(c, 201, PROJECT_CREATED, { ...project, userProjects });
   };
 
   getAllProjects = async (c: Context) => {

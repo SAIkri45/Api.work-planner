@@ -7,14 +7,15 @@ import type { Transaction } from "../../types/dbTypes.js";
 
 import { allowedTaskStatus } from "../../constants/appMessages.js";
 import { db } from "../../db/configuration.js";
-import { projects } from "../../db/schema/projects.js";
+import { Project, projects } from "../../db/schema/projects.js";
 import { task_assignees } from "../../db/schema/taskAssignees.js";
 import { Tasks } from "../../db/schema/tasks.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import NotFoundException from "../../exceptions/notFoundException.js";
 import { buildOrderByClause, buildProjectFilters } from "../../helpers/projectHelper.js";
-import { getMultipleRecordsByMultipleColumnValues, saveRecords } from "./baseDbService.js";
+import { getMultipleRecordsByMultipleColumnValues, saveRecords, saveRecordsWithTrx, saveSingleRecordWithTrx } from "./baseDbService.js";
+import { createNotification } from "./notificationServices.js";
 
 export async function getProjectUsersById(id: number, search?: string) {
   const searchString = search?.trim();
@@ -522,3 +523,35 @@ export async function softDeleteTaskAssigneesByProjectId(
       ),
     );
 }
+export async function  createProjectWithAssignments(projectData: Partial<Project>,assignedUsers:number[],createdBy: number): Promise<{ project: Project; userProjects: UserProjects[] }> {
+    let insertedProject = {} as Project;
+    let insertedUserProjects: UserProjects[] = [];
+
+    await db.transaction(async (trx) => {
+      
+      insertedProject = await saveSingleRecordWithTrx<Project>(projects,{ ...projectData, created_by: createdBy },trx);
+      console.log(assignedUsers)
+      if (assignedUsers?.length) {
+        const userProjectRecords = assignedUsers.map((userId) => ({user_id: userId,project_id: insertedProject.id,}));
+
+        insertedUserProjects = await saveRecordsWithTrx<UserProjects>(user_projects,userProjectRecords,trx);
+        console.log("insertedUserProjects",insertedUserProjects);
+
+       
+        for (const userId of assignedUsers) {
+          await createNotification({
+            user_id: userId,
+            sender_id: createdBy,
+            project_id: insertedProject.id,
+            title: "New Project Assigned",
+            message: `You have been added to project "${insertedProject.title}".`,
+            type: "PROJECT_ASSIGN",
+           } ,trx);
+
+          
+        }
+      }
+    });
+
+    return { project: insertedProject, userProjects: insertedUserProjects };
+  }

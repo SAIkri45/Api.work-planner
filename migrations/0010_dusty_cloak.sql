@@ -1,0 +1,1 @@
+ALTER TABLE "notifications" ADD COLUMN "updated_at" timestamp DEFAULT now();

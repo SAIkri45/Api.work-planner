@@ -64,6 +64,20 @@
       "when": 1759909281751,
       "tag": "0008_fast_umar",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1760324138282,
+      "tag": "0009_organic_gorgon",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1760324884689,
+      "tag": "0010_dusty_cloak",
+      "breakpoints": true
     }
   ]
 }

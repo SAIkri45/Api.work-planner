@@ -62,9 +62,10 @@ export async function getTaskCounts(dateRange, userId) {
     ];
     if (userId) {
         const taskIds = await getUserAssignedTaskIds(userId);
-        if (taskIds.length > 0) {
-            conditions.push(inArray(Tasks.id, taskIds));
+        if (taskIds.length === 0) {
+            return [sql `1 = 0`];
         }
+        conditions.push(inArray(Tasks.id, taskIds));
     }
     const productiveConditions = or(eq(Tasks.task_status, "COMPLETED"), eq(Tasks.task_status, "DONE"), eq(Tasks.task_status, "IN_PROGRESS"));
     const [productive, overdue, total] = await Promise.all([
