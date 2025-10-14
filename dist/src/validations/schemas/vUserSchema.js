@@ -5,7 +5,6 @@ import { prepareValibotIssue } from "../prepareValibotIssue.js";
 import { userDesignation, userEmail, userId, userName, userPassword, userPhone } from "./userCommonValidations.js";
 // Phone regex
 const phoneRegex = /^(\+91|\+91-|0)?[6-9]\d{9}$/;
-// Create Legal Advisor or Advocate Schema
 export const VCreateUserSchema = pipeAsync(object({
     user_name: pipe(string(NAME_INVALID), nonEmpty(NAME_MISSING), transform(value => value.trim()), minLength(3, NAME_TOO_SHORT)),
     // ✅ slack_id optional now
@@ -44,6 +43,7 @@ export const VAddUserSchema = pipeAsync(object({
     password: userPassword,
     phone: userPhone,
     designation: userDesignation,
+    user_type: pipe(string(USER_TYPE_INVALID), transform(value => value.trim().toUpperCase()), nonEmpty(USER_TYPE_INVALID), picklist(allowedUserTypes, USER_TYPE_INVALID))
 }), rawTransformAsync(async ({ dataset, addIssue }) => {
     const { email, phone } = dataset.value;
     const { emailExists, phoneExists } = await checkEmailAndPhoneExist(email, phone);
@@ -62,6 +62,7 @@ export const VUpdateUserSchemaByLoginUser = pipeAsync(object({
     display_name: userName,
     designation: userDesignation,
     phone: userPhone,
+    user_type: pipe(string(USER_TYPE_INVALID), transform(value => value.trim().toUpperCase()), nonEmpty(USER_TYPE_INVALID), picklist(allowedUserTypes, USER_TYPE_INVALID))
 }), rawTransformAsync(async ({ dataset, addIssue }) => {
     const { email, phone, id } = dataset.value;
     const { emailExists, phoneExists } = await checkEmailAndPhoneExistExceptUserId(email, phone, id);
