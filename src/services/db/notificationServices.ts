@@ -1,27 +1,31 @@
 import { desc, eq } from "drizzle-orm";
 
-import { getIO } from "../../../socket/index.js";
 import { db } from "../../db/configuration.js";
-import { notifications } from "../../db/schema/notification.js";
-import { saveSingleRecordWithTrx } from "./baseDbService.js";
+import { NewNotification, Notification, notifications } from "../../db/schema/notification.js";
+import { saveRecordsWithTrx } from "./baseDbService.js";
+export const createNotificationsForUsers = async (
+  title: string,
+  description: string,
+  category: string,
+  trx: any,
+  userIds?: number[],
+  projectId?: number | null,
+  taskId?: number | null,
+ ) => {
+  if (!userIds?.length) return;
 
-interface NotificationInput {
-  user_id: number;
-  sender_id: number;
-  project_id: number;
-  title: string;
-  message: string;
-  type: string;
-  created_at?: Date;
-  updated_at?: Date;
-}
+  const notificationRecords: NewNotification[] = userIds.map((user_id) => ({
+    user_id,
+    project_id: projectId,
+    task_id: taskId??null,
+    title,
+    description,
+    category,
+  }));
 
-export async function createNotification(input: NotificationInput, trx: any) {
-  const notification = await saveSingleRecordWithTrx(notifications, input, trx);
-  const io = getIO();
-  io.to(`user_${input.user_id}`).emit("notification", notification);
-  return notification;
-}
+  await saveRecordsWithTrx(notifications, notificationRecords, trx);
+};
+
 
 export async function getNotificationsForUser(userId: number) {
   return await db.select().from(notifications).where(eq(notifications.user_id, userId)).orderBy(desc(notifications.created_at));

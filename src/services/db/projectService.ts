@@ -15,7 +15,6 @@ import { users } from "../../db/schema/users.js";
 import NotFoundException from "../../exceptions/notFoundException.js";
 import { buildOrderByClause, buildProjectFilters } from "../../helpers/projectHelper.js";
 import { getMultipleRecordsByMultipleColumnValues, saveRecords, saveRecordsWithTrx, saveSingleRecordWithTrx } from "./baseDbService.js";
-import { createNotification } from "./notificationServices.js";
 
 export async function getProjectUsersById(id: number, search?: string) {
   const searchString = search?.trim();

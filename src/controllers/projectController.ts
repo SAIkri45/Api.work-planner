@@ -22,6 +22,7 @@ import { getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRec
 import { assignUsersToProject, checkTaskExist,  getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, softDeleteTaskAssigneesByProjectId, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
+import { createNotificationsForUsers } from "../services/db/notificationServices.js";
 
 class ProjectController {
   createProject = async (c: Context) => {
@@ -45,9 +46,17 @@ class ProjectController {
         }));
         insertedDataUsers = await saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
       }
+       await createNotificationsForUsers(
+        "New Project Assigned",
+        `You have been assigned to project "${insertedData.title}".`,
+        "project",
+        trx,
+        assigned_users,
+        insertedData.id,
+        null
+      );
     });
-   
-        return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
+   return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
       }
 
   getAllProjects = async (c: Context) => {
