@@ -177,7 +177,7 @@ export const allowedUserTypes = [
   "EMPLOYEE",
   "MANAGER",
   "ADMIN",
-  "TEAM LEAD",
+  "TEAM_LEAD",
 ] as const;
 
 export const allowedUserStatuses = [
