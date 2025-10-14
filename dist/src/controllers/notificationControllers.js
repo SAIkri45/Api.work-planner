@@ -11,7 +11,7 @@ class NotificationController {
         const { records, total } = await getNotificationsForUser(user.id, page, limit);
         const pagination_records = getPaginationData(page, limit, total);
         const result = { pagination_records, records };
-        return sendSuccessResp(c, 200, "NOTIFICATIONS_FETCHED_SUCCESSFULLY", result);
+        return sendSuccessResp(c, 200, "Notifications fetched successfully", result);
     };
     isNotificationRead = async (c) => {
         const user = c.get("user_payload");
@@ -24,7 +24,7 @@ class NotificationController {
             throw new Error("Notification not found");
         }
         await updateRecordById(notifications, notificationId, { is_marked: true });
-        return sendSuccessResp(c, 200, "NOTIFICATION_MARKED_AS_READ");
+        return sendSuccessResp(c, 200, "Notification marked as read");
     };
 }
 export default NotificationController;
