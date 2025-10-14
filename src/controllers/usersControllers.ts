@@ -44,7 +44,7 @@ export class UsersController {
       whereQueryData.columns.push("display_name");
       whereQueryData.values.push(`%${searchString}%`);
     }
-    if(designation){
+    if (designation) {
       whereQueryData.columns.push("designation");
       whereQueryData.values.push(designation);
     }
@@ -158,7 +158,7 @@ export class UsersController {
     return sendSuccessResp(c, 201, USER_CREATED, result);
   };
 
-  // TODO
+
   getAllUserRemovedProjects = async (c: Context) => {
     const user = c.get("user_payload");
     const page = +c.req.query("page")! || 1;

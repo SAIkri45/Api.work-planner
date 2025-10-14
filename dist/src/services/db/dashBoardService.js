@@ -55,8 +55,8 @@ export async function getUserTaskStatisticsWithPagination(offset, pageSize, sear
     const total_records = totalCountResult[0].count;
     const processedResult = result.map((user) => {
         const validTasks = user.task_assignees
-            .filter((assignee) => assignee.task && !assignee.task.deleted_at)
-            .map((assignee) => assignee.task?.task_status);
+            .filter(assignee => assignee.task && !assignee.task.deleted_at)
+            .map(assignee => assignee.task?.task_status);
         const statusCounts = {
             NEW: validTasks.filter((status) => status === "NEW").length,
             IN_PROGRESS: validTasks.filter((status) => status === "IN_PROGRESS").length,

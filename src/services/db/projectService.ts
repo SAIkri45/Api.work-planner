@@ -523,35 +523,19 @@ export async function softDeleteTaskAssigneesByProjectId(
       ),
     );
 }
-export async function  createProjectWithAssignments(projectData: Partial<Project>,assignedUsers:number[],createdBy: number): Promise<{ project: Project; userProjects: UserProjects[] }> {
-    let insertedProject = {} as Project;
-    let insertedUserProjects: UserProjects[] = [];
+// export async function  createProjectWithAssignments(projectData: Partial<Project>,assignedUsers:number[],createdBy: number): Promise<{ project: Project; userProjects: UserProjects[] }> {
+//     let insertedProject = {} as Project;
+//     let insertedUserProjects: UserProjects[] = [];
 
-    await db.transaction(async (trx) => {
+//     await db.transaction(async (trx) => {
       
-      insertedProject = await saveSingleRecordWithTrx<Project>(projects,{ ...projectData, created_by: createdBy },trx);
-      console.log(assignedUsers)
-      if (assignedUsers?.length) {
-        const userProjectRecords = assignedUsers.map((userId) => ({user_id: userId,project_id: insertedProject.id,}));
+//       insertedProject = await saveSingleRecordWithTrx<Project>(projects,{ ...projectData, created_by: createdBy },trx);
+//       if (assignedUsers?.length) {
+//         const userProjectRecords = assignedUsers.map((userId) => ({user_id: userId,project_id: insertedProject.id,}));
 
-        insertedUserProjects = await saveRecordsWithTrx<UserProjects>(user_projects,userProjectRecords,trx);
-        console.log("insertedUserProjects",insertedUserProjects);
+//         insertedUserProjects = await saveRecordsWithTrx<UserProjects>(user_projects,userProjectRecords,trx);
+//       }
+//     });
 
-       
-        for (const userId of assignedUsers) {
-          await createNotification({
-            user_id: userId,
-            sender_id: createdBy,
-            project_id: insertedProject.id,
-            title: "New Project Assigned",
-            message: `You have been added to project "${insertedProject.title}".`,
-            type: "PROJECT_ASSIGN",
-           } ,trx);
-
-          
-        }
-      }
-    });
-
-    return { project: insertedProject, userProjects: insertedUserProjects };
-  }
+//     return { insertedData:insertedProject, insertedDataUsers: insertedUserProjects };
+//   }

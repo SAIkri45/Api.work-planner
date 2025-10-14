@@ -3,6 +3,7 @@ import type { Context } from "hono";
 import { eq, gte, inArray, isNull, lte } from "drizzle-orm";
 
 import type { Task } from "../db/schema/tasks.js";
+import type { User } from "../db/schema/users.js";
 import type { ValidatedUpdateTask, ValidatedUpdateTaskStatus } from "../validations/schemas/vTaskSchema.js";
 
 import {
@@ -27,7 +28,6 @@ import {
 import { getAllTaskList, getUserAssignedTaskIds } from "../services/db/taskService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
-import { User } from "../db/schema/users.js";
 
 export class TasksController {
   // Get Paginated Tasks (GET)
@@ -66,7 +66,6 @@ export class TasksController {
     if (!result) {
       throw new NotFoundException(TASK_NOT_FOUND);
     }
-
 
     return sendSuccessResp(c, 200, TASKS_FETCHED, result);
   };
@@ -118,7 +117,7 @@ export class TasksController {
 
   getTaskStatusCounts = async (c: Context) => {
     const { startDate, endDate, dateField } = c.req.query();
-    const user:User = c.get("user_payload");
+    const user: User = c.get("user_payload");
 
     const conditions = [isNull(Tasks.deleted_at)];
 
@@ -132,10 +131,10 @@ export class TasksController {
         conditions.push(lte(dateColumn, `${endDate}T23:59:59`));
       }
     }
-    if(user.user_type !== "ADMIN" && user.user_type !== "MANAGER") { 
-       const userTaskIds = await getUserAssignedTaskIds(user.id);
-       conditions.push(userTaskIds.length > 0? inArray(Tasks.id, userTaskIds): eq(Tasks.id, 0) );
-     }
+    if (user.user_type !== "ADMIN" && user.user_type !== "MANAGER") {
+      const userTaskIds = await getUserAssignedTaskIds(user.id);
+      conditions.push(userTaskIds.length > 0 ? inArray(Tasks.id, userTaskIds) : eq(Tasks.id, 0));
+    }
     const [
       completedTasksCount,
       inProgressTasksCount,
@@ -167,7 +166,7 @@ export class TasksController {
   };
 
   getWeeklySummary = async (c: Context) => {
-    const user:User = c.get("user_payload");
+    const user: User = c.get("user_payload");
     const userId = user.user_type === "EMPLOYEE" ? user.id : undefined;
 
     const [currentWeek, previousWeek] = await Promise.all([

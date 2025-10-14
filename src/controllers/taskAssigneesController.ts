@@ -53,7 +53,7 @@ export class TaskAssigneesController {
     if (taskExists) {
       throw new ConflictException(TASK_ALREADY_EXISTS);
     }
-    if(userDetails.user_type === "EMPLOYEE"){
+    if (userDetails.user_type === "EMPLOYEE") {
       assigned_users = [userDetails.id];
     }
 

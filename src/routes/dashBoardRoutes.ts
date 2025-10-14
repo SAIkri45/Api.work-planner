@@ -11,5 +11,4 @@ dashBoardRoutes.get("/statistics", dashBoardController.overAllStatistics);
 dashBoardRoutes.get("/today-tasks", isAuthorized, dashBoardController.todayTasks);
 dashBoardRoutes.get("/today-status", dashBoardController.todaysTasksStatusCount);
 
-
 export default dashBoardRoutes;

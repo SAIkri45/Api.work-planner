@@ -1,6 +1,6 @@
 import type { db } from "../db/configuration.js";
 import type { DeviceToken, DeviceTokensTable, NewDeviceToken } from "../db/schema/deviceToken.js";
-import { NewNotification, NotificationTable } from "../db/schema/notification.js";
+import type { NewNotification, NotificationTable } from "../db/schema/notification.js";
 import type { NewOTP, OTP, OTPsTable } from "../db/schema/otp.js";
 import type { NewProject, Project, ProjectsTable } from "../db/schema/projects.js";
 import type { RefreshToken, RefreshTokensTable } from "../db/schema/refreshToken.js";
@@ -9,7 +9,6 @@ import type { NewTaskAssignees, TaskAssignees, TaskAssigneesTable } from "../db/
 import type { NewTask, Task, TasksTable } from "../db/schema/tasks.js";
 import type { NewUserProjects, UserProjects, UserProjectsTable } from "../db/schema/userProjects.js";
 import type { NewUser, User, UsersTable } from "../db/schema/users.js";
-
 
 export type DBTable = UsersTable | SlackTokensTable | TasksTable | ProjectsTable | UserProjectsTable | TaskAssigneesTable | DeviceTokensTable | OTPsTable | RefreshTokensTable | NotificationTable;
 export type DBTableRow = User | SlackToken | Task | Project | UserProjects | TaskAssignees | DeviceToken | OTP | RefreshToken | Notification;

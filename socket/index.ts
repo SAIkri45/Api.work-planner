@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 
 let io: Server;
 
-export const initSocket = (server: any) => {
+export function initSocket(server: any) {
   io = new Server(server, {
     cors: { origin: "*" },
   });
@@ -19,6 +19,6 @@ export const initSocket = (server: any) => {
       console.log(" User disconnected:", socket.id);
     });
   });
-};
+}
 
 export const getIO = () => io;

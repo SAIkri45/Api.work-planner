@@ -67,7 +67,7 @@ export async function getTaskCounts(dateRange, userId) {
         }
         conditions.push(inArray(Tasks.id, taskIds));
     }
-    const productiveConditions = or(eq(Tasks.task_status, "COMPLETED"), eq(Tasks.task_status, "DONE"), eq(Tasks.task_status, "IN_PROGRESS"));
+    const productiveConditions = or(eq(Tasks.task_status, "COMPLETED"), eq(Tasks.task_status, "IN_PROGRESS"));
     const [productive, overdue, total] = await Promise.all([
         getRecordsCount(Tasks, [...conditions, productiveConditions]),
         getRecordsCount(Tasks, [...conditions, eq(Tasks.task_status, "OVERDUE")]),
@@ -76,8 +76,8 @@ export async function getTaskCounts(dateRange, userId) {
     return { productive, overdue, total };
 }
 export function buildWeeklySummaryResponse(currentWeek, previousWeek) {
-    const productivityPercentage = currentWeek.total > 0
-        ? Math.round((currentWeek.productive / currentWeek.total) * 100)
+    const productivityPercentage = currentWeek.total - currentWeek.overdue > 0
+        ? Math.round((currentWeek.productive / (currentWeek.total - currentWeek.overdue)) * 100)
         : 0;
     const calculateChange = (current, previous) => {
         if (previous === 0)

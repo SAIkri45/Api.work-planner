@@ -4,24 +4,22 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
+import { initSocket } from "../socket/index.js";
 import { appConfig } from "./config/appConfig.js";
 import { DEF_ERROR_RESP } from "./constants/appMessages.js";
 import envData from "./env.js";
 import authRoutes from "./routes/authRouters.js";
 import dashBoardRoutes from "./routes/dashBoardRoutes.js";
+import notificationRoute from "./routes/notificationRoutes.js";
 import projectRouter from "./routes/projectRoutes.js";
 import oAuthRouter from "./routes/slackOAuthRouters.js";
 import taskAssigneesRoutes from "./routes/taskAssigneesRoutes.js";
 import taskRouter from "./routes/taskRoutes.js";
 import userRoutes from "./routes/usersRouters.js";
-import notificationRoute from "./routes/notificationRoutes.js";
-import { initSocket } from "../socket/index.js";
 
 const apiVer = appConfig.version;
 const app = new Hono().basePath(`/${apiVer}`);
 const port = envData.PORT || 3000;
-
-
 
 app.use("*", cors());
 // app.use(
@@ -44,7 +42,7 @@ app.route("/dash-board", dashBoardRoutes);
 app.route("/", oAuthRouter);
 app.route("/users", userRoutes);
 app.route("/task-assignees", taskAssigneesRoutes);
-app.route("/notifications",notificationRoute)
+app.route("/notifications", notificationRoute);
 
 app.route("/auth", authRoutes);
 

@@ -110,7 +110,6 @@ export class UsersController {
         const { password, ...result } = await saveSingleRecord(users, { ...validateReq, user_name: validateReq.display_name, password: hashedPassword });
         return sendSuccessResp(c, 201, USER_CREATED, result);
     };
-    // TODO
     getAllUserRemovedProjects = async (c) => {
         const user = c.get("user_payload");
         const page = +c.req.query("page") || 1;

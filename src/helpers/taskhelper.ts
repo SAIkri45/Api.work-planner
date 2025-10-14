@@ -80,16 +80,14 @@ export async function getTaskCounts(dateRange: { startDate: string; endDate: str
 
   if (userId) {
     const taskIds = await getUserAssignedTaskIds(userId);
-   if (taskIds.length === 0) {
+    if (taskIds.length === 0) {
       return [sql`1 = 0`];
     }
     conditions.push(inArray(Tasks.id, taskIds));
   }
 
-  
   const productiveConditions = or(
     eq(Tasks.task_status, "COMPLETED"),
-    eq(Tasks.task_status, "DONE"),
     eq(Tasks.task_status, "IN_PROGRESS"),
   );
 
@@ -103,8 +101,8 @@ export async function getTaskCounts(dateRange: { startDate: string; endDate: str
 }
 
 export function buildWeeklySummaryResponse(currentWeek: any, previousWeek: any) {
-  const productivityPercentage = currentWeek.total > 0
-    ? Math.round((currentWeek.productive / currentWeek.total) * 100)
+  const productivityPercentage = currentWeek.total - currentWeek.overdue > 0
+    ? Math.round((currentWeek.productive / (currentWeek.total - currentWeek.overdue)) * 100)
     : 0;
   const calculateChange = (current: number, previous: number) => {
     if (previous === 0)
