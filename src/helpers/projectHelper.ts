@@ -117,7 +117,7 @@ export function buildProjectsWhereQueryData(
   }
 
   // User-based filtering based on role
-  if (user.user_type === "EMPLOYEE" || user.user_type === "TL") {
+  if (user.user_type === "EMPLOYEE" || user.user_type === "TEAM LEAD") {
     // Employees and Team Leaders can only see projects they're assigned to
     // This assumes you have a user_projects junction table or similar
     whereQueryData.columns.push("created_by");

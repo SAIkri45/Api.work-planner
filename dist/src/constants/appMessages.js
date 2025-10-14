@@ -160,7 +160,7 @@ export const allowedUserTypes = [
     "EMPLOYEE",
     "MANAGER",
     "ADMIN",
-    "TL",
+    "TEAM LEAD",
 ];
 export const allowedUserStatuses = [
     "ACTIVE",
