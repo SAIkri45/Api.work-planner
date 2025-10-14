@@ -5,7 +5,7 @@ import { projects } from "./projects.js";
 import { task_assignees } from "./taskAssignees.js";
 import { user_projects } from "./userProjects.js";
 
-export const userTypesEnum = pgEnum("user_type", ["SUPER_ADMIN", "EMPLOYEE", "MANAGER", "ADMIN", "TEAM LEAD"]);
+export const userTypesEnum = pgEnum("user_type", ["SUPER_ADMIN", "EMPLOYEE", "MANAGER", "ADMIN", "TEAM_LEAD"]);
 export const userStatuses = pgEnum("user_status", ["ACTIVE", "INACTIVE"]);
 
 export const users = pgTable("users", {
