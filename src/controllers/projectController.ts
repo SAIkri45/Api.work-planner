@@ -36,24 +36,30 @@ class ProjectController {
         }
         let insertedData = {} as Project;
         let insertedDataUsers: DBTableRow[] = [];
-       await db.transaction(async (trx) => {
-       insertedData= await saveSingleRecordWithTrx<Project>(projects, { ...projectData, created_by: userDetails.id }, trx);
+        
+
+        await db.transaction(async (trx) => {
+        insertedData= await saveSingleRecordWithTrx<Project>(projects, { ...projectData, created_by: userDetails.id }, trx);
       // insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
-      if (assigned_users?.length) {
+        if (assigned_users?.length) {
         const userProjectRecords = assigned_users.map(user_id => ({
           user_id,
           project_id: insertedData.id
         }));
         insertedDataUsers = await saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
       }
-       await createNotificationsForUsers(
-        "New Project Assigned",
-        `You have been assigned to project "${insertedData.title}".`,
+      let creatorMsg = `You created the project ${insertedData.title}.`;
+      let assignedMsg = `You have been assigned to project ${insertedData.title}.`;
+      await createNotificationsForUsers(
+       "New Project Created",
+        creatorMsg,
+        assignedMsg,
         "project",
         trx,
         assigned_users,
         insertedData.id,
-        null
+        undefined,
+        userDetails.id
       );
     });
    return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
@@ -76,6 +82,7 @@ class ProjectController {
 
   softDeleteProjectById = async (c: Context) => {
     const projectId = +c.req.param("id");
+    const user:User = c.get("user_payload");
     if (!projectId) {
       throw new BadRequestException(PROJECT_ID_REQUIRED);
     }
@@ -96,7 +103,17 @@ class ProjectController {
       await updateRecordByMultipleColumnValuesWithTrx<UserProjects>(user_projects, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
       await updateRecordByMultipleColumnValuesWithTrx<Task>(Tasks, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
       await softDeleteTaskAssigneesByProjectId(projectId, trx);
-    });
+      await createNotificationsForUsers("Project Deleted",`You deleted the project ${projectExists.title}.`, 
+      `Project "${projectExists.title}" has been deleted.`, 
+      "project",
+      trx,
+      undefined,
+      projectId,
+      undefined,
+      user.id
+    );
+  });
+
     return sendSuccessResp(c, 200, PROJECT_DELETED);
   };
 
@@ -261,16 +278,29 @@ class ProjectController {
 
   updateProjectStatus = async (c: Context) => {
     const projectId = +c.req.param("id");
+    const user:User = c.get("user_payload")
     const projectStatus = await c.req.json();
     if (!projectId) {
       throw new BadRequestException(INVALID_INPUT);
     }
     const validatedReq = await validateRequest<ValidatedUpdateProjectStatus>("update-project-status", projectStatus, PROJECT_VALIDATION_ERROR);
-    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id"]);
+    const projectExists = await getSingleRecordByMultipleColumnValues<Project>(projects, ["id", "deleted_at"], [projectId, null], ["id","project_status"]);
     if (!projectExists) {
       throw new NotFoundException(PROJECT_NOT_FOUND_ID);
     }
     const result = await updateRecordById<Project>(projects, projectId, validatedReq);
+    if(result.project_status!=projectExists.project_status){
+      await createNotificationsForUsers("Project Status Updated",`You have updated the "${result.title}" status to "${result.project_status}".`, 
+      `"${projectExists.title}" status  has been updated to "${result.project_status}".`, 
+      "project",
+      undefined,
+      undefined,
+      projectId,
+      undefined,
+      user.id
+    );
+  }
+   
     return sendSuccessResp(c, 200, PROJECT_STATUS_UPDATED, result);
   };
 

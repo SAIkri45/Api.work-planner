@@ -20,7 +20,7 @@ export const notifications = pgTable("notifications", {
 });
 
 export type NewNotification = typeof notifications.$inferInsert;
-export type Notification = typeof notifications.$inferSelect;
+export type Notifications = typeof notifications.$inferSelect;
 export type NotificationTable = typeof notifications;
 
 export const notificationRelations = relations(notifications, ({ one }) => ({
