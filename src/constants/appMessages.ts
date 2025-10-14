@@ -44,6 +44,7 @@ export const USER_TYPE_INVALID = "User type is invalid";
 export const USER_STATUS = "User is inactive. Please contact admin";
 export const NAME_INVALID = "Name is invalid";
 export const NAME_MISSING = "Name is required";
+export const USER_TYPE_REQUIRED = "User type is required";
 export const NAME_TOO_SHORT
     = "Minimum length of the name is 3 characters";
 export const DESIGNATION_TOO_SHORT = "Minimum length of the name is 3 characters";
