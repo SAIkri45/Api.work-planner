@@ -6,6 +6,7 @@ import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { buildWeeklySummaryResponse, getDateRange, getTaskCounts } from "../helpers/taskhelper.js";
 import { getRecordsCount, getSingleRecordByMultipleColumnValues, updateRecordById, } from "../services/db/baseDbService.js";
+import { createNotificationsForUsers } from "../services/db/notificationServices.js";
 import { getAllTaskList, getUserAssignedTaskIds } from "../services/db/taskService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
@@ -54,22 +55,25 @@ export class TasksController {
         if (!taskExists) {
             throw new NotFoundException(TASK_NOT_FOUND);
         }
-        //  const result = await updateRecordById<Task>(Tasks, taskId, validatedReq);
         const result = await updateRecordById(Tasks, taskId, { ...validatedReq, updated_by: userDetails.id });
         return sendSuccessResp(c, 200, TASK_UPDATED, result);
     };
     updateTaskStatus = async (c) => {
         const taskId = +c.req.param("id");
         const reqBody = await c.req.json();
+        const user = c.get("user_payload");
         if (!taskId) {
             throw new BadRequestException(TASK_ID_REQUIRED);
         }
         const validatedReq = await validateRequest("update-task-status", reqBody, TASK_VALIDATION_ERROR);
-        const taskExists = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null], ["id"]);
+        const taskExists = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at"], [taskId, null]);
         if (!taskExists) {
             throw new NotFoundException(TASK_NOT_FOUND);
         }
         const result = await updateRecordById(Tasks, taskId, validatedReq);
+        if (result.task_status !== taskExists.task_status) {
+            await createNotificationsForUsers("Task Status Updated", `You have updated the ${result.task_title} status to ${result.task_status}.`, `${taskExists.task_title} status  has been updated to "${result.task_status}".`, "task", undefined, undefined, taskExists.project_id, taskExists.id, user.id);
+        }
         return sendSuccessResp(c, 200, TASK_STATUS_UPDATED, result);
     };
     getTaskStatusCounts = async (c) => {

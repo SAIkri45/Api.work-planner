@@ -4,7 +4,7 @@ export function sendSuccessResp(c, status, message, data) {
         success: true,
         message,
     };
-    if (data) {
+    if (data !== undefined) {
         resp.data = data;
     }
     return c.json(resp, status);

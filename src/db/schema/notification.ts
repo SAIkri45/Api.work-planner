@@ -15,7 +15,7 @@ export const notifications = pgTable("notifications", {
   category: text("category").default("message"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
-  is_marked:boolean("is_marked").default(false)
+  is_marked: boolean("is_marked").default(false),
 
 });
 
@@ -28,7 +28,7 @@ export const notificationRelations = relations(notifications, ({ one }) => ({
     fields: [notifications.user_id],
     references: [users.id],
   }),
-   
+
   project: one(projects, {
     fields: [notifications.project_id],
     references: [projects.id],

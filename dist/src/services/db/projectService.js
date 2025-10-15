@@ -129,8 +129,9 @@ export async function getNonExistingUsers(projectId, search) {
 export async function assignUsersToProject(projectId, userIds) {
     if (!userIds.length)
         return { assigned_users: [] };
-    // Directly insert users into project
-    const insertedRecords = await insertUsersToProject(projectId, userIds);
+    const userProjectRecords = userIds.map((userId) => ({ project_id: projectId, user_id: userId }));
+    const insertedRecords = await saveRecords(user_projects, userProjectRecords);
+    // const insertedRecords = await insertUsersToProject(projectId, userIds);
     return { assigned_users: insertedRecords };
 }
 export async function getTasksByProjectId(projectId, search, offset, pageSize, orderBy, taskStatus, dueDate) {
@@ -376,15 +377,3 @@ export async function softDeleteTaskAssigneesByProjectId(projectId, trx) {
     })
         .where(and(inArray(task_assignees.task_id, taskIds), isNull(task_assignees.deleted_at)));
 }
-// export async function  createProjectWithAssignments(projectData: Partial<Project>,assignedUsers:number[],createdBy: number): Promise<{ project: Project; userProjects: UserProjects[] }> {
-//     let insertedProject = {} as Project;
-//     let insertedUserProjects: UserProjects[] = [];
-//     await db.transaction(async (trx) => {
-//       insertedProject = await saveSingleRecordWithTrx<Project>(projects,{ ...projectData, created_by: createdBy },trx);
-//       if (assignedUsers?.length) {
-//         const userProjectRecords = assignedUsers.map((userId) => ({user_id: userId,project_id: insertedProject.id,}));
-//         insertedUserProjects = await saveRecordsWithTrx<UserProjects>(user_projects,userProjectRecords,trx);
-//       }
-//     });
-//     return { insertedData:insertedProject, insertedDataUsers: insertedUserProjects };
-//   }

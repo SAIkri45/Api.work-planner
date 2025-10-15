@@ -9,7 +9,7 @@ export function sendSuccessResp(c: Context, status: ContentfulStatusCode, messag
     success: true,
     message,
   };
-  if (data) {
+  if (data !== undefined) {
     resp.data = data;
   }
 

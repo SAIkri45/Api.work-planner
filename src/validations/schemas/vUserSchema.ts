@@ -10,7 +10,6 @@ import { userDesignation, userEmail, userId, userName, userPassword, userPhone }
 // Phone regex
 const phoneRegex = /^(\+91|\+91-|0)?[6-9]\d{9}$/;
 
-
 export const VCreateUserSchema = pipeAsync(
   object({
     user_name: pipe(
@@ -122,7 +121,7 @@ export const VAddUserSchema = pipeAsync(
     password: userPassword,
     phone: userPhone,
     designation: userDesignation,
-    user_type:pipe(picklist(allowedUserTypes, USER_TYPE_INVALID)),
+    user_type: pipe(picklist(allowedUserTypes, USER_TYPE_INVALID)),
   }),
   rawTransformAsync(async ({ dataset, addIssue }) => {
     const { email, phone } = dataset.value;
@@ -154,7 +153,7 @@ export const VUpdateUserSchemaByLoginUser = pipeAsync(
       transform(value => value.trim().toUpperCase()),
       nonEmpty(USER_TYPE_REQUIRED),
       picklist(allowedUserTypes, USER_TYPE_INVALID),
-    )
+    ),
   }),
   rawTransformAsync(async ({ dataset, addIssue }) => {
     const { email, phone, id } = dataset.value;

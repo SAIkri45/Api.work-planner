@@ -1,8 +1,9 @@
+import { eq } from "drizzle-orm";
+import { notifications } from "../db/schema/notification.js";
+import { getPaginationData } from "../helpers/paginationHelper.js";
+import { getRecordsConditionally, getRecordsCount, getSingleRecordByMultipleColumnValues, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { getNotificationsForUser } from "../services/db/notificationServices.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
-import { getPaginationData } from "../helpers/paginationHelper.js";
-import { getSingleRecordByMultipleColumnValues, updateRecordById } from "../services/db/baseDbService.js";
-import { notifications } from "../db/schema/notification.js";
 class NotificationController {
     getNotifications = async (c) => {
         const user = c.get("user_payload");
@@ -25,6 +26,21 @@ class NotificationController {
         }
         await updateRecordById(notifications, notificationId, { is_marked: true });
         return sendSuccessResp(c, 200, "Notification marked as read");
+    };
+    markAllNotificationsRead = async (c) => {
+        const user = c.get("user_payload");
+        const allNotifications = await getRecordsConditionally(notifications, { columns: ["user_id", "is_marked"], values: [user.id, false] }, ["id"]);
+        if (!allNotifications || allNotifications.length === 0) {
+            return sendSuccessResp(c, 200, "No notifications to mark");
+        }
+        await updateRecordByMultipleColumnValues(notifications, ["user_id", "is_marked"], [user.id, false], { is_marked: true });
+        return sendSuccessResp(c, 200, "All notifications marked as read");
+    };
+    countUnreadNotifications = async (c) => {
+        const user = c.get("user_payload");
+        const count = await getRecordsCount(notifications, [eq(notifications.user_id, user.id), eq(notifications.is_marked, false)]);
+        ;
+        return sendSuccessResp(c, 200, "Unread notifications count", count);
     };
 }
 export default NotificationController;

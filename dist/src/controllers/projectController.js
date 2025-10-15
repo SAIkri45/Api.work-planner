@@ -9,10 +9,10 @@ import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
+import { createNotificationsForUsers } from "../services/db/notificationServices.js";
 import { assignUsersToProject, checkTaskExist, getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, softDeleteTaskAssigneesByProjectId, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
-import { createNotificationsForUsers } from "../services/db/notificationServices.js";
 class ProjectController {
     createProject = async (c) => {
         const requestBody = await c.req.json();
@@ -31,12 +31,12 @@ class ProjectController {
             if (assigned_users?.length) {
                 const userProjectRecords = assigned_users.map(user_id => ({
                     user_id,
-                    project_id: insertedData.id
+                    project_id: insertedData.id,
                 }));
                 insertedDataUsers = await saveRecordsWithTrx(user_projects, userProjectRecords, trx);
             }
-            let creatorMsg = `You created the project ${insertedData.title}.`;
-            let assignedMsg = `You have been assigned to project ${insertedData.title}.`;
+            const creatorMsg = `You created the project ${insertedData.title}.`;
+            const assignedMsg = `You have been assigned to project ${insertedData.title}.`;
             await createNotificationsForUsers("New Project Created", creatorMsg, assignedMsg, "project", trx, assigned_users, insertedData.id, undefined, userDetails.id);
         });
         return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
@@ -243,8 +243,8 @@ class ProjectController {
             throw new NotFoundException(PROJECT_NOT_FOUND_ID);
         }
         const result = await updateRecordById(projects, projectId, validatedReq);
-        if (result.project_status != projectExists.project_status) {
-            await createNotificationsForUsers("Project Status Updated", `You have updated the "${result.title}" status to "${result.project_status}".`, `"${projectExists.title}" status  has been updated to "${result.project_status}".`, "project", undefined, undefined, projectId, undefined, user.id);
+        if (result.project_status !== projectExists.project_status) {
+            await createNotificationsForUsers("Project Status Updated", `You have updated the ${result.title} status to ${result.project_status}.`, `${result.title} status  has been updated to ${result.project_status}.`, "project", undefined, undefined, projectId, undefined, user.id);
         }
         return sendSuccessResp(c, 200, PROJECT_STATUS_UPDATED, result);
     };

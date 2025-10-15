@@ -13,7 +13,7 @@ export const notifications = pgTable("notifications", {
     category: text("category").default("message"),
     created_at: timestamp("created_at").defaultNow(),
     updated_at: timestamp("updated_at").defaultNow(),
-    is_marked: boolean("is_marked").default(false)
+    is_marked: boolean("is_marked").default(false),
 });
 export const notificationRelations = relations(notifications, ({ one }) => ({
     user: one(users, {

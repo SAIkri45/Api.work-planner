@@ -6,6 +6,7 @@ import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { getSingleRecordByMultipleColumnValues, saveRecordswithtrx, saveSingleRecord, updateRecordById, updateRecordByMultipleColumnValues, updateRecordByMultipleColumnValuesWithTrx, } from "../services/db/baseDbService.js";
+import { createNotificationsForUsers } from "../services/db/notificationServices.js";
 import { assignUsersToTask, getUnassignedUsersForTask, usersByTaskIdDropdown } from "../services/db/taskService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
@@ -16,21 +17,17 @@ export class TaskAssigneesController {
         const userDetails = c.get("user_payload");
         const validatedReq = await validateRequest("create-task", requestBody, TASK_VALIDATION_ERROR);
         let { assigned_users, ...taskData } = validatedReq;
-        // check duplicate task
         const taskExists = await getSingleRecordByMultipleColumnValues(Tasks, ["task_title", "deleted_at", "project_id"], [taskData.task_title, null, taskData.project_id], ["id"]);
         if (taskExists) {
             throw new ConflictException(TASK_ALREADY_EXISTS);
         }
-        if (userDetails.user_type === "EMPLOYEE") {
+        if (!assigned_users?.length && userDetails.user_type !== "MANAGER") {
             assigned_users = [userDetails.id];
         }
-        let task; // here add data type
+        let task = null;
         let insertedDataUsers;
         await db.transaction(async (trx) => {
-            // create task
             task = await saveSingleRecord(Tasks, { ...taskData, created_by: userDetails.id }, trx);
-            // task = await saveSingleRecord<Task>(Tasks, taskData, trx);
-            // assign users if provided
             if (assigned_users?.length) {
                 const assigneeRecords = assigned_users.map(user_id => ({
                     task_id: task.id,
@@ -40,12 +37,16 @@ export class TaskAssigneesController {
                 }));
                 insertedDataUsers = await saveRecordswithtrx(task_assignees, assigneeRecords, trx);
             }
+            const creatorMsg = `You created the task ${task.task_title}.`;
+            const assignedMsg = `You have been assigned to task ${task.task_title}.`;
+            await createNotificationsForUsers("New Task Created", creatorMsg, assignedMsg, "task", trx, assigned_users, task.project_id, task.id, userDetails.id);
         });
-        return sendSuccessResp(c, 200, TASK_CREATED, { ...task, insertedDataUsers });
+        return sendSuccessResp(c, 200, TASK_CREATED, { task, insertedDataUsers });
     };
     // Delete Task
     deleteTask = async (c) => {
         const taskId = +c.req.param("id");
+        const user = c.get("user_payload");
         if (!taskId) {
             throw new BadRequestException(TASK_ID_REQUIRED);
         }
@@ -53,13 +54,14 @@ export class TaskAssigneesController {
         if (!task) {
             throw new NotFoundException(TASK_NOT_FOUND);
         }
-        const checkTaskStatus = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at", "task_status"], [taskId, null, "COMPLETED"], ["id"]);
-        if (!checkTaskStatus) {
+        const isTaskExists = await getSingleRecordByMultipleColumnValues(Tasks, ["id", "deleted_at", "task_status"], [taskId, null, "COMPLETED"]);
+        if (!isTaskExists) {
             throw new ConflictException(TASK_STATUS_NOT_COMPLETED);
         }
         await db.transaction(async (trx) => {
             updateRecordById(Tasks, taskId, { deleted_at: new Date() }, trx);
             updateRecordByMultipleColumnValuesWithTrx(task_assignees, ["task_id"], [taskId], { deleted_at: new Date() }, trx);
+            await createNotificationsForUsers("Task Deleted", `You have deleted the ${isTaskExists.task_title}.`, `${isTaskExists.task_title} has been deleted .`, "task", trx, undefined, task.project_id, task.id, user.id);
         });
         return sendSuccessResp(c, 200, TASK_DELETED);
     };

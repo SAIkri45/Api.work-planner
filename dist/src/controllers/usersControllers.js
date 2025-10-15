@@ -13,6 +13,7 @@ import { validateRequest } from "../validations/validateRequest.js";
 import NotFoundException from "./../exceptions/notFoundException.js";
 export class UsersController {
     getPaginatedUsers = async (c) => {
+        const user = c.get("user_payload");
         const page = +c.req.query("page") || 1;
         const pageSize = +(c.req.query("page_size") || 10);
         const searchString = c.req.query("search_string") || null;
@@ -38,6 +39,7 @@ export class UsersController {
         }
         const columnsToSelect = ["id", "slack_id", "profile_pic", "designation", "display_name", "phone", "email", "user_type", "user_status", "created_at", "updated_at"];
         const result = await getPaginatedRecordsConditionally(users, page, pageSize, orderByQueryData, whereQueryData, columnsToSelect);
+        result.records = result.records.filter(u => u.id !== user.id);
         return sendSuccessResp(c, 200, USERS_FETCHED, result);
     };
     // 2. Dropdown list (id + full_name only)
