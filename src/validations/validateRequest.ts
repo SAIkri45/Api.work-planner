@@ -9,6 +9,7 @@ import { VAddUsersToProjectSchema, VCreateProjectSchema, VRemoveUsersFromProject
 import { VAssignUsersToTaskSchema, VRemoveUsersFromTaskSchema } from "./schemas/vTaskAssigneesSchema.js";
 import { VCreateTaskSchema, VUpdateTaskSchema, VUpdateTaskStatusSchema } from "./schemas/vTaskSchema.js";
 import { VAddUserSchema, VCreateUserSchema, VUpdateUserPasswordSchema, VUpdateUserSchema, VUpdateUserSchemaByLoginUser, VUserStatusSchema } from "./schemas/vUserSchema.js";
+import { CreateChatSchema } from "./schemas/vChatSchema.js";
 
 export async function validateRequest<R extends ValidatedRequest>(
   actionType: AppActivity,
@@ -77,6 +78,9 @@ export async function validateRequest<R extends ValidatedRequest>(
       break;
     case "update-user-password":
       schema = VUpdateUserPasswordSchema;
+      break;
+    case "create-chat":
+      schema = CreateChatSchema;
       break;
     default:
       break;

@@ -13,6 +13,7 @@ import oAuthRouter from "./routes/slackOAuthRouters.js";
 import taskAssigneesRoutes from "./routes/taskAssigneesRoutes.js";
 import taskRouter from "./routes/taskRoutes.js";
 import userRoutes from "./routes/usersRouters.js";
+import { chatRoutes } from "./routes/chatRoutes.js";
 const apiVer = appConfig.version;
 const app = new Hono().basePath(`/${apiVer}`);
 const port = envData.PORT || 3000;
@@ -36,6 +37,7 @@ app.route("/", oAuthRouter);
 app.route("/users", userRoutes);
 app.route("/task-assignees", taskAssigneesRoutes);
 app.route("/notifications", notificationRoute);
+app.route("/chats", chatRoutes);
 app.route("/auth", authRoutes);
 // handling errors globally
 app.onError((err, c) => {

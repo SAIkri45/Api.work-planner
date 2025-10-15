@@ -1,4 +1,5 @@
 import type { db } from "../db/configuration.js";
+import { Chats, ChatTable, NewChat } from "../db/schema/chats.js";
 import type { DeviceToken, DeviceTokensTable, NewDeviceToken } from "../db/schema/deviceToken.js";
 import type { NewNotification, Notifications, NotificationTable } from "../db/schema/notification.js";
 import type { NewOTP, OTP, OTPsTable } from "../db/schema/otp.js";
@@ -10,9 +11,9 @@ import type { NewTask, Task, TasksTable } from "../db/schema/tasks.js";
 import type { NewUserProjects, UserProjects, UserProjectsTable } from "../db/schema/userProjects.js";
 import type { NewUser, User, UsersTable } from "../db/schema/users.js";
 
-export type DBTable = UsersTable | SlackTokensTable | TasksTable | ProjectsTable | UserProjectsTable | TaskAssigneesTable | DeviceTokensTable | OTPsTable | RefreshTokensTable | NotificationTable;
-export type DBTableRow = User | SlackToken | Task | Project | UserProjects | TaskAssignees | DeviceToken | OTP | RefreshToken | Notifications;
-export type DBNewRecord = NewUser | NewSlackToken | NewTask | NewProject | NewUserProjects | NewTaskAssignees | NewDeviceToken | NewOTP | NewDeviceToken | NewNotification;
+export type DBTable = UsersTable | SlackTokensTable | TasksTable | ProjectsTable | UserProjectsTable | TaskAssigneesTable | DeviceTokensTable | OTPsTable | RefreshTokensTable | NotificationTable | ChatTable;
+export type DBTableRow = User | SlackToken | Task | Project | UserProjects | TaskAssignees | DeviceToken | OTP | RefreshToken | Notifications | Chats;
+export type DBNewRecord = NewUser | NewSlackToken | NewTask | NewProject | NewUserProjects | NewTaskAssignees | NewDeviceToken | NewOTP | NewDeviceToken | NewNotification | NewChat;
 export type DBNewRecords = NewUser[] | NewSlackToken[] | NewTask[] | NewProject[] | NewUserProjects[] | NewTaskAssignees[] | NewDeviceToken[] | NewOTP[] | NewDeviceToken[];
 
 export type DBTableColumns<T extends DBTableRow> = keyof T;

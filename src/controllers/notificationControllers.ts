@@ -48,8 +48,8 @@ class NotificationController {
 
   countUnreadNotifications = async (c: Context) => {
     const user: User = c.get("user_payload");
-    const count = await getRecordsCount(notifications, [eq(notifications.user_id, user.id), eq(notifications.is_marked, false)]); ;
-    return sendSuccessResp(c, 200, "Unread notifications count", count);
+    const result = await getRecordsCount(notifications, [eq(notifications.user_id, user.id), eq(notifications.is_marked, false)]); ;
+    return sendSuccessResp(c, 200, "Unread notifications count", {count:result});
   };
 }
 export default NotificationController;
