@@ -22,8 +22,9 @@ export class UsersController {
         const userType = c.req.query("user_type");
         const orderByQueryData = parseOrderByQuery("created_at", "desc", orderBy);
         const whereQueryData = {
-            columns: ["deleted_at"],
-            values: [null],
+            columns: ["deleted_at", "id"],
+            values: [null, user.id],
+            relations: ["eq", "ne"],
         };
         if (userType) {
             whereQueryData.columns.push("user_type");
@@ -39,7 +40,6 @@ export class UsersController {
         }
         const columnsToSelect = ["id", "slack_id", "profile_pic", "designation", "display_name", "phone", "email", "user_type", "user_status", "created_at", "updated_at"];
         const result = await getPaginatedRecordsConditionally(users, page, pageSize, orderByQueryData, whereQueryData, columnsToSelect);
-        result.records = result.records.filter(u => u.id !== user.id);
         return sendSuccessResp(c, 200, USERS_FETCHED, result);
     };
     // 2. Dropdown list (id + full_name only)

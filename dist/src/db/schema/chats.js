@@ -1,8 +1,8 @@
+import { relations } from "drizzle-orm";
 import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
-import { users } from "./users.js";
 import { projects } from "./projects.js";
 import { Tasks } from "./tasks.js";
-import { relations } from "drizzle-orm";
+import { users } from "./users.js";
 export const chats = pgTable("chats", {
     id: serial("id").primaryKey().notNull(),
     user_id: integer("user_id").notNull().references(() => users.id),
@@ -11,7 +11,7 @@ export const chats = pgTable("chats", {
     description: text("description").notNull(),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
-    deleted_at: timestamp("deleted_at")
+    deleted_at: timestamp("deleted_at"),
 });
 export const chatRelations = relations(chats, ({ one }) => ({
     user: one(users, {

@@ -5,11 +5,11 @@ import type { AppActivity, ValidatedRequest } from "../types/appTypes.js";
 import UnprocessableContentException from "../exceptions/unprocessableContentException.js";
 import { VSignInSchema, VSignUpOrSignInSchema, VSignUpOrSignInVerifySchema } from "./schemas/signInSignUpValidationSchema.js";
 import { VUserSigninSchema } from "./schemas/signinValidations.js";
+import { CreateChatSchema } from "./schemas/vChatSchema.js";
 import { VAddUsersToProjectSchema, VCreateProjectSchema, VRemoveUsersFromProjectSchema, VUpdateProjectSchema, VUpdateProjectStatusSchema } from "./schemas/vProjectSchema.js";
 import { VAssignUsersToTaskSchema, VRemoveUsersFromTaskSchema } from "./schemas/vTaskAssigneesSchema.js";
 import { VCreateTaskSchema, VUpdateTaskSchema, VUpdateTaskStatusSchema } from "./schemas/vTaskSchema.js";
 import { VAddUserSchema, VCreateUserSchema, VUpdateUserPasswordSchema, VUpdateUserSchema, VUpdateUserSchemaByLoginUser, VUserStatusSchema } from "./schemas/vUserSchema.js";
-import { CreateChatSchema } from "./schemas/vChatSchema.js";
 
 export async function validateRequest<R extends ValidatedRequest>(
   actionType: AppActivity,

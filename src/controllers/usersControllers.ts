@@ -32,8 +32,9 @@ export class UsersController {
     const orderByQueryData = parseOrderByQuery<User>("created_at", "desc", orderBy);
 
     const whereQueryData: WhereQueryData<User> = {
-      columns: ["deleted_at"],
-      values: [null],
+      columns: ["deleted_at", "id"],
+      values: [null, user.id],
+      relations: ["eq", "ne"],
     };
 
     if (userType) {
@@ -52,7 +53,6 @@ export class UsersController {
 
     const columnsToSelect = ["id", "slack_id", "profile_pic", "designation", "display_name", "phone", "email", "user_type", "user_status", "created_at", "updated_at"] as const;
     const result = await getPaginatedRecordsConditionally<User>(users, page, pageSize, orderByQueryData, whereQueryData, columnsToSelect);
-    result.records = result.records.filter(u => u.id !== user.id);
     return sendSuccessResp(c, 200, USERS_FETCHED, result);
   };
 

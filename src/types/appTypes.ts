@@ -5,7 +5,7 @@ import type { Task } from "../db/schema/tasks.js";
 import type { UserProjects } from "../db/schema/userProjects.js";
 import type { User } from "../db/schema/users.js";
 import type { ValidatedSignIn, ValidatedSignUpOrSignIn, ValidatedSignUpOrSignInVerification } from "../validations/schemas/signInSignUpValidationSchema.js";
-import { ValidatedCreateChat } from "../validations/schemas/vChatSchema.js";
+import type { ValidatedCreateChat } from "../validations/schemas/vChatSchema.js";
 import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject, ValidatedUpdateProjectStatus } from "../validations/schemas/vProjectSchema.js";
 import type { ValidatedAssignUsersToTask, ValidatedCreateTaskAssignee, ValidatedRemoveUsersFromTask } from "../validations/schemas/vTaskAssigneesSchema.js";
 import type { ValidatedCreateTask, ValidatedUpdateTask, ValidatedUpdateTaskStatus } from "../validations/schemas/vTaskSchema.js";

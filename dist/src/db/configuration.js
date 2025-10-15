@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import fs from "node:fs";
 import pg from "pg";
 import { dbConfig } from "../config/dbConfig.js";
+import * as chatshema from "./schema/chats.js";
 import * as deviceTokens from "./schema/deviceToken.js";
 import * as otps from "./schema/otp.js";
 import * as projectSchema from "./schema/projects.js";
@@ -35,5 +36,6 @@ export const db = drizzle({
         ...otps,
         ...refreshTokens,
         ...deviceTokens,
+        ...chatshema,
     },
 });

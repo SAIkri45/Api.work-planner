@@ -9,6 +9,7 @@ import { appConfig } from "./config/appConfig.js";
 import { DEF_ERROR_RESP } from "./constants/appMessages.js";
 import envData from "./env.js";
 import authRoutes from "./routes/authRouters.js";
+import { chatRoutes } from "./routes/chatRoutes.js";
 import dashBoardRoutes from "./routes/dashBoardRoutes.js";
 import notificationRoute from "./routes/notificationRoutes.js";
 import projectRouter from "./routes/projectRoutes.js";
@@ -16,7 +17,6 @@ import oAuthRouter from "./routes/slackOAuthRouters.js";
 import taskAssigneesRoutes from "./routes/taskAssigneesRoutes.js";
 import taskRouter from "./routes/taskRoutes.js";
 import userRoutes from "./routes/usersRouters.js";
-import { chatRoutes } from "./routes/chatRoutes.js";
 
 const apiVer = appConfig.version;
 const app = new Hono().basePath(`/${apiVer}`);
@@ -44,7 +44,7 @@ app.route("/", oAuthRouter);
 app.route("/users", userRoutes);
 app.route("/task-assignees", taskAssigneesRoutes);
 app.route("/notifications", notificationRoute);
-app.route("/chats",chatRoutes)
+app.route("/chats", chatRoutes);
 
 app.route("/auth", authRoutes);
 

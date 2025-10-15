@@ -1,5 +1,5 @@
 import type { db } from "../db/configuration.js";
-import { Chats, ChatTable, NewChat } from "../db/schema/chats.js";
+import type { Chats, ChatTable, NewChat } from "../db/schema/chats.js";
 import type { DeviceToken, DeviceTokensTable, NewDeviceToken } from "../db/schema/deviceToken.js";
 import type { NewNotification, Notifications, NotificationTable } from "../db/schema/notification.js";
 import type { NewOTP, OTP, OTPsTable } from "../db/schema/otp.js";
