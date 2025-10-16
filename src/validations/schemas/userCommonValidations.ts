@@ -26,7 +26,6 @@ export const userPhone = pipe(
 export const userDesignation = pipe(
   string(DESIGNATION_REQUIRED),
   nonEmpty(DESIGNATION_REQUIRED),
-  minLength(8, DESIGNATION_MIN_LENGTH),
 );
 
 export const userName = pipe(

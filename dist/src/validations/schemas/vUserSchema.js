@@ -1,5 +1,5 @@
 import { email as emailValidator, minLength, nonEmpty, object, optional, picklist, pipe, pipeAsync, rawTransformAsync, regex, string, transform } from "valibot";
-import { allowedUserStatuses, allowedUserTypes, DESIGNATION_INVALID, DESIGNATION_TOO_SHORT, EMAIL_EXISTS, EMAIL_INVALID, EMAIL_MISSING, NAME_INVALID, NAME_MISSING, NAME_TOO_SHORT, PHONE_EXISTS, PHONE_INVALID, PHONE_MISSING, PROFILE_PIC_INVALID, SLACK_ID_INVALID, USER_STATUS_INVALID, USER_STATUS_REQUIRED, USER_TYPE_INVALID, USER_TYPE_REQUIRED } from "../../constants/appMessages.js";
+import { allowedUserStatuses, allowedUserTypes, DESIGNATION_INVALID, DESIGNATION_TOO_SHORT, EMAIL_EXISTS, EMAIL_INVALID, EMAIL_MISSING, NAME_INVALID, NAME_MISSING, NAME_TOO_SHORT, PHONE_EXISTS, PHONE_INVALID, PHONE_MISSING, PROFILE_PIC_INVALID, ROLE_REQUIRED, SLACK_ID_INVALID, USER_STATUS_INVALID, USER_STATUS_REQUIRED, USER_TYPE_INVALID } from "../../constants/appMessages.js";
 import { checkEmailAndPhoneExist, checkEmailAndPhoneExistExceptUserId, userEmailExists } from "../customValidations.js";
 import { prepareValibotIssue } from "../prepareValibotIssue.js";
 import { userDesignation, userEmail, userId, userName, userPassword, userPhone } from "./userCommonValidations.js";
@@ -32,8 +32,8 @@ rawTransformAsync(async ({ dataset, addIssue }) => {
     return dataset.value;
 }));
 export const VUpdateUserSchema = pipeAsync(object({
-    user_name: pipe(string(NAME_INVALID), nonEmpty(NAME_MISSING), transform(value => value.trim()), minLength(3, NAME_TOO_SHORT)),
-    email: pipe(string(EMAIL_INVALID), nonEmpty(EMAIL_MISSING), emailValidator(EMAIL_INVALID)),
+    user_name: pipe(string(NAME_MISSING), nonEmpty(NAME_MISSING), transform(value => value.trim()), minLength(3, NAME_TOO_SHORT)),
+    email: pipe(string(EMAIL_MISSING), nonEmpty(EMAIL_MISSING), emailValidator(EMAIL_INVALID)),
     phone: pipe(string(PHONE_INVALID), nonEmpty(PHONE_MISSING), regex(phoneRegex, PHONE_INVALID)),
 }));
 // add user by the admin
@@ -43,7 +43,7 @@ export const VAddUserSchema = pipeAsync(object({
     password: userPassword,
     phone: userPhone,
     designation: userDesignation,
-    user_type: pipe(picklist(allowedUserTypes, USER_TYPE_INVALID)),
+    user_type: pipe(picklist(allowedUserTypes, ROLE_REQUIRED)),
 }), rawTransformAsync(async ({ dataset, addIssue }) => {
     const { email, phone } = dataset.value;
     const { emailExists, phoneExists } = await checkEmailAndPhoneExist(email, phone);
@@ -62,7 +62,7 @@ export const VUpdateUserSchemaByLoginUser = pipeAsync(object({
     display_name: userName,
     designation: userDesignation,
     phone: userPhone,
-    user_type: pipe(string(USER_TYPE_REQUIRED), transform(value => value.trim().toUpperCase()), nonEmpty(USER_TYPE_REQUIRED), picklist(allowedUserTypes, USER_TYPE_INVALID)),
+    user_type: pipe(string(ROLE_REQUIRED), transform(value => value.trim().toUpperCase()), nonEmpty(ROLE_REQUIRED), picklist(allowedUserTypes, ROLE_REQUIRED)),
 }), rawTransformAsync(async ({ dataset, addIssue }) => {
     const { email, phone, id } = dataset.value;
     const { emailExists, phoneExists } = await checkEmailAndPhoneExistExceptUserId(email, phone, id);
