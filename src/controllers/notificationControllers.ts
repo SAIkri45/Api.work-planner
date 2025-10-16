@@ -10,6 +10,8 @@ import { getPaginationData } from "../helpers/paginationHelper.js";
 import { getRecordsConditionally, getRecordsCount, getSingleRecordByMultipleColumnValues, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { getNotificationsForUser } from "../services/db/notificationServices.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
+import BadRequestException from "../exceptions/badRequestException.js";
+import NotFoundException from "../exceptions/notFoundException.js";
 
 class NotificationController {
   getNotifications = async (c: Context) => {
@@ -26,11 +28,11 @@ class NotificationController {
     const user: User = c.get("user_payload");
     const notificationId = +c.req.param("id");
     if (!notificationId) {
-      throw new Error("Notification id is required");
+      throw new BadRequestException("Notification id is required");
     }
     const notification = await getSingleRecordByMultipleColumnValues<Notifications>(notifications, ["id", "user_id"], [notificationId, user.id], ["id"]);
     if (!notification) {
-      throw new Error("Notification not found");
+      throw new NotFoundException("Notification not found");
     }
     await updateRecordById(notifications, notificationId, { is_marked: true });
     return sendSuccessResp(c, 200, "Notification marked as read");

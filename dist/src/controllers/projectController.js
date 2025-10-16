@@ -35,8 +35,8 @@ class ProjectController {
                 }));
                 insertedDataUsers = await saveRecordsWithTrx(user_projects, userProjectRecords, trx);
             }
-            const creatorMsg = `You created the project ${insertedData.title}.`;
-            const assignedMsg = `You have been assigned to project ${insertedData.title}.`;
+            const creatorMsg = `Project - You created the project ${insertedData.title}.`;
+            const assignedMsg = `Project - You have been assigned to project ${insertedData.title}.`;
             await createNotificationsForUsers("New Project Created", creatorMsg, assignedMsg, "project", trx, assigned_users, insertedData.id, undefined, userDetails.id);
         });
         return sendSuccessResp(c, 201, PROJECT_CREATED, { ...insertedData, insertedDataUsers });
@@ -78,7 +78,7 @@ class ProjectController {
             await updateRecordByMultipleColumnValuesWithTrx(user_projects, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
             await updateRecordByMultipleColumnValuesWithTrx(Tasks, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
             await softDeleteTaskAssigneesByProjectId(projectId, trx);
-            await createNotificationsForUsers("Project Deleted", `You deleted the project ${projectExists.title}.`, `Project "${projectExists.title}" has been deleted.`, "project", trx, undefined, projectId, undefined, user.id);
+            await createNotificationsForUsers("Project Deleted", `Project - You deleted the ${projectExists.title}.`, `Project - ${projectExists.title} has been deleted.`, "project", trx, undefined, projectId, undefined, user.id);
         });
         return sendSuccessResp(c, 200, PROJECT_DELETED);
     };
@@ -244,7 +244,7 @@ class ProjectController {
         }
         const result = await updateRecordById(projects, projectId, validatedReq);
         if (result.project_status !== projectExists.project_status) {
-            await createNotificationsForUsers("Project Status Updated", `You have updated the ${result.title} status to ${result.project_status}.`, `${result.title} status  has been updated to ${result.project_status}.`, "project", undefined, undefined, projectId, undefined, user.id);
+            await createNotificationsForUsers("Project Status Updated", `Project - You have updated the ${result.title} status from ${projectExists.project_status} to ${result.project_status}.`, `Project - ${result.title} status  has been updated from ${projectExists.project_status} to ${result.project_status}.`, "project", undefined, undefined, projectId, undefined, user.id);
         }
         return sendSuccessResp(c, 200, PROJECT_STATUS_UPDATED, result);
     };

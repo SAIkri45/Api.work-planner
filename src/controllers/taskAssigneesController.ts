@@ -72,8 +72,8 @@ export class TaskAssigneesController {
 
         insertedDataUsers = await saveRecordswithtrx<TaskAssignees>(task_assignees, assigneeRecords, trx);
       }
-      const creatorMsg = `You created the task ${task.task_title}.`;
-      const assignedMsg = `You have been assigned to task ${task.task_title}.`;
+      const creatorMsg = `Task - You created the task ${task.task_title}.`;
+      const assignedMsg = `Task - You have been assigned to task ${task.task_title}.`;
       await createNotificationsForUsers(
         "New Task Created",
         creatorMsg,
@@ -115,7 +115,7 @@ export class TaskAssigneesController {
       updateRecordById<Task>(Tasks, taskId, { deleted_at: new Date() }, trx);
 
       updateRecordByMultipleColumnValuesWithTrx<TaskAssignees>(task_assignees, ["task_id"], [taskId], { deleted_at: new Date() }, trx);
-      await createNotificationsForUsers("Task Deleted", `You have deleted the ${isTaskExists.task_title}.`, `${isTaskExists.task_title} has been deleted .`, "task", trx, undefined, task.project_id, task.id, user.id,
+      await createNotificationsForUsers("Task Deleted", `Task - You have deleted the ${isTaskExists.task_title}.`, `Task - ${isTaskExists.task_title} has been deleted .`, "task", trx, undefined, task.project_id, task.id, user.id,
       );
     });
 

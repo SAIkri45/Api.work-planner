@@ -47,8 +47,8 @@ class ProjectController {
         }));
         insertedDataUsers = await saveRecordsWithTrx<UserProjects>(user_projects, userProjectRecords, trx);
       }
-      const creatorMsg = `You created the project ${insertedData.title}.`;
-      const assignedMsg = `You have been assigned to project ${insertedData.title}.`;
+      const creatorMsg = `Project - You created the project ${insertedData.title}.`;
+      const assignedMsg = `Project - You have been assigned to project ${insertedData.title}.`;
       await createNotificationsForUsers(
         "New Project Created",
         creatorMsg,
@@ -102,7 +102,7 @@ class ProjectController {
       await updateRecordByMultipleColumnValuesWithTrx<UserProjects>(user_projects, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
       await updateRecordByMultipleColumnValuesWithTrx<Task>(Tasks, ["project_id"], [projectId], { deleted_at: new Date() }, trx);
       await softDeleteTaskAssigneesByProjectId(projectId, trx);
-      await createNotificationsForUsers("Project Deleted", `You deleted the project ${projectExists.title}.`, `Project "${projectExists.title}" has been deleted.`, "project", trx, undefined, projectId, undefined, user.id,
+      await createNotificationsForUsers("Project Deleted", `Project - You deleted the ${projectExists.title}.`, `Project - ${projectExists.title} has been deleted.`, "project", trx, undefined, projectId, undefined, user.id,
       );
     });
 
@@ -282,7 +282,7 @@ class ProjectController {
     }
     const result = await updateRecordById<Project>(projects, projectId, validatedReq);
     if (result.project_status !== projectExists.project_status) {
-      await createNotificationsForUsers("Project Status Updated", `You have updated the ${result.title} status to ${result.project_status}.`, `${result.title} status  has been updated to ${result.project_status}.`, "project", undefined, undefined, projectId, undefined, user.id,
+      await createNotificationsForUsers("Project Status Updated", `Project - You have updated the ${result.title} status from ${projectExists.project_status} to ${result.project_status}.`, `Project - ${result.title} status  has been updated from ${projectExists.project_status} to ${result.project_status}.`, "project", undefined, undefined, projectId, undefined, user.id,
       );
     }
 

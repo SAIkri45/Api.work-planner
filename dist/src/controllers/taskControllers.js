@@ -72,7 +72,7 @@ export class TasksController {
         }
         const result = await updateRecordById(Tasks, taskId, validatedReq);
         if (result.task_status !== taskExists.task_status) {
-            await createNotificationsForUsers("Task Status Updated", `You have updated the ${result.task_title} status to ${result.task_status}.`, `${taskExists.task_title} status  has been updated to "${result.task_status}".`, "task", undefined, undefined, taskExists.project_id, taskExists.id, user.id);
+            await createNotificationsForUsers("Task Status Updated", `Task - You have updated the ${result.task_title} status from ${taskExists.task_status} to ${result.task_status}.`, `Task - ${taskExists.task_title} status  has been updated from "${taskExists.task_status}" to "${result.task_status}".`, "task", undefined, undefined, taskExists.project_id, taskExists.id, user.id);
         }
         return sendSuccessResp(c, 200, TASK_STATUS_UPDATED, result);
     };

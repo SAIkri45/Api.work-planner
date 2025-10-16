@@ -37,8 +37,8 @@ export class TaskAssigneesController {
                 }));
                 insertedDataUsers = await saveRecordswithtrx(task_assignees, assigneeRecords, trx);
             }
-            const creatorMsg = `You created the task ${task.task_title}.`;
-            const assignedMsg = `You have been assigned to task ${task.task_title}.`;
+            const creatorMsg = `Task - You created the task ${task.task_title}.`;
+            const assignedMsg = `Task - You have been assigned to task ${task.task_title}.`;
             await createNotificationsForUsers("New Task Created", creatorMsg, assignedMsg, "task", trx, assigned_users, task.project_id, task.id, userDetails.id);
         });
         return sendSuccessResp(c, 200, TASK_CREATED, { task, insertedDataUsers });
@@ -61,7 +61,7 @@ export class TaskAssigneesController {
         await db.transaction(async (trx) => {
             updateRecordById(Tasks, taskId, { deleted_at: new Date() }, trx);
             updateRecordByMultipleColumnValuesWithTrx(task_assignees, ["task_id"], [taskId], { deleted_at: new Date() }, trx);
-            await createNotificationsForUsers("Task Deleted", `You have deleted the ${isTaskExists.task_title}.`, `${isTaskExists.task_title} has been deleted .`, "task", trx, undefined, task.project_id, task.id, user.id);
+            await createNotificationsForUsers("Task Deleted", `Task - You have deleted the ${isTaskExists.task_title}.`, `Task - ${isTaskExists.task_title} has been deleted .`, "task", trx, undefined, task.project_id, task.id, user.id);
         });
         return sendSuccessResp(c, 200, TASK_DELETED);
     };
