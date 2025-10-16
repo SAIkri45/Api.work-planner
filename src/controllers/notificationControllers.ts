@@ -6,12 +6,12 @@ import type { Notifications } from "../db/schema/notification.js";
 import type { User } from "../db/schema/users.js";
 
 import { notifications } from "../db/schema/notification.js";
+import BadRequestException from "../exceptions/badRequestException.js";
+import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
 import { getRecordsConditionally, getRecordsCount, getSingleRecordByMultipleColumnValues, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { getNotificationsForUser } from "../services/db/notificationServices.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
-import BadRequestException from "../exceptions/badRequestException.js";
-import NotFoundException from "../exceptions/notFoundException.js";
 
 class NotificationController {
   getNotifications = async (c: Context) => {

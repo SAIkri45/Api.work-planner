@@ -17,11 +17,11 @@ export class ChatController {
     };
     getAllChats = async (c) => {
         const task_id = +c.req.param("task_id");
-        const page = +(c.req.param("page") || 1);
-        const limit = +(c.req.param("limit") || 10);
+        const page = +(c.req.query("page") || 1);
+        const limit = +(c.req.query("limit") || 10);
         const result = await getChatsByTaskId(task_id, page, limit);
         const total = await getRecordsCount(chats, { task_id });
-        const paginationInfo = getPaginationData(1, 10, total);
+        const paginationInfo = getPaginationData(page, limit, total);
         return sendSuccessResp(c, 200, "Chats fetched successfully", { pagination_info: paginationInfo, records: result });
     };
 }

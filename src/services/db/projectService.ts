@@ -1,7 +1,9 @@
 import { and, desc, eq, exists, gte, ilike, inArray, isNull, lte, not, sql } from "drizzle-orm";
 
+import type { NewProject, Project } from "../../db/schema/projects.js";
 import type { Task } from "../../db/schema/tasks.js";
 import type { UserProjects } from "../../db/schema/userProjects.js";
+import type { NewUser, User } from "../../db/schema/users.js";
 import type { GetAllProjectsResult, ProjectBasic, ProjectUser, ProjectWithUsersResponse } from "../../types/appTypes.js";
 import type { Transaction } from "../../types/dbTypes.js";
 
@@ -14,7 +16,8 @@ import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import NotFoundException from "../../exceptions/notFoundException.js";
 import { buildOrderByClause, buildProjectFilters } from "../../helpers/projectHelper.js";
-import { getMultipleRecordsByMultipleColumnValues, saveRecords } from "./baseDbService.js";
+import { getMultipleRecordsByMultipleColumnValues, saveRecords, saveRecordsWithTrx, saveSingleRecordWithTrx } from "./baseDbService.js";
+import { createNotificationsForUsers } from "./notificationServices.js";
 
 export async function getProjectUsersById(id: number, search?: string) {
   const searchString = search?.trim();
@@ -521,4 +524,44 @@ export async function softDeleteTaskAssigneesByProjectId(
         isNull(task_assignees.deleted_at),
       ),
     );
+}
+
+export async function createProject(projectData: NewProject, assigned_users: number[], userDetails: User) {
+  return await db.transaction(async (trx) => {
+    const insertedData = await saveSingleRecordWithTrx<Project>(
+      projects,
+      { ...projectData, created_by: userDetails.id },
+      trx,
+    );
+
+    let insertedDataUsers: NewUser[] = [];
+    if (assigned_users?.length) {
+      const userProjectRecords = assigned_users.map(user_id => ({
+        user_id,
+        project_id: insertedData.id,
+      }));
+      insertedDataUsers = await saveRecordsWithTrx<UserProjects>(
+        user_projects,
+        userProjectRecords,
+        trx,
+      );
+    }
+
+    const creatorMsg = `Project - You created the project ${insertedData.title}.`;
+    const assignedMsg = `Project - You have been assigned to project ${insertedData.title}.`;
+
+    await createNotificationsForUsers(
+      "New Project Created",
+      creatorMsg,
+      assignedMsg,
+      "project",
+      trx,
+      assigned_users,
+      insertedData.id,
+      undefined,
+      userDetails.id,
+    );
+
+    return { insertedData, insertedDataUsers };
+  });
 }

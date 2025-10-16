@@ -419,3 +419,4 @@ export const USER_ID_REQUIRED = "User id is required";
 export const USER_PASSWORD_CHANGED = "Password updated successfully";
 export const INVALID_EMAIL = "Invalid email address";
 export const ROLE_REQUIRED = "Role is required";
+export const USER_UNAUTHORIZED = "Unauthorized access";

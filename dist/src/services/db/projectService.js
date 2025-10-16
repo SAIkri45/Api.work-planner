@@ -8,7 +8,8 @@ import { user_projects } from "../../db/schema/userProjects.js";
 import { users } from "../../db/schema/users.js";
 import NotFoundException from "../../exceptions/notFoundException.js";
 import { buildOrderByClause, buildProjectFilters } from "../../helpers/projectHelper.js";
-import { getMultipleRecordsByMultipleColumnValues, saveRecords } from "./baseDbService.js";
+import { getMultipleRecordsByMultipleColumnValues, saveRecords, saveRecordsWithTrx, saveSingleRecordWithTrx } from "./baseDbService.js";
+import { createNotificationsForUsers } from "./notificationServices.js";
 export async function getProjectUsersById(id, search) {
     const searchString = search?.trim();
     const result = await db.query.projects.findFirst({
@@ -376,4 +377,21 @@ export async function softDeleteTaskAssigneesByProjectId(projectId, trx) {
         updated_at: new Date(),
     })
         .where(and(inArray(task_assignees.task_id, taskIds), isNull(task_assignees.deleted_at)));
+}
+export async function createProject(projectData, assigned_users, userDetails) {
+    return await db.transaction(async (trx) => {
+        const insertedData = await saveSingleRecordWithTrx(projects, { ...projectData, created_by: userDetails.id }, trx);
+        let insertedDataUsers = [];
+        if (assigned_users?.length) {
+            const userProjectRecords = assigned_users.map(user_id => ({
+                user_id,
+                project_id: insertedData.id,
+            }));
+            insertedDataUsers = await saveRecordsWithTrx(user_projects, userProjectRecords, trx);
+        }
+        const creatorMsg = `Project - You created the project ${insertedData.title}.`;
+        const assignedMsg = `Project - You have been assigned to project ${insertedData.title}.`;
+        await createNotificationsForUsers("New Project Created", creatorMsg, assignedMsg, "project", trx, assigned_users, insertedData.id, undefined, userDetails.id);
+        return { insertedData, insertedDataUsers };
+    });
 }

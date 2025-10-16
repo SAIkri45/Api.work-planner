@@ -1,13 +1,11 @@
 import bcrypt from "bcrypt";
-import { EMPLOYEES_FETCHED, INVALID_INPUT, USER_CREATED, USER_DELETED, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_ID_REQUIRED, USER_NOT_FOUND, USER_PASSWORD_CHANGED, USER_STATUS, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
+import { INVALID_INPUT, USER_CREATED, USER_DELETED, USER_EXIST_WITH_EMAIL, USER_FETCHED, USER_ID_REQUIRED, USER_NOT_FOUND, USER_PASSWORD_CHANGED, USER_STATUS, USER_UPDATED, USER_VALIDATION_ERROR, USERS_FETCHED } from "../constants/appMessages.js";
 import { users } from "../db/schema/users.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import ConflictException from "../exceptions/conflictException.js";
 import ForbiddenException from "../exceptions/forbiddenException.js";
-import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getPaginatedRecordsConditionally, getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveSingleRecord, softDeleteRecordById, updateRecordById } from "../services/db/baseDbService.js";
-import { getAllRemovedProject } from "../services/db/userService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 import NotFoundException from "./../exceptions/notFoundException.js";
@@ -16,7 +14,7 @@ export class UsersController {
         const user = c.get("user_payload");
         const page = +c.req.query("page") || 1;
         const pageSize = +(c.req.query("page_size") || 10);
-        const searchString = c.req.query("search_string") || null;
+        const searchString = c.req.query("search_string");
         const designation = c.req.query("designation");
         const orderBy = c.req.query("order_by");
         const userType = c.req.query("user_type");
@@ -36,13 +34,12 @@ export class UsersController {
         }
         if (designation) {
             whereQueryData.columns.push("designation");
-            whereQueryData.values.push(designation);
+            whereQueryData.values.push(`%${designation}%`);
         }
         const columnsToSelect = ["id", "slack_id", "profile_pic", "designation", "display_name", "phone", "email", "user_type", "user_status", "created_at", "updated_at"];
         const result = await getPaginatedRecordsConditionally(users, page, pageSize, orderByQueryData, whereQueryData, columnsToSelect);
         return sendSuccessResp(c, 200, USERS_FETCHED, result);
     };
-    // 2. Dropdown list (id + full_name only)
     getUsersDropdown = async (c) => {
         const searchString = c.req.query("search_string");
         const orderByQueryData = parseOrderByQuery("created_at", "desc");
@@ -58,23 +55,6 @@ export class UsersController {
         const result = await getRecordsConditionally(users, whereQueryData, columnsToSelect, orderByQueryData);
         return sendSuccessResp(c, 200, USERS_FETCHED, result);
     };
-    // 3. Employees list (exclude admins) with pagination
-    getEmployeesList = async (c) => {
-        const page = +c.req.query("page") || 1;
-        const pageSize = +c.req.query("page_size") || 10;
-        const searchString = c.req.query("search_string")?.trim() || null;
-        const whereQueryData = {
-            columns: ["user_status", "deleted_at"],
-            values: ["ACTIVE", null],
-        };
-        if (searchString) {
-            whereQueryData.columns.push("display_name");
-            whereQueryData.values.push(`%${searchString}%`);
-        }
-        const result = await getPaginatedRecordsConditionally(users, page, pageSize, { columns: ["created_at"], values: ["desc"] }, whereQueryData);
-        return sendSuccessResp(c, 200, EMPLOYEES_FETCHED, result);
-    };
-    // get single user by id
     getUserById = async (c) => {
         const userId = +c.req.param("id");
         if (!userId) {
@@ -94,11 +74,11 @@ export class UsersController {
             throw new BadRequestException(USER_ID_REQUIRED);
         }
         const validatedReq = await validateRequest("update-emp", { ...requestbody, id: userId }, USER_VALIDATION_ERROR);
-        const userData = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at"], [userId, null], ["id"]);
+        const userData = await getSingleRecordByMultipleColumnValues(users, ["id", "deleted_at"], [userId, null]);
         if (!userData) {
             throw new NotFoundException(USER_NOT_FOUND);
         }
-        const result = await updateRecordById(users, userId, validatedReq);
+        const { password, ...result } = await updateRecordById(users, userId, validatedReq);
         return sendSuccessResp(c, 200, USER_UPDATED, result);
     };
     createUserByAdmin = async (c) => {
@@ -111,21 +91,6 @@ export class UsersController {
         const hashedPassword = await bcrypt.hash(validateReq.password, 10);
         const { password, ...result } = await saveSingleRecord(users, { ...validateReq, user_name: validateReq.display_name, password: hashedPassword });
         return sendSuccessResp(c, 201, USER_CREATED, result);
-    };
-    getAllUserRemovedProjects = async (c) => {
-        const user = c.get("user_payload");
-        const page = +c.req.query("page") || 1;
-        const pageSize = +c.req.query("page_size") || 10;
-        const offset = (page - 1) * pageSize;
-        const search = c.req.query("search_string");
-        const orderBy = c.req.query("order_by");
-        const { result, total_records } = await getAllRemovedProject(user.id, offset, pageSize, search, orderBy);
-        const paginationInfo = getPaginationData(page, pageSize, total_records);
-        const finalResponse = {
-            pagination_info: paginationInfo,
-            records: result,
-        };
-        return sendSuccessResp(c, 200, "Removed projects fetched successfully", finalResponse);
     };
     softDeleteUserById = async (c) => {
         const userId = +c.req.param("id");
