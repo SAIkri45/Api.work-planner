@@ -15,7 +15,6 @@ export const VUserSigninSchema = pipeAsync(
     password: pipe(
       string(PASSWORD_REQUIRED),
       nonEmpty(PASSWORD_REQUIRED),
-      minLength(8, PASSWORD_MIN_LENGTH),
     ),
 
   }),

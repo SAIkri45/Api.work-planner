@@ -9,6 +9,7 @@ import { getRecordsCount, saveSingleRecord } from "../services/db/baseDbService.
 import { getChatsByTaskId } from "../services/db/chatServices.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
+import { eq } from "drizzle-orm";
 
 export class ChatController {
   createChat = async (c: Context) => {
@@ -27,7 +28,7 @@ export class ChatController {
     const page = +(c.req.query("page") || 1);
     const limit = +(c.req.query("limit") || 10);
     const result = await getChatsByTaskId(task_id, page, limit);
-    const total = await getRecordsCount(chats, { task_id });
+    const total = await getRecordsCount(chats,[eq(chats.task_id,task_id)]);
     const paginationInfo = getPaginationData(page, limit, total);
     return sendSuccessResp(c, 200, "Chats fetched successfully", { pagination_info: paginationInfo, records: result });
   };

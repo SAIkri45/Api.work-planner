@@ -307,6 +307,7 @@ async function executeQuery<R extends DBTableRow, C extends keyof R = keyof R>(
     dQuery = dQuery.limit(pageSize).offset((page - 1) * pageSize);
   }
 
+
   const results = await dQuery;
 
   if (columnsRequired) {

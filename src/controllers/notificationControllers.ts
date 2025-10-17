@@ -9,20 +9,30 @@ import { notifications } from "../db/schema/notification.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
 import { getPaginationData } from "../helpers/paginationHelper.js";
-import { getRecordsConditionally, getRecordsCount, getSingleRecordByMultipleColumnValues, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getRecordsCount, getSingleRecordByMultipleColumnValues, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { getNotificationsForUser } from "../services/db/notificationServices.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
+import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
+import { WhereQueryData } from "../types/dbTypes.js";
 
 class NotificationController {
   getNotifications = async (c: Context) => {
     const user: User = c.get("user_payload");
     const page = +(c.req.query("page") || 1);
-    const limit = +(c.req.query("limit") || 10);
-    const { records, total } = await getNotificationsForUser(user.id, page, limit);
-    const pagination_records = getPaginationData(page, limit, total);
-    const result = { pagination_records, records };
-    return sendSuccessResp(c, 200, "Notifications fetched successfully", result);
-  };
+    const pageSize = +(c.req.query("page_size") || 10)
+    const orderBy = c.req.query("order_by");
+    const orderByQueryData = parseOrderByQuery<Notifications>("created_at", "desc", orderBy);
+    const whereQueryData: WhereQueryData<Notifications> = {
+      columns: ["user_id"],
+      values: [user.id],
+      relations: ["eq"],
+    };
+    const columnsToSelect = ["id", "user_id", "project_id", "task_id", "title", "description", "category", "created_at", "updated_at"] as const;
+    const result = await getPaginatedRecordsConditionally<Notifications>(notifications,page,pageSize,orderByQueryData,whereQueryData,columnsToSelect);
+
+    return sendSuccessResp(c, 200, "NOTIFICATIONS_FETCHED", result);
+  }
+
 
   isNotificationRead = async (c: Context) => {
     const user: User = c.get("user_payload");
@@ -53,5 +63,6 @@ class NotificationController {
     const result = await getRecordsCount(notifications, [eq(notifications.user_id, user.id), eq(notifications.is_marked, false)]); ;
     return sendSuccessResp(c, 200, "Unread notifications count", { count: result });
   };
+
 }
 export default NotificationController;

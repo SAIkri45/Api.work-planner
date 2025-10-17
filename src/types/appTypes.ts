@@ -89,7 +89,7 @@ export interface RefreshedTokenData {
 export interface TaskResponse {
   id: number;
   task_title: string;
-  task_status: "NEW" | "IN_PROGRESS" | "COMPLETED" | "REVIEW" | "OVERDUE" | "DONE" | null;
+  task_status: "TODO" | "IN_PROGRESS" | "COMPLETED" | "REVIEW" | "OVERDUE" | "DONE" | null;
   start_date: string | null;
   end_date: string | null;
 }

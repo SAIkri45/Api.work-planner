@@ -9,7 +9,7 @@ import { ProjectDescription, projectDueDate, projectLinks, projectStartDate, pro
 export const VCreateProjectSchema = pipeAsync(
   object({
     title: projectTile,
-    description: ProjectDescription,
+    description:optional(string()),
     logo_url: optional(string(PROJECT_LOGO_URL_MISSING)),
     project_links: optional(pipe(
       string(PROJECT_LINKS_REQUIRED),
@@ -43,7 +43,7 @@ export const VCreateProjectSchema = pipeAsync(
 export const VUpdateProjectSchema = pipeAsync(
   object({
     title: projectTile,
-    description: ProjectDescription,
+    description: optional(string()),
     logo_url: optional(string(PROJECT_LOGO_URL_MISSING)),
     // updated_by: pipe(number()),
     project_status: projectStatus,

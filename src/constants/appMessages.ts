@@ -195,7 +195,7 @@ export const allowedProjectStatus = [
 ] as const;
 
 export const allowedTaskStatus = [
-  "NEW",
+  "TODO",
   "IN_PROGRESS",
   "COMPLETED",
   "REVIEW",

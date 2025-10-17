@@ -153,7 +153,7 @@ export class TasksController {
       getRecordsCount(Tasks, [eq(Tasks.task_status, "IN_PROGRESS"), ...conditions]),
       getRecordsCount(Tasks, [eq(Tasks.task_status, "REVIEW"), ...conditions]),
       getRecordsCount(Tasks, [eq(Tasks.task_status, "OVERDUE"), ...conditions]),
-      getRecordsCount(Tasks, [eq(Tasks.task_status, "NEW"), ...conditions]),
+      getRecordsCount(Tasks, [eq(Tasks.task_status, "TODO"), ...conditions]),
       getRecordsCount(Tasks, [eq(Tasks.task_status, "DONE"), ...conditions]),
       getRecordsCount(Tasks, conditions),
     ]);
