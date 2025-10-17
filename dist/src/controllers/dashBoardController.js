@@ -22,7 +22,7 @@ class DashBoardController {
             in_progress_tasks: inProgressTasksCount,
             review_tasks_Count: reviewTasksCount,
             overdue_TasksCount: overDueTasksCount,
-            new_tasks_Count: newTasksCount,
+            Todo_tasks_Count: newTasksCount,
         });
     };
     overAllStatistics = async (c) => {
@@ -57,7 +57,7 @@ class DashBoardController {
             in_progress_tasks: inProgressTasksCount,
             review_tasks_Count: reviewTasksCount,
             overdue_TasksCount: overDueTasksCount,
-            new_tasks_Count: newTasksCount,
+            Todo_tasks_Count: newTasksCount,
         });
     };
     todayTasks = async (c) => {

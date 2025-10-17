@@ -6,7 +6,6 @@ export const projectTile = pipe(
   string(PROJECT_TITLE_REQUIRED),
   nonEmpty(PROJECT_TITLE_REQUIRED),
   transform(value => value.trim().toLocaleLowerCase()),
-  regex(/^[A-Z ]+$/i, VALID_TITLE),
   minLength(3, PROJECT_TITLE_MIN_LENGTH),
 );
 
