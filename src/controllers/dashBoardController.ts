@@ -18,7 +18,7 @@ class DashBoardController {
       getRecordsCount(Tasks, [eq(Tasks.task_status, "IN_PROGRESS"), isNull(Tasks.deleted_at)]),
       getRecordsCount(Tasks, [eq(Tasks.task_status, "REVIEW"), isNull(Tasks.deleted_at)]),
       getRecordsCount(Tasks, [eq(Tasks.task_status, "OVERDUE"), isNull(Tasks.deleted_at)]),
-      getRecordsCount(Tasks, [eq(Tasks.task_status, "NEW"), isNull(Tasks.deleted_at)]),
+      getRecordsCount(Tasks, [eq(Tasks.task_status, "TODO"), isNull(Tasks.deleted_at)]),
       getRecordsCount(Tasks, [isNull(Tasks.deleted_at)]),
     ]);
 
@@ -28,7 +28,7 @@ class DashBoardController {
       in_progress_tasks: inProgressTasksCount,
       review_tasks_Count: reviewTasksCount,
       overdue_TasksCount: overDueTasksCount,
-      new_tasks_Count: newTasksCount,
+      Todo_tasks_Count: newTasksCount,
     });
   };
 
@@ -66,7 +66,7 @@ class DashBoardController {
       getRecordsCount(Tasks, [eq(Tasks.task_status, "IN_PROGRESS"), lte(Tasks.start_date, todayEndISO), gte(Tasks.end_date, todayStartISO), isNull(Tasks.deleted_at)]),
       getRecordsCount(Tasks, [eq(Tasks.task_status, "REVIEW"), lte(Tasks.start_date, todayEndISO), gte(Tasks.end_date, todayStartISO), isNull(Tasks.deleted_at)]),
       getRecordsCount(Tasks, [eq(Tasks.task_status, "OVERDUE"), lte(Tasks.start_date, todayEndISO), gte(Tasks.end_date, todayStartISO), isNull(Tasks.deleted_at)]),
-      getRecordsCount(Tasks, [eq(Tasks.task_status, "NEW"), lte(Tasks.start_date, todayEndISO), gte(Tasks.end_date, todayStartISO), isNull(Tasks.deleted_at)]),
+      getRecordsCount(Tasks, [eq(Tasks.task_status, "TODO"), lte(Tasks.start_date, todayEndISO), gte(Tasks.end_date, todayStartISO), isNull(Tasks.deleted_at)]),
       getRecordsCount(Tasks, [lte(Tasks.start_date, todayEndISO), gte(Tasks.end_date, todayStartISO), isNull(Tasks.deleted_at)]),
     ]);
 
@@ -76,7 +76,7 @@ class DashBoardController {
       in_progress_tasks: inProgressTasksCount,
       review_tasks_Count: reviewTasksCount,
       overdue_TasksCount: overDueTasksCount,
-      new_tasks_Count: newTasksCount,
+      Todo_tasks_Count: newTasksCount,
     });
   };
 

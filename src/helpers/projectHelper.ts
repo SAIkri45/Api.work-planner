@@ -10,6 +10,7 @@ import { db } from "../db/configuration.js";
 import { projects } from "../db/schema/projects.js";
 import { user_projects } from "../db/schema/userProjects.js";
 
+
 // filters
 export async function buildProjectFilters(search?: string, projectStatus?: any, user?: any): Promise<any[]> {
   const filters: any[] = [isNull(projects.deleted_at)];

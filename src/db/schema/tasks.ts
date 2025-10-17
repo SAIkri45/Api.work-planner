@@ -6,13 +6,13 @@ import { task_assignees } from "./taskAssignees.js";
 import { users } from "./users.js";
 
 // Task status enum
-export const taskStatuses = pgEnum("task_status", ["NEW", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE", "DONE"]);
+export const taskStatuses = pgEnum("task_status", ["TODO", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE", "DONE"]);
 export const Tasks = pgTable("tasks", {
   id: serial().primaryKey(),
   task_title: varchar().notNull(),
   project_id: integer().references(() => projects.id),
   description: text(),
-  task_status: taskStatuses("task_status").default("NEW"),
+  task_status: taskStatuses("task_status").default("TODO"),
   created_by: integer().references(() => users.id),
   updated_by: integer().references(() => users.id),
   start_date: timestamp({ mode: "string" }),

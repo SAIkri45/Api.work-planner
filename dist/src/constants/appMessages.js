@@ -168,7 +168,7 @@ export const allowedUserStatuses = [
     "INACTIVE",
 ];
 export const allowedProjectStatus = [
-    "NEW",
+    "TODO",
     "IN_PROGRESS",
     "COMPLETED",
     "REVIEW",
@@ -176,7 +176,7 @@ export const allowedProjectStatus = [
     "DONE",
 ];
 export const allowedTaskStatus = [
-    "NEW",
+    "TODO",
     "IN_PROGRESS",
     "COMPLETED",
     "REVIEW",

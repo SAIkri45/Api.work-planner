@@ -2,7 +2,7 @@ import type { InferOutput } from "valibot";
 
 import { email as emailValidator, minLength, nonEmpty, object, pipe, pipeAsync, string, transform } from "valibot";
 
-import { EMAIL_REQUIRED, PASSWORD_MIN_LENGTH, PASSWORD_REQUIRED } from "../../constants/appMessages.js";
+import { EMAIL_INVALID, EMAIL_REQUIRED, PASSWORD_MIN_LENGTH, PASSWORD_REQUIRED } from "../../constants/appMessages.js";
 
 export const VUserSigninSchema = pipeAsync(
   object({
@@ -10,7 +10,7 @@ export const VUserSigninSchema = pipeAsync(
       string(EMAIL_REQUIRED),
       nonEmpty(EMAIL_REQUIRED),
       transform(value => value.trim().toLowerCase()),
-      emailValidator(EMAIL_REQUIRED),
+      emailValidator(EMAIL_INVALID),
     ),
     password: pipe(
       string(PASSWORD_REQUIRED),

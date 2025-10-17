@@ -125,7 +125,7 @@ export interface ProjectBasic {
   title: string;
   description: string | null;
   logo_url: string | null;
-  project_status: "NEW" | "IN_PROGRESS" | "COMPLETED" | "REVIEW" | "OVERDUE" | "DONE" | null;
+  project_status: "TODO" | "IN_PROGRESS" | "COMPLETED" | "REVIEW" | "OVERDUE" | "DONE" | null;
   start_date: Date | null;
   due_date: Date | null;
 }

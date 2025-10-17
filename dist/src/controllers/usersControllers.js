@@ -42,10 +42,12 @@ export class UsersController {
     };
     getUsersDropdown = async (c) => {
         const searchString = c.req.query("search_string");
-        const orderByQueryData = parseOrderByQuery("created_at", "desc");
+        const user = c.get("user_payload");
+        const orderByQueryData = parseOrderByQuery("display_name", "asc");
         const whereQueryData = {
-            columns: ["user_status", "deleted_at"],
-            values: ["ACTIVE", null],
+            columns: ["user_status", "deleted_at", "id"],
+            values: ["ACTIVE", null, user.id],
+            relations: ["eq", "eq", "ne"],
         };
         const columnsToSelect = ["id", "display_name"];
         if (searchString) {

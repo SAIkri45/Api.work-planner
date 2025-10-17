@@ -5,7 +5,7 @@ import { Tasks } from "./tasks.js";
 import { user_projects } from "./userProjects.js";
 import { users } from "./users.js";
 
-export const projectStatuses = pgEnum("project_status", ["NEW", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE", "DONE"]);
+export const projectStatuses = pgEnum("project_status", ["TODO", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE", "DONE"]);
 export const projects = pgTable("projects", {
   id: serial().primaryKey(),
   title: varchar().notNull(),
@@ -14,7 +14,7 @@ export const projects = pgTable("projects", {
   project_links: text(),
   created_by: integer().references(() => users.id),
   updated_by: integer().references(() => users.id),
-  project_status: projectStatuses("project_status").default("NEW"),
+  project_status: projectStatuses("project_status").default("TODO"),
   start_date: timestamp(),
   due_date: timestamp(),
   created_at: timestamp().defaultNow(),

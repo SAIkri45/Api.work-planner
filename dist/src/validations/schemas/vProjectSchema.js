@@ -1,10 +1,10 @@
 import { minLength, nonEmpty, number, object, optional, pipe, pipeAsync, string, transform } from "valibot";
 import { PROJECT_LINKS_REQUIRED, PROJECT_LINKS_TOO_SHORT, PROJECT_LOGO_URL_MISSING } from "../../constants/appMessages.js";
 import ConflictException from "../../exceptions/conflictException.js";
-import { ProjectDescription, projectDueDate, projectLinks, projectStartDate, projectStatus, projectTile, projectUserIds, projectUserIdsRequired } from "./projectCommonValidatiors.js";
+import { projectDueDate, projectLinks, projectStartDate, projectStatus, projectTile, projectUserIds, projectUserIdsRequired } from "./projectCommonValidatiors.js";
 export const VCreateProjectSchema = pipeAsync(object({
     title: projectTile,
-    description: ProjectDescription,
+    description: optional(string()),
     logo_url: optional(string(PROJECT_LOGO_URL_MISSING)),
     project_links: optional(pipe(string(PROJECT_LINKS_REQUIRED), nonEmpty(PROJECT_LINKS_REQUIRED), transform(value => value.trim()), minLength(8, PROJECT_LINKS_TOO_SHORT))),
     // created_by: pipe(number()),
@@ -24,7 +24,7 @@ export const VCreateProjectSchema = pipeAsync(object({
 }));
 export const VUpdateProjectSchema = pipeAsync(object({
     title: projectTile,
-    description: ProjectDescription,
+    description: optional(string()),
     logo_url: optional(string(PROJECT_LOGO_URL_MISSING)),
     // updated_by: pipe(number()),
     project_status: projectStatus,

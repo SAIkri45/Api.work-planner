@@ -2,19 +2,24 @@ import { eq } from "drizzle-orm";
 import { notifications } from "../db/schema/notification.js";
 import BadRequestException from "../exceptions/badRequestException.js";
 import NotFoundException from "../exceptions/notFoundException.js";
-import { getPaginationData } from "../helpers/paginationHelper.js";
-import { getRecordsConditionally, getRecordsCount, getSingleRecordByMultipleColumnValues, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
-import { getNotificationsForUser } from "../services/db/notificationServices.js";
+import { getPaginatedRecordsConditionally, getRecordsConditionally, getRecordsCount, getSingleRecordByMultipleColumnValues, updateRecordById, updateRecordByMultipleColumnValues } from "../services/db/baseDbService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
+import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 class NotificationController {
     getNotifications = async (c) => {
         const user = c.get("user_payload");
         const page = +(c.req.query("page") || 1);
-        const limit = +(c.req.query("limit") || 10);
-        const { records, total } = await getNotificationsForUser(user.id, page, limit);
-        const pagination_records = getPaginationData(page, limit, total);
-        const result = { pagination_records, records };
-        return sendSuccessResp(c, 200, "Notifications fetched successfully", result);
+        const pageSize = +(c.req.query("page_size") || 10);
+        const orderBy = c.req.query("order_by");
+        const orderByQueryData = parseOrderByQuery("created_at", "desc", orderBy);
+        const whereQueryData = {
+            columns: ["user_id"],
+            values: [user.id],
+            relations: ["eq"],
+        };
+        const columnsToSelect = ["id", "user_id", "project_id", "task_id", "title", "description", "category", "created_at", "updated_at"];
+        const result = await getPaginatedRecordsConditionally(notifications, page, pageSize, orderByQueryData, whereQueryData, columnsToSelect);
+        return sendSuccessResp(c, 200, "NOTIFICATIONS_FETCHED", result);
     };
     isNotificationRead = async (c) => {
         const user = c.get("user_payload");

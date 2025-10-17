@@ -58,7 +58,7 @@ export async function getUserTaskStatisticsWithPagination(offset, pageSize, sear
             .filter(assignee => assignee.task && !assignee.task.deleted_at)
             .map(assignee => assignee.task?.task_status);
         const statusCounts = {
-            NEW: validTasks.filter((status) => status === "NEW").length,
+            NEW: validTasks.filter((status) => status === "TODO").length,
             IN_PROGRESS: validTasks.filter((status) => status === "IN_PROGRESS").length,
             COMPLETED: validTasks.filter((status) => status === "COMPLETED").length,
             REVIEW: validTasks.filter((status) => status === "REVIEW").length,
@@ -87,7 +87,7 @@ export async function getTodayTasksWithUsersService(page, pageSize, taskStatus, 
     const todayEndStr = todayEnd.toISOString();
     const conditions = [isNull(Tasks.deleted_at)];
     conditions.push(and(lte(Tasks.start_date, todayEndStr), gte(Tasks.end_date, todayStartStr)));
-    const validStatuses = ["NEW", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE"];
+    const validStatuses = ["TODO", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE"];
     if (taskStatus && validStatuses.includes(taskStatus)) {
         conditions.push(eq(Tasks.task_status, taskStatus));
     }
