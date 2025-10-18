@@ -24,6 +24,4 @@ export function prepareOTPData(user: User, action: ActionType, expireInMin = 15,
   }
   return data;
 }
-// function randomOTP() {
-//   return `${Math.floor(1000 + Math.random() * 9000)}`;
-// }
+

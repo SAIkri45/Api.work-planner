@@ -40,7 +40,6 @@ class ProjectController {
 
     await db.transaction(async (trx) => {
       insertedData = await saveSingleRecordWithTrx<Project>(projects, { ...projectData, created_by: userDetails.id }, trx);
-      // insertedData = await saveSingleRecordWithTrx<Project>(projects, projectData, trx);
       if (assigned_users?.length) {
         const userProjectRecords = assigned_users.map(user_id => ({
           user_id,

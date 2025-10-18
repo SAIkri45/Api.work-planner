@@ -26,9 +26,6 @@ async function getRecordsConditionally(table, whereQueryData, columnsToSelect, o
     const orderByConditions = prepareOrderByQueryConditions(table, orderByQueryData);
     const whereQuery = whereConditions ? and(...whereConditions) : null;
     const results = await executeQuery(table, whereQuery, columnsRequired, orderByConditions, inQueryCondition);
-    // if (!results || results.length === 0) {
-    //   return null;
-    // }
     return results;
 }
 async function getPaginatedRecordsConditionally(table, page, pageSize, orderByQueryData, whereQueryData, columnsToSelect, inQueryData) {

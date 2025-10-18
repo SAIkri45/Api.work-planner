@@ -40,7 +40,7 @@ import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 
 export class TaskAssigneesController {
-  // Create Task (with transaction)
+ 
   createTask = async (c: Context) => {
     const requestBody = await c.req.json();
     const userDetails = c.get("user_payload");
@@ -90,7 +90,7 @@ export class TaskAssigneesController {
     return sendSuccessResp(c, 200, TASK_CREATED, { task, insertedDataUsers });
   };
 
-  // Delete Task
+ 
   deleteTask = async (c: Context) => {
     const taskId = +c.req.param("id");
     const user: User = c.get("user_payload");
@@ -122,7 +122,7 @@ export class TaskAssigneesController {
     return sendSuccessResp(c, 200, TASK_DELETED);
   };
 
-  // Remove Assignees by Task ID
+  
   removeAssigneesByTaskId = async (c: Context) => {
     const taskId = +c.req.param("id");
     const reqBody = await c.req.json();

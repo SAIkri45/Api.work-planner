@@ -18,15 +18,6 @@ const apiVer = appConfig.version;
 const app = new Hono().basePath(`/${apiVer}`);
 const port = envData.PORT || 3000;
 app.use("*", cors());
-// app.use(
-//   "*",
-//   cors({
-//     origin: [
-//       "http://localhost:3000",
-//     ],
-//     credentials: true,
-//   }),
-// );
 app.get("/", (c) => {
     return c.text("Hello Hono!");
 });
@@ -39,7 +30,6 @@ app.route("/task-assignees", taskAssigneesRoutes);
 app.route("/notifications", notificationRoute);
 app.route("/chats", chatRoutes);
 app.route("/auth", authRoutes);
-// handling errors globally
 app.onError((err, c) => {
     const statusCode = err.status || 555;
     const errorMessage = err.message || DEF_ERROR_RESP;

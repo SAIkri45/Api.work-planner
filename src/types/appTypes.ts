@@ -175,5 +175,5 @@ export interface userSignInRespData {
 }
 
 export interface ProjectStatus {
-  project_status: "NEW" | "IN_PROGRESS" | "COMPLETED" | "REVIEW" | "OVERDUE" | "DONE" | null;
+  project_status: "TODO" | "IN_PROGRESS" | "COMPLETED" | "REVIEW" | "OVERDUE" | "DONE" | null;
 }

@@ -63,9 +63,7 @@ async function getRecordsConditionally<
     inQueryCondition,
   );
 
-  // if (!results || results.length === 0) {
-  //   return null;
-  // }
+  
 
   return results;
 }

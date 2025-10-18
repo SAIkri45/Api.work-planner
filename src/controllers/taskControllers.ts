@@ -31,7 +31,7 @@ import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
 
 export class TasksController {
-  // Get Paginated Tasks (GET)
+  
   getPaginatedTasks = async (c: Context) => {
     const user = c.get("user_payload");
     const page = +c.req.query("page")! || 1;
@@ -54,7 +54,6 @@ export class TasksController {
     return sendSuccessResp(c, 200, TASKS_FETCHED, finalResponse);
   };
 
-  // Get Task By Id
   getTaskById = async (c: Context) => {
     const taskId = +c.req.param("id");
 
@@ -71,7 +70,7 @@ export class TasksController {
     return sendSuccessResp(c, 200, TASKS_FETCHED, result);
   };
 
-  // Edit Task (PATCH)
+ 
   editTask = async (c: Context) => {
     const taskId = +c.req.param("id");
     const userDetails = c.get("user_payload");
