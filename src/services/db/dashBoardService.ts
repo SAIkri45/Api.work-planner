@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, ilike, isNull, like, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, isNull, like, lte, sql } from "drizzle-orm";
 
 import type { TaskStatus } from "../../constants/appMessages.js";
 
@@ -107,6 +107,7 @@ export async function getTodayTasksWithUsersService(page: number, pageSize: numb
   const todayEndStr = todayEnd.toISOString();
   const conditions: any[] = [isNull(Tasks.deleted_at)];
   conditions.push(and(lte(Tasks.start_date, todayEndStr), gte(Tasks.end_date, todayStartStr)));
+
   const validStatuses: TaskStatus[] = ["TODO", "IN_PROGRESS", "COMPLETED", "REVIEW", "OVERDUE"];
   if (taskStatus && validStatuses.includes(taskStatus as TaskStatus)) {
     conditions.push(eq(Tasks.task_status, taskStatus as TaskStatus));
@@ -121,6 +122,7 @@ export async function getTodayTasksWithUsersService(page: number, pageSize: numb
   const totalRecords = totalCountResult[0]?.count || 0;
   const tasks = await db.query.Tasks.findMany({
     where: and(...conditions),
+    orderBy: asc(Tasks.end_date),
     limit: pageSize,
     offset,
     with: {

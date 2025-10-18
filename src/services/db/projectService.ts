@@ -272,7 +272,7 @@ export async function getProjectTaskStatusCounts(projectId: number) {
       total_count: sql<number>`CAST(COUNT(*) AS INTEGER)`,
       completed_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'COMPLETED') AS INTEGER)`,
       inProgress_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'IN_PROGRESS') AS INTEGER)`,
-      new_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'NEW') AS INTEGER)`,
+      new_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'TODO') AS INTEGER)`,
       review_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'REVIEW') AS INTEGER)`,
       overdue_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'OVERDUE') AS INTEGER)`,
       done_count: sql<number>`CAST(COUNT(*) FILTER (WHERE ${Tasks.task_status} = 'DONE') AS INTEGER)`,
@@ -564,4 +564,19 @@ export async function createProject(projectData: NewProject, assigned_users: num
 
     return { insertedData, insertedDataUsers };
   });
+}
+
+
+
+export async function getProjectsByUser(user: User, search?: string, projectStatus?: string) {
+  const filters = await buildProjectFilters(search, projectStatus, user);
+  const result = await db.query.projects.findMany({
+      where: and(...filters),
+       columns: {
+       id: true,
+       title: true,
+    },
+
+  });
+  return result;
 }

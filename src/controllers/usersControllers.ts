@@ -54,8 +54,8 @@ export class UsersController {
     const user:User = c.get("user_payload");
     const orderByQueryData = parseOrderByQuery<User>("display_name", "asc");
     const whereQueryData: WhereQueryData<User> = {
-      columns: ["user_status", "deleted_at", "id"],
-      values: ["ACTIVE", null , user.id],
+      columns: ["user_status", "deleted_at", "user_type"],
+      values: ["ACTIVE", null , "MANAGER" ],
       relations: ["eq", "eq", "ne"],
     };
     

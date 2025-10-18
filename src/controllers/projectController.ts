@@ -8,7 +8,7 @@ import type { ProjectsResponse, ProjectTasksResp, ProjectUsersResponse } from ".
 import type { DBTableRow, WhereQueryData } from "../types/dbTypes.js";
 import type { ValidatedAddUsersToProject, ValidatedCreateProject, ValidatedRemoveUsersFromProject, ValidatedUpdateProject, ValidatedUpdateProjectStatus } from "../validations/schemas/vProjectSchema.js";
 
-import { AVILABLE_USERS_FETCHED, INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_FETCHED, PROJECT_ID_REQUIRED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_STATUS_UPDATED, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_USERS_FETCHED_SUCCESS, TASKS_FETCHED, TASKS_STATUS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
+import { AVILABLE_USERS_FETCHED, INVALID_INPUT, PROJECT_ALREADY_EXISTS, PROJECT_CREATED, PROJECT_DELETED, PROJECT_FETCHED, PROJECT_ID_REQUIRED, PROJECT_NOT_FOUND, PROJECT_NOT_FOUND_ID, PROJECT_STATUS, PROJECT_STATUS_UPDATED, PROJECT_TASKS_IN_COMPLETED, PROJECT_UPDATED, PROJECT_USERS_ASSIGNED, PROJECT_USERS_REMOVED, PROJECT_USERS_VALIDATION_ERROR, PROJECT_VALIDATION_ERROR, PROJECTS_FETCHED, PROJECTS_FETCHED_SUCCESS, PROJECTS_USERS_FETCHED_SUCCESS, TASKS_FETCHED, TASKS_STATUS_FETCHED, USER_FETCHED } from "../constants/appMessages.js";
 import { db } from "../db/configuration.js";
 import { projects } from "../db/schema/projects.js";
 import { Tasks } from "../db/schema/tasks.js";
@@ -20,9 +20,10 @@ import { getPaginationData } from "../helpers/paginationHelper.js";
 import { parseOrderByQuery } from "../helpers/parseOrderByHelper.js";
 import { getRecordsConditionally, getSingleRecordByMultipleColumnValues, saveRecordsWithTrx, saveSingleRecordWithTrx, softDeleteRecordByIdWithTrx, updateRecordById, updateRecordByMultipleColumnValuesWithTrx } from "../services/db/baseDbService.js";
 import { createNotificationsForUsers } from "../services/db/notificationServices.js";
-import { assignUsersToProject, checkTaskExist, getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, softDeleteTaskAssigneesByProjectId, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
+import { assignUsersToProject, checkTaskExist, getAllProjectsWithRoleBasedAccess, getAllUsersInProjectWithPagination, getNonExistingUsers, getProjectsByUser, getProjectTaskStatusCounts, getProjectUsersById, getProjectUsersByIdDropdown, getTasksByProjectId, removeUsersFromProject, softDeleteTaskAssigneesByProjectId, updateProjectStatus, userCreatedProjectById } from "../services/db/projectService.js";
 import { sendSuccessResp } from "../utils/respUtils.js";
 import { validateRequest } from "../validations/validateRequest.js";
+import { isNull } from "drizzle-orm";
 
 class ProjectController {
   createProject = async (c: Context) => {
@@ -110,15 +111,16 @@ class ProjectController {
   };
 
   getAllProjectsDropDown = async (c: Context) => {
+    const user:User = c.get("user_payload")
     const searchString = c.req.query("search_string");
     const orderByQueryData = parseOrderByQuery<Project>("id", "asc");
     const whereQueryData: WhereQueryData<Project> = { columns: ["deleted_at"], values: [null] };
     const columnsToSelect = ["id", "title"] as const;
     if (searchString) {
-      // Add search string filter using LIKE
       whereQueryData.columns.push("title");
       whereQueryData.values.push(`%${searchString}%`);
     }
+   
     const result = await getRecordsConditionally<Project>(projects, whereQueryData, columnsToSelect, orderByQueryData);
     return sendSuccessResp(c, 200, PROJECTS_FETCHED, result);
   };
@@ -294,5 +296,13 @@ class ProjectController {
 
     return sendSuccessResp(c, 200, PROJECT_STATUS_UPDATED, result);
   };
+  getProjects = async(c :Context) => {
+    const user:User = c.get("user_payload");
+    const search_string=c.req.query("search_string");
+    const result = await getProjectsByUser(user,search_string);
+    return sendSuccessResp(c, 200, PROJECTS_FETCHED_SUCCESS, {records : result});
+  }
 }
+
+
 export default ProjectController;

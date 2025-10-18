@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, ilike, isNull, like, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, isNull, like, lte, sql } from "drizzle-orm";
 import { db } from "../../db/configuration.js";
 import { task_assignees } from "../../db/schema/taskAssignees.js";
 import { Tasks } from "../../db/schema/tasks.js";
@@ -100,6 +100,7 @@ export async function getTodayTasksWithUsersService(page, pageSize, taskStatus, 
     const totalRecords = totalCountResult[0]?.count || 0;
     const tasks = await db.query.Tasks.findMany({
         where: and(...conditions),
+        orderBy: asc(Tasks.end_date),
         limit: pageSize,
         offset,
         with: {

@@ -17,7 +17,7 @@ class NotificationController {
             values: [user.id],
             relations: ["eq"],
         };
-        const columnsToSelect = ["id", "user_id", "project_id", "task_id", "title", "description", "category", "created_at", "updated_at"];
+        const columnsToSelect = ["id", "user_id", "project_id", "task_id", "title", "description", "category", "created_at", "updated_at", "is_marked"];
         const result = await getPaginatedRecordsConditionally(notifications, page, pageSize, orderByQueryData, whereQueryData, columnsToSelect);
         return sendSuccessResp(c, 200, "NOTIFICATIONS_FETCHED", result);
     };

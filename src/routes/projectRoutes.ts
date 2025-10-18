@@ -6,7 +6,7 @@ import { isAuthorized, isManagerOrAdmin } from "../middlewares/isAuthorized.js";
 const projectRouter = new Hono();
 const projectControllers = new ProjectController();
 
-projectRouter.get("/drop-down", isAuthorized, projectControllers.getAllProjectsDropDown);
+projectRouter.get("/drop-down", isAuthorized, projectControllers.getProjects);
 projectRouter.get("/users", isAuthorized, projectControllers.getAllProjectUsersList);
 projectRouter.get("/status", projectControllers.updateProjectStatusByCron);
 projectRouter.get("/:id/users/assigned", isAuthorized, projectControllers.getProjectBasedAssignedUsers);
