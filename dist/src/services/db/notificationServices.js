@@ -4,6 +4,7 @@ import { notifications } from "../../db/schema/notification.js";
 import { task_assignees } from "../../db/schema/taskAssignees.js";
 import { user_projects } from "../../db/schema/userProjects.js";
 import { saveRecordsWithTrx } from "./baseDbService.js";
+import { getIO } from "../../../socket/index.js";
 export async function createNotificationsForUsers(title, creatorDescription, userDescription, category, trx, userIds, projectId, taskId, creatorId) {
     let assignedUsers;
     if ((!userIds || !userIds.length) && projectId && !taskId) {
@@ -35,6 +36,13 @@ export async function createNotificationsForUsers(title, creatorDescription, use
         category,
     }));
     await saveRecordsWithTrx(notifications, notificationRecords, trx);
+    const io = getIO();
+    for (const user_id of userIds) {
+        io.to(`user_${user_id}`).emit("newNotification", {
+            title,
+            description: user_id === creatorId ? creatorDescription : userDescription
+        });
+    }
 }
 export async function getNotificationsForUser(userId, page, limit) {
     const offset = (page - 1) * limit;
